@@ -10,6 +10,7 @@ const DOOR = k.rgb(140, 140, 170);
 export function solid(x: number, y: number, w: number, h: number, color = PURPLE) {
   return k.add([
     k.pos(x, y),
+    k.anchor("topleft"),
     k.rect(w, h),
     k.area(),
     k.body({ isStatic: true }),
@@ -21,6 +22,7 @@ export function solid(x: number, y: number, w: number, h: number, color = PURPLE
 export function hazard(x: number, y: number, w: number, h: number) {
   return k.add([
     k.pos(x, y),
+    k.anchor("topleft"),
     k.rect(w, h),
     k.area(),
     k.body({ isStatic: true }),
@@ -42,6 +44,7 @@ export function coin(x: number, y: number) {
 export function checkpoint(x: number, y: number) {
   return k.add([
     k.pos(x, y),
+    k.anchor("topleft"),
     k.rect(8, 16),
     k.area(),
     k.color(GREEN.r, GREEN.g, GREEN.b),
@@ -52,6 +55,7 @@ export function checkpoint(x: number, y: number) {
 export function exitDoor(x: number, y: number) {
   return k.add([
     k.pos(x, y),
+    k.anchor("topleft"),
     k.rect(16, 24),
     k.area(),
     k.color(DOOR.r, DOOR.g, DOOR.b),
@@ -63,6 +67,7 @@ export function exitDoor(x: number, y: number) {
 export function movingPlatform(x: number, y: number, w = 60, h = 10, amp = 40, speed = 1.0) {
   const p = k.add([
     k.pos(x, y),
+    k.anchor("topleft"),
     k.rect(w, h),
     k.area(),
     k.body({ isStatic: true }),
@@ -82,6 +87,7 @@ export function collapsingPlatform(x: number, y: number, w = 48, h = 10, delay =
   const make = () =>
     k.add([
       k.pos(x, y),
+      k.anchor("topleft"),
       k.rect(w, h),
       k.area(),
       k.body({ isStatic: true }),
