@@ -4,7 +4,8 @@ import { spawnPlayer } from "../entities/player";
 export default function level1() {
   k.setGravity(1200);
 
-  const spawn = k.vec2(160, 90);
+  const groundY = 200;
+  const spawn = k.vec2(160, groundY - 24);
   const plr = spawnPlayer(spawn.clone());
 
   // UI
@@ -19,7 +20,10 @@ export default function level1() {
 
   // Camera follow with clamp
   k.onUpdate(() => {
-    const cam = k.vec2(Math.max(160, plr.pos.x), Math.max(90, plr.pos.y));
+    const cam = k.vec2(
+      Math.max(160, plr.pos.x),
+      Math.max(groundY - 110, plr.pos.y),
+    );
     k.camPos(cam);
   });
 
@@ -45,14 +49,14 @@ export default function level1() {
     ]);
 
   // Level layout
-  solid(120, 200, 420, 24);        // left floor
-  hazard(540, 200, 48, 24);        // gap hazard
-  solid(588, 200, 340, 24);        // right floor
-  solid(380, 120, 64, 12);         // floating block
+  solid(120, groundY, 420, 24);        // left floor
+  hazard(540, groundY, 48, 24);        // gap hazard
+  solid(588, groundY, 340, 24);        // right floor
+  solid(380, groundY - 80, 64, 12);     // floating block
 
   // Moving platform
   const mplat = k.add([
-    k.pos(520, 150),
+    k.pos(520, groundY - 50),
     k.rect(60, 10),
     k.area(),
     k.body({ isStatic: true }),
@@ -76,11 +80,13 @@ export default function level1() {
       k.color(255, 220, 0),
       "coin",
     ]);
-  [420, 455, 490, 625].forEach((x, i) => coin(x, 90 + (i % 2 ? -6 : 0)));
+  [420, 455, 490, 625].forEach((x, i) =>
+    coin(x, groundY - 110 + (i % 2 ? -6 : 0)),
+  );
 
   // Exit door
   k.add([
-    k.pos(940, 176),
+    k.pos(940, groundY - 24),
     k.rect(16, 24),
     k.area(),
     k.color(160, 160, 200),
@@ -90,7 +96,7 @@ export default function level1() {
   // Checkpoint
   let respawn = spawn.clone();
   k.add([
-    k.pos(700, 176),
+    k.pos(700, groundY - 24),
     k.rect(8, 16),
     k.area(),
     k.color(80, 200, 120),
