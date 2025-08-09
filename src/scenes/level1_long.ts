@@ -10,12 +10,24 @@ import { loadTiledJSON, buildFromTiled } from "../level/tiled";
 export default async function level1_long() {
   k.setGravity(1200);
   const par = makeParallax();
-
   const levelId = "level1_long";
 
+  // Display a small loading indicator so the screen isn't empty while
+  // we fetch the level data. If the request fails we replace it with an
+  // error message instead of leaving the user staring at a blank screen.
+  const loadingText = k.add([k.text("Loading..."), k.pos(8, 8), k.fixed()]);
+
   // ---- Load Tiled map ----
-  const map = await loadTiledJSON("/levels/level1_long.json");
-  const built = buildFromTiled(map);
+  let built;
+  try {
+    const map = await loadTiledJSON("/levels/level1_long.json");
+    built = buildFromTiled(map);
+  } catch (err) {
+    loadingText.text = "Failed to load level";
+    console.error(err);
+    return;
+  }
+  loadingText.destroy();
 
   // ---- Player ----
   const spawn = built.spawn ?? k.vec2(120, 256 - 24);
