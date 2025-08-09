@@ -25,7 +25,8 @@ export function spawnPatroller(opts: PatrollerOptions) {
     k.body(),
     k.anchor("center"),
     k.rect(width, height),
-    k.color(160, 70, 160),
+    k.sprite("enemy_slime"),
+    k.color(160, 70, 160, 0),
     "enemy",
     {
       dir: leftFirst ? -1 : 1,
@@ -33,6 +34,7 @@ export function spawnPatroller(opts: PatrollerOptions) {
       edgeTimer: 0, // detects leaving ground
     },
   ]);
+  try { (enemy as any).play("walk"); } catch {}
 
   // Move & simple edge safety
   k.onUpdate(() => {
@@ -40,6 +42,7 @@ export function spawnPatroller(opts: PatrollerOptions) {
 
     // Horizontal patrol
     enemy.move((enemy as any).dir * (enemy as any).speed, 0);
+    (enemy as any).flipX = (enemy as any).dir > 0;
 
     // If not grounded for a bit while moving horizontally, reverse.
     if (!enemy.isGrounded()) {

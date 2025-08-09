@@ -4,9 +4,6 @@ import { isPaused } from "../systems/pause";
 export type Solid = ReturnType<typeof solid>;
 const PURPLE = k.rgb(80, 76, 120);
 const RED = k.rgb(200, 70, 70);
-const GOLD = k.rgb(255, 220, 0);
-const GREEN = k.rgb(80, 200, 120);
-const DOOR = k.rgb(140, 140, 170);
 
 export function solid(x: number, y: number, w: number, h: number, color = PURPLE) {
   return k.add([
@@ -33,35 +30,39 @@ export function hazard(x: number, y: number, w: number, h: number) {
 }
 
 export function coin(x: number, y: number) {
-  return k.add([
+  const c = k.add([
     k.pos(x, y),
-    k.circle(4),
     k.area(),
-    k.color(GOLD.r, GOLD.g, GOLD.b),
+    k.circle(6), // slightly larger for pickup feel
+    k.sprite("coin"),
     "coin",
   ]);
+  try { (c as any).play("spin"); } catch {}
+  return c;
 }
 
 export function checkpoint(x: number, y: number) {
-  return k.add([
+  const f = k.add([
     k.pos(x, y),
-    k.anchor("topleft"),
-    k.rect(8, 16),
     k.area(),
-    k.color(GREEN.r, GREEN.g, GREEN.b),
+    k.rect(8, 16),
+    k.sprite("checkpoint"),
     "checkpoint",
   ]);
+  try { (f as any).play("idle"); } catch {}
+  return f;
 }
 
 export function exitDoor(x: number, y: number) {
-  return k.add([
+  const d = k.add([
     k.pos(x, y),
-    k.anchor("topleft"),
-    k.rect(16, 24),
     k.area(),
-    k.color(DOOR.r, DOOR.g, DOOR.b),
+    k.rect(16, 24),
+    k.sprite("door"),
     "exit",
   ]);
+  try { (d as any).play("idle"); } catch {}
+  return d;
 }
 
 // Simple horizontal moving platform (back-and-forth)

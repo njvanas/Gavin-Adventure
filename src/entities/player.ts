@@ -30,7 +30,9 @@ export function spawnPlayer(p: Vec2 = k.vec2(64, 0)) {
     k.rect(14, 16),
     k.area(),
     k.body({ jumpForce: JUMP }),
-    k.color(230, 230, 255),
+    // sprite for visuals, rect for collisions
+    k.sprite("player"),
+    k.color(230, 230, 255, 0),
     k.opacity(1),
     { hearts },
   ]);
@@ -65,6 +67,27 @@ export function spawnPlayer(p: Vec2 = k.vec2(64, 0)) {
     if (plr.isGrounded()) jumping = false;
 
     debug.text = `grounded: ${plr.isGrounded()}  vy: ${Math.round(plr.vel.y)}  pos: ${Math.round(plr.pos.x)},${Math.round(plr.pos.y)}`;
+  });
+
+  // Animation state
+  function play(name: string) {
+    try { (plr as any).play(name); } catch { /* ignore missing */ }
+  }
+  k.onUpdate(() => {
+    if (isPaused()) return;
+    const onGround = plr.isGrounded();
+    const vx = plr.vel.x;
+    const vy = plr.vel.y;
+
+    (plr as any).flipX = vx < -5;
+
+    if (!onGround) {
+      if (vy < 0) play("jump");
+      else play("fall");
+    } else {
+      if (Math.abs(vx) > 10) play("run");
+      else play("idle");
+    }
   });
 
   // Camera follow (scene clamps as needed)
