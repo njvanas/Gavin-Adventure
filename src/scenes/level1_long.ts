@@ -1,6 +1,7 @@
 import { k } from "../game";
 import { spawnPlayer } from "../entities/player";
 import { solid, hazard, coin, checkpoint, exitDoor, movingPlatform, collapsingPlatform } from "../level/kit";
+import { spawnPatroller } from "../entities/enemy";
 
 export default function level1_long() {
   k.setGravity(1200);
@@ -64,8 +65,6 @@ export default function level1_long() {
   coin(30 * 32 + 52, groundY - 120);
   ground(32 * 32, 8);
 
-  // Patroller placeholder area (enemy can be added later)
-
   // ====== SECTION 4: Double Hazard Gaps (1 screen) ======
   pit(40 * 32, 2);
   ground(42 * 32, 2);
@@ -115,8 +114,30 @@ export default function level1_long() {
   coin(106 * 32, groundY - 56);
   const door = exitDoor(113 * 32 + 24, groundY - 24);
 
+  // ===== ENEMIES: placements =====
+  const e1 = spawnPatroller({ x: 18 * 32 + 40, y: groundY - 24, speed: 60, leftFirst: true });
+  const e2 = spawnPatroller({ x: 33 * 32 + 40, y: groundY - 24, speed: 70, leftFirst: false });
+  const e3 = spawnPatroller({ x: 47 * 32 + 30, y: groundY - 24, speed: 65, leftFirst: true });
+  const e4 = spawnPatroller({ x: 97 * 32 + 50, y: groundY - 24, speed: 80, leftFirst: false });
+
   // ----- Collisions / rules -----
   plr.onCollide("coin", (c: any) => { k.destroy(c); score += 1; scoreText.text = String(score); });
+
+  // Stomp vs. damage
+  plr.onCollide("enemy", (e: any) => {
+    // Stomp if player is falling and above the enemy's center
+    if (plr.vel.y > 0 && plr.pos.y < e.pos.y - 4) {
+      // Bounce the player and destroy enemy
+      plr.jump(320);               // gentle bounce; doesn't overwrite plr.jump
+      // Small "poof" effect (placeholder)
+      k.add([k.pos(e.pos.x, e.pos.y), k.rect(8, 4), k.color(220, 200, 240), k.lifespan(0.15)]);
+      k.destroy(e);
+    } else {
+      // Side hit: damage player
+      (plr as any).damage?.(1);
+      k.shake(2);
+    }
+  });
 
   plr.onCollide("hazard", () => {
     (plr as any).damage?.(1);
