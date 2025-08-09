@@ -1,12 +1,9 @@
-import { k, loadCommonAssets } from "./game";
-import "./scenes/Title";
-import "./scenes/LevelSelect";
-import "./scenes/Level1";
-import "./scenes/Level2";
-import "./scenes/Level3";
-import "./scenes/Finale";
+import { k } from "./game";
+import level1 from "./scenes/level1";
 
-(async () => {
-  await loadCommonAssets();
-  k.go("Title");
-})();
+k.scene("level1", level1);
+k.scene("level2", () => {
+  k.add([k.text("Level 2 (WIP)", { size: 24 }), k.pos(120, 100)]);
+});
+
+k.go("level1");
