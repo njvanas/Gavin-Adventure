@@ -3,10 +3,15 @@ import { spawnPlayer, SPAWN_Y_OFFSET } from "../entities/player";
 import { solid, hazard, coin, checkpoint, exitDoor, movingPlatform, collapsingPlatform } from "../level/kit";
 import { spawnPatroller } from "../entities/enemy";
 import { isPaused, setPaused } from "../systems/pause";
+import { makeSmoothCamera } from "../systems/camera";
+import { makeParallax } from "../systems/parallax";
 import { sfxCoin, sfxHit, sfxCheckpoint, sfxExit } from "../audio/sfx";
 
 export default function level1_long() {
   k.setGravity(1200);
+
+  // Build parallax first so it sits behind world
+  const par = makeParallax();
 
   // ---- WORLD SCALE ----
   // Each "screen" ~ 320px wide. We'll build ~15 screens long (~4800px).
@@ -73,10 +78,20 @@ export default function level1_long() {
     });
   });
 
-  // Camera follow + gentle clamp
+  // Smooth camera targeting the player
+  const cam = makeSmoothCamera(() => plr.pos.clone(), {
+    deadW: 140,
+    deadH: 90,
+    lerp: 0.18,
+    clampMin: { x: 0, y: 0 },
+  });
+
+  // Camera & parallax updater
   k.onUpdate(() => {
-    const target = k.vec2(Math.max(160, plr.pos.x), Math.max(90, plr.pos.y));
-    k.camPos(target);
+    if (!isPaused()) {
+      cam.update();
+      par.update();
+    }
   });
 
   // --- SECTION HELPERS ---
