@@ -17,11 +17,11 @@ export function spawnPlayer(p: Vec2 = k.vec2(64, 0)) {
 
   const plr = k.add([
     k.pos(p.x, p.y - 1),
-    k.area(),
     k.anchor("center"),
+    k.rect(14, 16),
+    k.area(),
     k.body({ jumpForce: JUMP }),
     k.color(230, 230, 255),
-    k.rect(14, 16),
     k.opacity(1),
     { hearts },
   ]);

@@ -5,9 +5,9 @@ function levelButton(label: string, x: number, y: number, onPress: () => void) {
     k.rect(160, 40),
     k.pos(x, y),
     k.color(60, 60, 90),
+    k.anchor("center"),
     k.area(),
     k.outline(2, k.rgb(200, 200, 220)),
-    k.anchor("center"),
   ]);
   btn.add([k.text(label, { size: 16 }), k.anchor("center")]);
 

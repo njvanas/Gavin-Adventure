@@ -24,23 +24,25 @@ export default function level1() {
   });
 
   // Helpers
-  const solid = (x: number, y: number, w: number, h: number, color = k.rgb(120, 80, 160)) => k.add([
-    k.pos(x, y),
-    k.area(),
-    k.body({ isStatic: true }),
-    k.color(color.r, color.g, color.b),
-    k.rect(w, h),
-    "solid",
-  ]);
+  const solid = (x: number, y: number, w: number, h: number, color = k.rgb(120, 80, 160)) =>
+    k.add([
+      k.pos(x, y),
+      k.rect(w, h),
+      k.area(),
+      k.body({ isStatic: true }),
+      k.color(color.r, color.g, color.b),
+      "solid",
+    ]);
 
-  const hazard = (x: number, y: number, w: number, h: number) => k.add([
-    k.pos(x, y),
-    k.area(),
-    k.body({ isStatic: true }),
-    k.color(200, 70, 70),
-    k.rect(w, h),
-    "hazard",
-  ]);
+  const hazard = (x: number, y: number, w: number, h: number) =>
+    k.add([
+      k.pos(x, y),
+      k.rect(w, h),
+      k.area(),
+      k.body({ isStatic: true }),
+      k.color(200, 70, 70),
+      "hazard",
+    ]);
 
   // Level layout
   solid(120, 200, 420, 24);        // left floor
@@ -51,9 +53,9 @@ export default function level1() {
   // Moving platform
   const mplat = k.add([
     k.pos(520, 150),
+    k.rect(60, 10),
     k.area(),
     k.body({ isStatic: true }),
-    k.rect(60, 10),
     k.color(100, 100, 140),
     "solid",
     "mplatform",
@@ -66,20 +68,21 @@ export default function level1() {
   });
 
   // Coins guiding jump arc
-  const coin = (x: number, y: number) => k.add([
-    k.pos(x, y),
-    k.area(),
-    k.circle(4),
-    k.color(255, 220, 0),
-    "coin",
-  ]);
+  const coin = (x: number, y: number) =>
+    k.add([
+      k.pos(x, y),
+      k.circle(4),
+      k.area(),
+      k.color(255, 220, 0),
+      "coin",
+    ]);
   [420, 455, 490, 625].forEach((x, i) => coin(x, 90 + (i % 2 ? -6 : 0)));
 
   // Exit door
   k.add([
     k.pos(940, 176),
-    k.area(),
     k.rect(16, 24),
+    k.area(),
     k.color(160, 160, 200),
     "exit",
   ]);
@@ -88,8 +91,8 @@ export default function level1() {
   let respawn = spawn.clone();
   k.add([
     k.pos(700, 176),
-    k.area(),
     k.rect(8, 16),
+    k.area(),
     k.color(80, 200, 120),
     "checkpoint",
   ]);

@@ -8,32 +8,64 @@ const GREEN = k.rgb(80, 200, 120);
 const DOOR = k.rgb(140, 140, 170);
 
 export function solid(x: number, y: number, w: number, h: number, color = PURPLE) {
-  return k.add([k.pos(x, y), k.area(), k.body({ isStatic: true }), k.color(color.r, color.g, color.b), k.rect(w, h), "solid"]);
+  return k.add([
+    k.pos(x, y),
+    k.rect(w, h),
+    k.area(),
+    k.body({ isStatic: true }),
+    k.color(color.r, color.g, color.b),
+    "solid",
+  ]);
 }
 
 export function hazard(x: number, y: number, w: number, h: number) {
-  return k.add([k.pos(x, y), k.area(), k.body({ isStatic: true }), k.color(RED.r, RED.g, RED.b), k.rect(w, h), "hazard"]);
+  return k.add([
+    k.pos(x, y),
+    k.rect(w, h),
+    k.area(),
+    k.body({ isStatic: true }),
+    k.color(RED.r, RED.g, RED.b),
+    "hazard",
+  ]);
 }
 
 export function coin(x: number, y: number) {
-  return k.add([k.pos(x, y), k.area(), k.circle(4), k.color(GOLD.r, GOLD.g, GOLD.b), "coin"]);
+  return k.add([
+    k.pos(x, y),
+    k.circle(4),
+    k.area(),
+    k.color(GOLD.r, GOLD.g, GOLD.b),
+    "coin",
+  ]);
 }
 
 export function checkpoint(x: number, y: number) {
-  return k.add([k.pos(x, y), k.area(), k.rect(8, 16), k.color(GREEN.r, GREEN.g, GREEN.b), "checkpoint"]);
+  return k.add([
+    k.pos(x, y),
+    k.rect(8, 16),
+    k.area(),
+    k.color(GREEN.r, GREEN.g, GREEN.b),
+    "checkpoint",
+  ]);
 }
 
 export function exitDoor(x: number, y: number) {
-  return k.add([k.pos(x, y), k.area(), k.rect(16, 24), k.color(DOOR.r, DOOR.g, DOOR.b), "exit"]);
+  return k.add([
+    k.pos(x, y),
+    k.rect(16, 24),
+    k.area(),
+    k.color(DOOR.r, DOOR.g, DOOR.b),
+    "exit",
+  ]);
 }
 
 // Simple horizontal moving platform (back-and-forth)
 export function movingPlatform(x: number, y: number, w = 60, h = 10, amp = 40, speed = 1.0) {
   const p = k.add([
     k.pos(x, y),
+    k.rect(w, h),
     k.area(),
     k.body({ isStatic: true }),
-    k.rect(w, h),
     k.color(100, 100, 140),
     "mplatform",
     { t: 0, amp, speed },
@@ -50,9 +82,9 @@ export function collapsingPlatform(x: number, y: number, w = 48, h = 10, delay =
   const make = () =>
     k.add([
       k.pos(x, y),
+      k.rect(w, h),
       k.area(),
       k.body({ isStatic: true }),
-      k.rect(w, h),
       k.color(120, 100, 120),
       "cplatform",
       { armed: true },
