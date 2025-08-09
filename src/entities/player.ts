@@ -3,6 +3,10 @@ import type { Vec2, Key } from "kaboom";
 
 export type Player = ReturnType<typeof spawnPlayer>;
 
+// Y offset so the player starts slightly above the spawn point and
+// drops down onto the platform instead of appearing inside it.
+export const SPAWN_Y_OFFSET = 24;
+
 export function spawnPlayer(p: Vec2 = k.vec2(64, 0)) {
   const SPEED = 220;
   const JUMP = 420;
@@ -16,7 +20,9 @@ export function spawnPlayer(p: Vec2 = k.vec2(64, 0)) {
   let iFrames = 0;
 
   const plr = k.add([
-    k.pos(p.x, p.y - 1),
+    // Start above the provided position so gravity can settle the
+    // character naturally on the platform.
+    k.pos(p.x, p.y - SPAWN_Y_OFFSET),
     k.anchor("center"),
     k.rect(14, 16),
     k.area(),
