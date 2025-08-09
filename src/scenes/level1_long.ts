@@ -2,6 +2,8 @@ import { k } from "../game";
 import { spawnPlayer, SPAWN_Y_OFFSET } from "../entities/player";
 import { solid, hazard, coin, checkpoint, exitDoor, movingPlatform, collapsingPlatform } from "../level/kit";
 import { spawnPatroller } from "../entities/enemy";
+import { isPaused, setPaused } from "../systems/pause";
+import { sfxCoin, sfxHit, sfxCheckpoint, sfxExit } from "../audio/sfx";
 
 export default function level1_long() {
   k.setGravity(1200);
@@ -27,6 +29,48 @@ export default function level1_long() {
   k.onUpdate(() => {
     const h = (plr as any).hearts ?? 3;
     heartsUI.text = "❤".repeat(h) + " ".repeat(Math.max(0, 3 - h));
+  });
+
+  // ----- Pause Overlay -----
+  const overlay = k.add([
+    k.rect(k.width(), k.height()),
+    k.pos(0, 0),
+    k.color(0, 0, 0),
+    k.fixed(),
+    k.opacity(0),
+    { visible: false },
+  ]);
+
+  const pauseText = k.add([
+    k.text("Paused\n[ESC] Resume   [M] Mute SFX", { size: 16, width: 280, align: "center" }),
+    k.pos(k.width() / 2, k.height() / 2),
+    k.anchor("center"),
+    k.color(220, 220, 240),
+    k.fixed(),
+    k.opacity(0),
+  ]);
+
+  function showPauseUI(show: boolean) {
+    overlay.opacity = show ? 0.35 : 0;
+    (overlay as any).visible = show;
+    pauseText.opacity = show ? 1 : 0;
+  }
+
+  function togglePause() {
+    const p = !isPaused();
+    setPaused(p);
+    showPauseUI(p);
+  }
+
+  k.onKeyPress("escape", togglePause);
+
+  // Optional: quick mute toggle while paused
+  import("../audio/sfx").then(({ sfxMute, sfxIsMuted }) => {
+    k.onKeyPress("m", () => {
+      if (!isPaused()) return;
+      sfxMute(!sfxIsMuted());
+      pauseText.text = `Paused\n[ESC] Resume   [M] Mute SFX: ${sfxIsMuted() ? "ON" : "OFF"}`;
+    });
   });
 
   // Camera follow + gentle clamp
@@ -121,7 +165,12 @@ export default function level1_long() {
   const e4 = spawnPatroller({ x: 97 * 32 + 50, y: groundY - 24, speed: 80, leftFirst: false });
 
   // ----- Collisions / rules -----
-  plr.onCollide("coin", (c: any) => { k.destroy(c); score += 1; scoreText.text = String(score); });
+  plr.onCollide("coin", (c: any) => {
+    k.destroy(c);
+    score += 1;
+    scoreText.text = String(score);
+    sfxCoin();
+  });
 
   // Stomp vs. damage
   plr.onCollide("enemy", (e: any) => {
@@ -136,16 +185,19 @@ export default function level1_long() {
       // Side hit: damage player
       (plr as any).damage?.(1);
       k.shake(2);
+      sfxHit();
     }
   });
 
   plr.onCollide("hazard", () => {
     (plr as any).damage?.(1);
     k.shake(2);
+    sfxHit();
   });
 
   plr.onCollide("checkpoint", (f: any) => {
     respawn = f.pos.clone();
+    sfxCheckpoint();
   });
 
   // Basic respawn when hearts hit 0
@@ -160,5 +212,8 @@ export default function level1_long() {
     }
   });
 
-  plr.onCollide("exit", () => k.go("level2"));
+  plr.onCollide("exit", () => {
+    sfxExit();
+    k.go("level2");
+  });
 }

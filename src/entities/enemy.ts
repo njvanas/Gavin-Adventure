@@ -1,4 +1,5 @@
 import { k } from "../game";
+import { isPaused } from "../systems/pause";
 
 export type PatrollerOptions = {
   x: number;
@@ -35,7 +36,7 @@ export function spawnPatroller(opts: PatrollerOptions) {
 
   // Move & simple edge safety
   k.onUpdate(() => {
-    if (!enemy.exists()) return;
+    if (!enemy.exists() || isPaused()) return;
 
     // Horizontal patrol
     enemy.move((enemy as any).dir * (enemy as any).speed, 0);

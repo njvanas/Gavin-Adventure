@@ -1,4 +1,5 @@
 import { k } from "../game";
+import { isPaused } from "../systems/pause";
 
 export type Solid = ReturnType<typeof solid>;
 const PURPLE = k.rgb(80, 76, 120);
@@ -76,6 +77,7 @@ export function movingPlatform(x: number, y: number, w = 60, h = 10, amp = 40, s
     { t: 0, amp, speed },
   ]);
   k.onUpdate(() => {
+    if (!p.exists() || isPaused()) return;
     p.t += k.dt() * p.speed;
     p.move(Math.sin(p.t) * p.amp, 0);
   });
@@ -100,24 +102,29 @@ export function collapsingPlatform(x: number, y: number, w = 48, h = 10, delay =
 
   // When player grounds on it, start collapse
   k.onCollide("player", "cplatform", (plr: any, cp: any) => {
-    if (!cp.armed) return;
+    if (!cp.armed || isPaused()) return;
     cp.armed = false;
-    // tiny shake
+
     const start = cp.pos.clone();
     let t = 0;
     const shake = k.onUpdate(() => {
+      if (!cp.exists() || isPaused()) return;
       t += k.dt();
       cp.pos.x = start.x + Math.sin(t * 50) * 1.5;
     });
+
     k.wait(delay, () => {
       shake.cancel();
-      // drop
-      cp.use(k.body({ isStatic: false }));
-      cp.gravityScale = 2;
-      k.wait(respawn, () => {
-        k.destroy(cp);
-        plat = make();
-      });
+      const drop = () => {
+        if (isPaused()) { k.wait(0.05, drop); return; }
+        cp.use(k.body({ isStatic: false }));
+        cp.gravityScale = 2;
+        k.wait(respawn, () => {
+          if (cp.exists()) k.destroy(cp);
+          plat = make();
+        });
+      };
+      drop();
     });
   });
 

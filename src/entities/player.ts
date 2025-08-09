@@ -1,5 +1,6 @@
 import { k } from "../game";
 import type { Vec2, Key } from "kaboom";
+import { sfxJump } from "../audio/sfx";
 
 export type Player = ReturnType<typeof spawnPlayer>;
 
@@ -49,6 +50,7 @@ export function spawnPlayer(p: Vec2 = k.vec2(64, 0)) {
 
     if (bufferLeft > 0 && coyoteLeft > 0) {
       kaboomJump(JUMP);
+      sfxJump();
       bufferLeft = 0;
       jumping = true;
     } else if (bufferLeft > 0) {
@@ -98,7 +100,10 @@ export function spawnPlayer(p: Vec2 = k.vec2(64, 0)) {
   }
 
   function doJump() {
-    if (plr.isGrounded()) kaboomJump(JUMP);
+    if (plr.isGrounded()) {
+      kaboomJump(JUMP);
+      sfxJump();
+    }
   }
 
   return Object.assign(plr, {
