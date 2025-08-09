@@ -1,5 +1,5 @@
 import { k } from "../game";
-import { spawnPlayer } from "../entities/player";
+import { spawnPlayer, SPAWN_Y_OFFSET } from "../entities/player";
 import { solid, hazard, coin, checkpoint, exitDoor, movingPlatform, collapsingPlatform } from "../level/kit";
 import { spawnPatroller } from "../entities/enemy";
 
@@ -153,7 +153,7 @@ export default function level1_long() {
     const hearts = (plr as any).getHearts?.() ?? 3;
     if (hearts <= 0) {
       k.wait(0.05, () => {
-        plr.pos = respawn.clone();
+        plr.pos = respawn.clone().sub(k.vec2(0, SPAWN_Y_OFFSET));
         (plr as any).hearts = 3;
         plr.vel = k.vec2(0, 0);
       });
