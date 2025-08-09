@@ -1,6 +1,7 @@
 import { k } from "../game";
 import type { Vec2, Key } from "kaboom";
 import { sfxJump } from "../audio/sfx";
+import { isPaused } from "../systems/pause";
 
 export type Player = ReturnType<typeof spawnPlayer>;
 
@@ -18,6 +19,7 @@ export function spawnPlayer(p: Vec2 = k.vec2(64, 0)) {
   let coyoteLeft = 0;
   let bufferLeft = 0;
   let jumping = false;
+  let climbing = false;
   let iFrames = 0;
 
   const plr = k.add([
@@ -46,6 +48,7 @@ export function spawnPlayer(p: Vec2 = k.vec2(64, 0)) {
 
   // Update loop for timers & debug
   k.onUpdate(() => {
+    if (isPaused()) return;
     coyoteLeft = plr.isGrounded() ? COYOTE : Math.max(0, coyoteLeft - k.dt());
 
     if (bufferLeft > 0 && coyoteLeft > 0) {
@@ -68,14 +71,26 @@ export function spawnPlayer(p: Vec2 = k.vec2(64, 0)) {
   k.onUpdate(() => k.camPos(k.vec2(plr.pos.x, plr.pos.y)));
 
   // Horizontal movement
-  k.onKeyDown("left", () => plr.move(-SPEED, 0));
-  k.onKeyDown("a", () => plr.move(-SPEED, 0));
-  k.onKeyDown("right", () => plr.move(SPEED, 0));
-  k.onKeyDown("d", () => plr.move(SPEED, 0));
+  k.onKeyDown("left", () => !isPaused() && plr.move(-SPEED, 0));
+  k.onKeyDown("a", () => !isPaused() && plr.move(-SPEED, 0));
+  k.onKeyDown("right", () => !isPaused() && plr.move(SPEED, 0));
+  k.onKeyDown("d", () => !isPaused() && plr.move(SPEED, 0));
 
   // Jump input with buffer
   const JUMP_KEYS: Key[] = ["space", "w", "up"];
-  const queueJump = () => { bufferLeft = BUFFER; };
+  const queueJump = () => {
+    if (isPaused()) return;
+    if (climbing) {
+      climbing = false;
+      (plr as any).gravityScale = 1;
+      kaboomJump(JUMP);
+      sfxJump();
+      jumping = true;
+      bufferLeft = 0;
+    } else {
+      bufferLeft = BUFFER;
+    }
+  };
   JUMP_KEYS.forEach((key) => k.onKeyPress(key, queueJump));
 
   // Variable jump height
@@ -84,6 +99,41 @@ export function spawnPlayer(p: Vec2 = k.vec2(64, 0)) {
       if (jumping && plr.vel.y < 0) plr.vel.y *= 0.45;
       jumping = false;
     });
+  });
+
+  // Ladder logic
+  function setClimb(on: boolean) {
+    if (climbing === on) return;
+    climbing = on;
+    (plr as any).gravityScale = on ? 0 : 1;
+    if (on) plr.vel = k.vec2(0, 0);
+  }
+
+  k.onUpdate(() => {
+    if (isPaused() || !climbing) return;
+    const up = k.isKeyDown("w") || k.isKeyDown("up");
+    const down = k.isKeyDown("s") || k.isKeyDown("down");
+    const climbSpeed = 120;
+    if (up && !down) plr.move(0, -climbSpeed);
+    else if (down && !up) plr.move(0, climbSpeed);
+    else plr.vel.y = 0;
+    plr.vel.x *= 0.8;
+  });
+
+  plr.onCollide("ladder", () => {
+    const intent = k.isKeyDown("w") || k.isKeyDown("up") || k.isKeyDown("s") || k.isKeyDown("down");
+    if (intent) setClimb(true);
+  });
+
+  plr.onCollideEnd("ladder", () => setClimb(false));
+
+  // Jump pad bounce
+  plr.onCollide("jumpPad", (pad: any) => {
+    if (isPaused()) return;
+    const force = Number(pad?.force ?? 520);
+    kaboomJump(Math.max(force, JUMP));
+    sfxJump();
+    jumping = true;
   });
 
   function flash(duration = 0.08, low = 0.3) {

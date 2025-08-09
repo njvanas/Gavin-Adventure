@@ -130,3 +130,67 @@ export function collapsingPlatform(x: number, y: number, w = 48, h = 10, delay =
 
   return plat;
 }
+
+// One-way platform: solid when player above and falling, pass-through otherwise
+export function oneWayPlatform(x: number, y: number, w = 60, h = 10) {
+  const p: any = k.add([
+    k.pos(x, y),
+    k.anchor("topleft"),
+    k.rect(w, h),
+    k.area(),
+    k.body({ isStatic: true }),
+    k.color(120, 110, 150),
+    "oneway",
+    { solidOn: true },
+  ]);
+
+  k.onUpdate(() => {
+    if (!p.exists() || isPaused()) return;
+    let shouldBeSolid = false;
+    const top = p.pos.y;
+    for (const plr of k.get("player")) {
+      if (!plr.exists()) continue;
+      const above = (plr.pos.y + 1) <= top;
+      const fallingOrStand = plr.vel.y >= 0;
+      if (above && fallingOrStand) { shouldBeSolid = true; break; }
+    }
+    if (shouldBeSolid && !p.solidOn) {
+      p.solidOn = true;
+      p.use(k.body({ isStatic: true }));
+    } else if (!shouldBeSolid && p.solidOn) {
+      p.solidOn = false;
+      p.use(k.body({ isStatic: false }));
+      p.gravityScale = 0;
+      p.vel = k.vec2(0, 0);
+    }
+  });
+  return p;
+}
+
+// Ladder: climbable area without solidity
+export function ladder(x: number, y: number, h = 64, w = 16) {
+  return k.add([
+    k.pos(x, y),
+    k.anchor("topleft"),
+    k.rect(w, h),
+    k.area(),
+    k.color(90, 140, 160),
+    "ladder",
+    { _ladder: true },
+  ]);
+}
+
+// Jump pad: bounces the player upward
+export function jumpPad(x: number, y: number, w = 24, h = 8, force = 520) {
+  return k.add([
+    k.pos(x, y),
+    k.anchor("topleft"),
+    k.rect(w, h),
+    k.area(),
+    k.body({ isStatic: true }),
+    k.color(200, 160, 60),
+    "jumpPad",
+    { force },
+  ]);
+}
+

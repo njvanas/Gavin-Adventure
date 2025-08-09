@@ -1,5 +1,5 @@
 import { k } from "../game";
-import { solid, hazard, coin, checkpoint, exitDoor, movingPlatform, collapsingPlatform } from "./kit";
+import { solid, hazard, coin, checkpoint, exitDoor, movingPlatform, collapsingPlatform, oneWayPlatform, ladder, jumpPad } from "./kit";
 import { spawnPatroller } from "../entities/enemy";
 import type { Vec2 } from "kaboom";
 
@@ -131,6 +131,31 @@ export function buildFromTiled(map: TiledMap): BuiltMapRefs {
           Number(p.h ?? o.height ?? 10),
           Number(p.delay ?? 0.6),
           Number(p.respawn ?? 2.0),
+        );
+        break;
+      case "oneway":
+        oneWayPlatform(
+          o.x,
+          o.y,
+          Number(p.w ?? o.width ?? 60),
+          Number(p.h ?? o.height ?? 10),
+        );
+        break;
+      case "ladder":
+        ladder(
+          o.x,
+          o.y,
+          Number(p.h ?? o.height ?? 64),
+          Number(p.w ?? o.width ?? 16),
+        );
+        break;
+      case "jumpPad":
+        jumpPad(
+          o.x,
+          o.y,
+          Number(p.w ?? o.width ?? 24),
+          Number(p.h ?? o.height ?? 8),
+          Number(p.force ?? 520),
         );
         break;
     }
