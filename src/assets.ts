@@ -51,22 +51,24 @@ export async function loadAssets() {
   // Load each sprite; tolerate missing files during early prototyping.
   await Promise.all(
     Object.entries(SPRITES).map(async ([name, cfg]) => {
+      const opts = {
+        sliceX: (cfg as any).sliceX,
+        sliceY: (cfg as any).sliceY,
+        anims:  (cfg as any).anims,
+      } as any;
       try {
-        await k.loadSprite(name, cfg.url, {
-          sliceX: (cfg as any).sliceX,
-          sliceY: (cfg as any).sliceY,
-          anims:  (cfg as any).anims,
-        });
-      } catch (e) {
-        // Fallback: create a 1×1 white sprite if the file is missing
-        console.warn(`[assets] Failed to load ${name} from ${cfg.url}, using fallback`, e);
-        if (!k.getSprite(name)) {
-          const canvas = document.createElement("canvas");
-          canvas.width = 2; canvas.height = 2;
-          const ctx = canvas.getContext("2d")!;
-          ctx.fillStyle = "#fff"; ctx.fillRect(0,0,2,2);
-          await k.loadSprite(name, canvas.toDataURL());
-        }
+        // Check if the resource actually exists before asking kaboom to load it.
+        const res = await fetch((cfg as any).url);
+        if (!res.ok) throw new Error("missing");
+        await k.loadSprite(name, (cfg as any).url, opts);
+      } catch {
+        // Fallback: create a tiny placeholder to avoid rejected load promises
+        console.warn(`[assets] Using placeholder for ${name}`);
+        const canvas = document.createElement("canvas");
+        canvas.width = 2; canvas.height = 2;
+        const ctx = canvas.getContext("2d")!;
+        ctx.fillStyle = "#fff"; ctx.fillRect(0,0,2,2);
+        await k.loadSprite(name, canvas.toDataURL(), opts);
       }
     })
   );
