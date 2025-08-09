@@ -6,12 +6,15 @@ import { isPaused, setPaused } from "../systems/pause";
 import { makeSmoothCamera } from "../systems/camera";
 import { makeParallax } from "../systems/parallax";
 import { sfxCoin, sfxHit, sfxCheckpoint, sfxExit } from "../audio/sfx";
+import type { RunStats } from "../systems/progress";
 
 export default function level1_long() {
   k.setGravity(1200);
 
   // Build parallax first so it sits behind world
   const par = makeParallax();
+
+  const levelId = "level1_long";
 
   // ---- WORLD SCALE ----
   // Each "screen" ~ 320px wide. We'll build ~15 screens long (~4800px).
@@ -24,8 +27,12 @@ export default function level1_long() {
   const plr = spawnPlayer(spawn.clone());
   (plr as any).addTag?.("player"); // in case your player adds tags; tolerated if missing
 
+  // ---- Run Stats ----
+  const startTime = Date.now();
+  let coinsCollected = 0;
+  let deaths = 0;
+
   // UI
-  let score = 0;
   let respawn = spawn.clone();
   const scoreText = k.add([k.text("0"), k.pos(8, 8), k.fixed()]);
   const heartsUI = k.add([k.text("❤❤❤"), k.pos(8, 18), k.fixed()]);
@@ -181,9 +188,10 @@ export default function level1_long() {
 
   // ----- Collisions / rules -----
   plr.onCollide("coin", (c: any) => {
+    if (!c.exists()) return;
     k.destroy(c);
-    score += 1;
-    scoreText.text = String(score);
+    coinsCollected += 1;
+    scoreText.text = String(coinsCollected);
     sfxCoin();
   });
 
@@ -215,10 +223,11 @@ export default function level1_long() {
     sfxCheckpoint();
   });
 
-  // Basic respawn when hearts hit 0
+  // Basic respawn when hearts hit 0 (track deaths)
   k.onUpdate(() => {
     const hearts = (plr as any).getHearts?.() ?? 3;
     if (hearts <= 0) {
+      deaths += 1;
       k.wait(0.05, () => {
         plr.pos = respawn.clone().sub(k.vec2(0, SPAWN_Y_OFFSET));
         (plr as any).hearts = 3;
@@ -229,6 +238,12 @@ export default function level1_long() {
 
   plr.onCollide("exit", () => {
     sfxExit();
-    k.go("level2");
+    const timeMs = Date.now() - startTime;
+    const payload = {
+      stats: { levelId, timeMs, coins: coinsCollected, deaths } as RunStats,
+      retryScene: "level1_long",
+      nextScene: "level2",
+    };
+    k.go("level_end", payload);
   });
 }
