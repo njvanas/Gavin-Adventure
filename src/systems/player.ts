@@ -16,6 +16,7 @@ export function spawnPlayer(p = k.vec2(64, 0)) {
     k.body({ jumpForce: JUMP }),   // default jump force
     k.color(230, 230, 255),
     k.opacity(1),                  // for flash()
+    "player",
     { hearts },
   ]);
 

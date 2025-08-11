@@ -19,50 +19,44 @@ export function spawnPatroller(opts: PatrollerOptions) {
     leftFirst = true,
   } = opts;
 
-  const enemy = k.add([
+const e = k.add([
     k.pos(x, y),
+    k.sprite("enemy_slime"),
     k.area(),
     k.body(),
     k.anchor("center"),
-    k.rect(width, height),
-    k.sprite("enemy_slime"),
-    k.color(160, 70, 160, 0),
     "enemy",
-    {
-      dir: leftFirst ? -1 : 1,
-      speed,
-      edgeTimer: 0, // detects leaving ground
-    },
+    { dir: 1, speed: 50 },
   ]);
-  try { (enemy as any).play("walk"); } catch {}
+  try { (e as any).play("walk"); } catch {}
 
   // Move & simple edge safety
   k.onUpdate(() => {
-    if (!enemy.exists() || isPaused()) return;
+    if (!e.exists() || isPaused()) return;
 
     // Horizontal patrol
-    enemy.move((enemy as any).dir * (enemy as any).speed, 0);
-    (enemy as any).flipX = (enemy as any).dir > 0;
+    e.move((e as any).dir * (e as any).speed, 0);
+    (e as any).flipX = (e as any).dir > 0;
 
     // If not grounded for a bit while moving horizontally, reverse.
-    if (!enemy.isGrounded()) {
-      (enemy as any).edgeTimer += k.dt();
-      if ((enemy as any).edgeTimer > 0.12) {
-        (enemy as any).dir *= -1;
-        (enemy as any).edgeTimer = 0;
+    if (!e.isGrounded()) {
+      (e as any).edgeTimer += k.dt();
+      if ((e as any).edgeTimer > 0.12) {
+        (e as any).dir *= -1;
+        (e as any).edgeTimer = 0;
         // small nudge back to platform
-        enemy.move((enemy as any).dir * 10, 0);
+        e.move((e as any).dir * 10, 0);
       }
     } else {
-      (enemy as any).edgeTimer = 0;
+      (e as any).edgeTimer = 0;
     }
   });
 
   // Flip on hitting walls/solids
-  enemy.onCollide("solid", () => {
-    (enemy as any).dir *= -1;
+  e.onCollide("solid", () => {
+    (e as any).dir *= -1;
   });
 
-  return enemy;
+  return e;
 }
 

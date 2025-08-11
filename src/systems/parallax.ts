@@ -1,46 +1,67 @@
 import { k } from "../game";
 import { isPaused } from "./pause";
 
-export type Layer = ReturnType<typeof makeLayer>;
+type LayerPair = [any, any];
 
-function makeLayer(factor: number, color: [number, number, number]) {
-  const rect = k.add([
-    k.rect(k.width(), k.height()),
+function makeLayer(factor: number, color: [number, number, number]): LayerPair {
+  const w = k.width() * 3;
+  const h = k.height();
+
+  const a = k.add([
+    k.rect(w, h),
     k.pos(0, 0),
-    k.color(color[0], color[1], color[2]),
-    k.fixed(),      // we'll override positions per frame
+    k.color(...color),
+    k.fixed(),
     { factor },
   ]);
-  return rect;
+  const b = k.add([
+    k.rect(w, h),
+    k.pos(w, 0),
+    k.color(...color),
+    k.fixed(),
+    { factor, _wrap: true },
+  ]);
+
+  return [a, b];
 }
 
 export function makeParallax() {
-  // Colors are placeholders; replace later with sprites
-  const far  = makeLayer(0.30, [24, 28, 48]);   // deep blue
-  const mid  = makeLayer(0.60, [36, 42, 72]);   // mid blue
-  const near = makeLayer(0.90, [48, 54, 96]);   // near blue
+  const far  = makeLayer(0.30, [25, 30, 55]);
+  const mid  = makeLayer(0.55, [40, 46, 74]);
+  const near = makeLayer(0.85, [58, 64, 102]);
 
-  function resizeToScreen() {
-    [far, mid, near].forEach((l: any) => {
-      l.width = k.width();
-      l.height = k.height();
-    });
+  const gradient = k.add([
+    k.rect(k.width(), k.height()),
+    k.pos(0, 0),
+    k.fixed(),
+    k.color(255, 255, 255),
+    k.opacity(0.05),
+  ]);
+
+  function resize() {
+    const h = k.height();
+    [...far, ...mid, ...near].forEach(l => { l.height = h; });
+    gradient.width = k.width();
+    gradient.height = h;
+  }
+  // Optional resize hook
+  // @ts-ignore
+  k.onResize?.(resize);
+  resize();
+
+  function scrollLayer(pair: LayerPair, targetX: number) {
+    const w = pair[0].width;
+    const off = (-targetX * pair[0].factor) % w;
+    pair[0].pos.x = off;
+    pair[1].pos.x = off + w;
   }
 
-  // Refit on resize (if your Kaboom setup emits this; otherwise safe no-op)
-  // @ts-ignore
-  k.onResize?.(resizeToScreen);
-  resizeToScreen();
-
-  function update() {
+  function update(targetPos: { x: number; y: number }) {
     if (isPaused()) return;
-    const cam = k.camPos();
-    // Parallax scroll: offset backgrounds opposite cam movement
-    (far as any).pos = k.vec2(Math.floor(-cam.x * 0.30), Math.floor(-cam.y * 0.10));
-    (mid as any).pos = k.vec2(Math.floor(-cam.x * 0.60), Math.floor(-cam.y * 0.20));
-    (near as any).pos = k.vec2(Math.floor(-cam.x * 0.90), Math.floor(-cam.y * 0.30));
+    scrollLayer(far, targetPos.x);
+    scrollLayer(mid, targetPos.x);
+    scrollLayer(near, targetPos.x);
   }
 
   return { update };
 }
-
