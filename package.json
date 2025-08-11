@@ -1,5 +1,5 @@
 {
-  "name": "ants-adventure",
+  "name": "gavin-adventure",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -11,15 +11,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Barend183/Ants-Adventure.git"
+    "url": "git+https://github.com/Barend183/Gavin-Adventure.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Barend183/Ants-Adventure/issues"
+    "url": "https://github.com/Barend183/Gavin-Adventure/issues"
   },
-  "homepage": "https://Barend183.github.io/Ants-Adventure/",
+  "homepage": "https://Barend183.github.io/Gavin-Adventure/",
   "description": "",
   "dependencies": {
     "kaboom": "^3000.1.17"
