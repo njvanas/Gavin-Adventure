@@ -6,6 +6,7 @@ import { makeParallax } from "../systems/parallax";
 import { sfxCoin, sfxHit, sfxCheckpoint, sfxExit } from "../audio/sfx";
 import type { RunStats } from "../systems/progress";
 import { loadTiledJSON, buildFromTiled } from "../level/tiled";
+import { initPauseMenu } from "../systems/pauseMenu";
 
 export default async function level1_long() {
   k.setGravity(1200);
@@ -18,13 +19,15 @@ export default async function level1_long() {
     const map = await loadTiledJSON("levels/level1_long.json");
     built = buildFromTiled(map);
   } catch (err) {
-    console.warn("Tiled map load failed, proceeding procedural-only", err);
+    console.warn("Tiled map load failed, procedural only", err);
   }
   loadingText.destroy();
 
   const spawn = built?.spawn ?? k.vec2(0, 180);
   const plr = spawnPlayer(spawn.clone());
   (plr as any).addTag?.("player");
+
+  initPauseMenu("level1_long");
 
   const startTime = Date.now();
   let coinsCollected = 0;
@@ -33,6 +36,7 @@ export default async function level1_long() {
   const scoreText = k.add([k.text("0"), k.pos(8, 8), k.fixed()]);
   const heartsUI = k.add([k.text("❤❤❤"), k.pos(8, 18), k.fixed()]);
   k.onUpdate(() => {
+    if (isPaused()) return;
     const h = (plr as any).getHearts?.() ?? (plr as any).hearts ?? 3;
     heartsUI.text = "❤".repeat(h);
   });
@@ -44,14 +48,14 @@ export default async function level1_long() {
   });
 
   k.onUpdate(() => {
-    if (!isPaused()) {
-      cam.update();
-      par.update(plr.pos.clone());
-    }
+    if (isPaused()) return;
+    cam.update();
+    par.update(plr.pos.clone());
   });
 
   let respawn = spawn.clone();
 
+  // Coin collision
   plr.onCollide("coin", (c: any) => {
     if (!c.exists()) return;
     c.destroy();
@@ -83,6 +87,7 @@ export default async function level1_long() {
   });
 
   k.onUpdate(() => {
+    if (isPaused()) return;
     const h = (plr as any).getHearts?.() ?? (plr as any).hearts ?? 3;
     if (h <= 0) {
       deaths++;
@@ -104,11 +109,12 @@ export default async function level1_long() {
     });
   });
 
+  // Procedural ground + coins
   initProceduralTerrain(plr, spawn.x);
 }
 
 // --------------------------------------------------
-// Procedural Terrain (reachable coins, tunnels with secret)
+// Procedural Terrain (original working style + coin sprites spinning)
 // --------------------------------------------------
 function initProceduralTerrain(player: any, originX: number) {
   const TILE = 32;
@@ -126,7 +132,7 @@ function initProceduralTerrain(player: any, originX: number) {
 
   const MAX_UP_STEP = 32;
   const MAX_DOWN_STEP = 64;
-  const MAX_REACH_ABOVE = 80; // max vertical distance a coin/secret may sit above surface
+  const MAX_REACH_ABOVE = 80;
 
   const TUNNEL_CHANCE = 0.14;
   const TUNNEL_MIN_W = 6;
@@ -138,7 +144,7 @@ function initProceduralTerrain(player: any, originX: number) {
 
   const PEAK_COIN_CHANCE = 0.42;
   const TUNNEL_COIN_DENSITY = 0.18;
-  const SECRET_CHANCE = 0.75; // chance a tunnel has an easter egg (rare item)
+  const SECRET_CHANCE = 0.75;
 
   type Desc =
     | { kind: "solid"; x: number; y: number; w: number; h: number }
@@ -181,6 +187,7 @@ function initProceduralTerrain(player: any, originX: number) {
   for (let c = startChunk - KEEP_BEHIND; c <= startChunk + KEEP_AHEAD; c++) ensureChunk(c);
 
   k.onUpdate(() => {
+    if (isPaused()) return;
     const current = Math.floor(player.pos.x / CHUNK_W);
     for (let c = current - KEEP_BEHIND; c <= current + KEEP_AHEAD; c++) ensureChunk(c);
     for (const idx of [...cache.keys()]) {
@@ -195,11 +202,10 @@ function initProceduralTerrain(player: any, originX: number) {
     const descs: Desc[] = [];
     const rng = rngSeed(idx ^ 0x9e3779b1);
 
-    // Heights
+    // Heights + smoothing
     const heights: number[] = [];
     for (let t = leftTile; t <= rightTile; t++) heights.push(rawSurfaceY(t));
 
-    // Slope constraints
     for (let i = 1; i < heights.length; i++) {
       const up = heights[i] - heights[i - 1];
       if (up > MAX_UP_STEP) heights[i] = heights[i - 1] + MAX_UP_STEP;
@@ -213,7 +219,7 @@ function initProceduralTerrain(player: any, originX: number) {
       if (down > MAX_DOWN_STEP) heights[i] = heights[i + 1] - MAX_DOWN_STEP;
     }
 
-    // Solid runs
+    // Ground runs
     let runStartTile = leftTile;
     let prevY = heights[0];
     for (let t = leftTile + 1; t <= rightTile + 1; t++) {
@@ -233,10 +239,6 @@ function initProceduralTerrain(player: any, originX: number) {
       }
     }
 
-    // Keep solids list for coin reach checks
-    const solids = () => descs.filter(d => d.kind === "solid") as Extract<Desc, { kind: "solid" }>[];
-
-    // Tunnel
     const midTile = (leftTile + rightTile) / 2;
     const nearSpawn = Math.abs(midTile - baseTileOffset) <= SAFE_RADIUS_TILES + 4;
     let tunnelSpan: { start: number; end: number; floorY: number; roofY: number } | null = null;
@@ -249,7 +251,7 @@ function initProceduralTerrain(player: any, originX: number) {
       const roofY = baseY - randInt(rng, 24, 38);
       const floorY = roofY + Math.max(MIN_CLEAR, 84);
 
-      // Carve: remove overlapping solid slices
+      // Carve
       for (let i = descs.length - 1; i >= 0; i--) {
         const s = descs[i];
         if (s.kind !== "solid") continue;
@@ -267,7 +269,7 @@ function initProceduralTerrain(player: any, originX: number) {
         }
       }
 
-      // Add tunnel floor & roof
+      // Floor & roof
       descs.push({
         kind: "solid",
         x: startTile * TILE,
@@ -285,37 +287,24 @@ function initProceduralTerrain(player: any, originX: number) {
 
       tunnelSpan = { start: startTile, end: endTile, floorY, roofY };
 
-      // Coins in tunnel (midline) – reachable (midline ~ (floor+roof)/2)
+      // Tunnel coins
       const midY = roofY + (floorY - roofY) / 2;
       const coinCount = Math.max(3, Math.floor(widthTiles * TUNNEL_COIN_DENSITY * 10));
       for (let i = 0; i < coinCount; i++) {
         const tx = startTile + 1 + Math.floor((i / (coinCount - 1)) * (widthTiles - 2));
-        descs.push({
-          kind: "coin",
-          x: tx * TILE + TILE / 2,
-          y: midY,
-        });
+        descs.push({ kind: "coin", x: tx * TILE + TILE / 2, y: midY });
       }
 
-      // Easter egg (secret) near tunnel far end (inside, reachable)
       if (rng() < SECRET_CHANCE) {
-        const secretTile = endTile - 2;
-        const mid = midY;
-        descs.push({
-          kind: "egg",
-          x: secretTile * TILE + TILE / 2,
-          y: mid,
-        });
+        descs.push({ kind: "egg", x: (endTile - 2) * TILE + TILE / 2, y: midY });
       }
     }
 
-    // Peak coins (ensure above a solid and within reach)
-    const solidList = solids();
+    // Peak coins
+    const solids = descs.filter(d => d.kind === "solid") as Extract<Desc, { kind: "solid" }>[];
     for (let t = leftTile + 1; t < rightTile; t++) {
       if (Math.abs(t - baseTileOffset) <= SAFE_RADIUS_TILES) continue;
-      // Skip tiles inside tunnel roof span (avoid floating coins over open hole)
       if (tunnelSpan && t >= tunnelSpan.start && t < tunnelSpan.end) continue;
-
       const idxLocal = t - leftTile;
       const y = heights[idxLocal];
       const ly = heights[idxLocal - 1];
@@ -323,16 +312,11 @@ function initProceduralTerrain(player: any, originX: number) {
       const isPeak = y < ly && y < ry;
       if (!isPeak) continue;
       if (Math.random() >= PEAK_COIN_CHANCE) continue;
-
       const coinX = t * TILE + TILE / 2;
-      const baseSolid = solidList.find(s =>
-        coinX > s.x + 8 && coinX < s.x + s.w - 8 && s.y === y
-      );
-      if (!baseSolid) continue;
-
+      const baseRun = solids.find(s => coinX >= s.x && coinX < s.x + s.w && s.y === y);
+      if (!baseRun) continue;
       const coinY = y - 44;
-      if (y - coinY > MAX_REACH_ABOVE) continue; // ensure reachable
-
+      if (y - coinY > MAX_REACH_ABOVE) continue;
       descs.push({ kind: "coin", x: coinX, y: coinY });
     }
 
@@ -352,7 +336,6 @@ function initProceduralTerrain(player: any, originX: number) {
       ]);
     }
     if (d.kind === "egg") {
-      // Secret collectible (also tagged coin so existing logic picks it up)
       return k.add([
         k.pos(d.x, d.y),
         k.anchor("center"),
@@ -364,13 +347,27 @@ function initProceduralTerrain(player: any, originX: number) {
         "egg",
       ]);
     }
-    return k.add([
-      k.pos(d.x, d.y),
-      k.anchor("center"),
-      k.sprite("coin"),
-      k.area(),
-      "coin",
-    ]);
+    // coin (with spin anim if sprite loaded)
+    try {
+      const c = k.add([
+        k.pos(d.x, d.y),
+        k.anchor("center"),
+        k.sprite("coin"),
+        k.area(),
+        "coin",
+      ]);
+      if ((c as any).play) (c as any).play("spin");
+      return c;
+    } catch {
+      return k.add([
+        k.pos(d.x, d.y),
+        k.anchor("center"),
+        k.rect(12, 12, { radius: 4 }),
+        k.area(),
+        k.color(255, 230, 0),
+        "coin",
+      ]);
+    }
   }
 
   function hash32(n: number) {
@@ -399,5 +396,4 @@ function initProceduralTerrain(player: any, originX: number) {
   }
   function randInt(r: () => number, a: number, b: number) {
     return a + Math.floor(r() * (b - a + 1));
-  }
-}
+  }}
