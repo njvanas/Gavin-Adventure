@@ -1,7 +1,8 @@
 import { k } from "../game";
-import { isPaused, setPaused } from "./pause";
+import { isPaused, setPaused } from "../systems/pause";
 
-const MAIN_MENU_SCENE = "main_menu"; // change if different
+// Change if your main menu scene id differs (Title or main_menu)
+const MAIN_MENU_SCENE = "Title";
 
 let uiRoot: any = null;
 
@@ -16,14 +17,9 @@ function showMenu(currentScene: string, restartData?: any) {
   if (uiRoot) return;
   setPaused(true);
 
-  uiRoot = k.add([
-    k.pos(0, 0),
-    k.fixed(),
-    { isPauseMenu: true },
-  ]);
+  uiRoot = k.add([k.pos(0, 0), k.fixed(), { isPauseMenu: true }]);
 
-  // dark overlay
-  uiRoot.add([
+  const overlay = uiRoot.add([
     k.rect(k.width(), k.height()),
     k.opacity(0.55),
     k.color(0, 0, 0),
@@ -33,63 +29,57 @@ function showMenu(currentScene: string, restartData?: any) {
   const panel = uiRoot.add([
     k.pos(k.width() / 2, k.height() / 2),
     k.anchor("center"),
-    k.rect(220, 180, { radius: 8 }),
+    k.rect(240, 200, { radius: 10 }),
     k.color(35, 38, 55),
-    k.outline(2, k.rgb(90, 100, 140)),
+    k.outline(3, k.rgb(90, 100, 140)),
     k.fixed(),
   ]);
 
   panel.add([
-    k.text("PAUSED", { size: 28 }),
-    k.pos(0, -60),
+    k.text("PAUSED", { size: 30 }),
+    k.pos(0, -70),
     k.anchor("center"),
-    k.color(255, 255, 255),
   ]);
 
-  let y = -20;
-  addButton(panel, "Resume", () => resumeGame(), y); y += 50;
-  addButton(panel, "Restart", () => {
+  let y = -25;
+  makeButton(panel, "Resume", () => resumeGame(), y); y += 55;
+  makeButton(panel, "Restart", () => {
     resumeGame();
     k.go(currentScene, restartData);
-  }, y); y += 50;
-  addButton(panel, "Exit to Menu", () => {
+  }, y); y += 55;
+  makeButton(panel, "Exit to Menu", () => {
     resumeGame();
     k.go(MAIN_MENU_SCENE);
   }, y);
 
-  // resize support
+  // Handle resize
   // @ts-ignore
   k.onResize?.(() => {
     if (!uiRoot) return;
+    overlay.width = k.width();
+    overlay.height = k.height();
     panel.pos = k.vec2(k.width() / 2, k.height() / 2);
-    uiRoot.children[0].width = k.width();
-    uiRoot.children[0].height = k.height();
   });
 }
 
-function addButton(parent: any, label: string, action: () => void, y: number) {
+function makeButton(parent: any, label: string, action: () => void, y: number) {
   const btn = parent.add([
     k.pos(0, y),
     k.anchor("center"),
-    k.rect(160, 36, { radius: 6 }),
+    k.rect(170, 40, { radius: 6 }),
     k.color(60, 66, 95),
     k.area(),
     k.outline(2, k.rgb(110, 120, 160)),
     { action },
   ]);
   btn.add([
-    k.text(label, { size: 16 }),
+    k.text(label, { size: 18 }),
     k.anchor("center"),
-    k.color(255, 255, 255),
   ]);
 
-  btn.onHover(() => {
-    btn.color = k.rgb(75, 82, 118);
-  });
-  btn.onHoverEnd(() => {
-    btn.color = k.rgb(60, 66, 95);
-  });
-  btn.onClick(() => action());
+  btn.onHover(() => { btn.color = k.rgb(75, 82, 118); });
+  btn.onHoverEnd(() => { btn.color = k.rgb(60, 66, 95); });
+  btn.onClick(action);
 }
 
 function resumeGame() {

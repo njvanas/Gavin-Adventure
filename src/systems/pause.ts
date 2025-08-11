@@ -1,11 +1,13 @@
-export const Pause = {
-  value: false,
-};
+export let paused = false;
 
 export function isPaused() {
-  return Pause.value;
+  return paused;
 }
 
-export function setPaused(p: boolean) {
-  Pause.value = p;
+export function setPaused(v: boolean) {
+  paused = v;
+}
+
+export function togglePaused() {
+  setPaused(!paused);
 }
