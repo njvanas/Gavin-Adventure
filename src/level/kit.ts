@@ -29,24 +29,22 @@ export function hazard(x: number, y: number, w: number, h: number) {
   ]);
 }
 
-export function coin(x: number, y: number) {
-  const c = k.add([
-    k.pos(x, y),
-    k.area(),
-    k.circle(6), // slightly larger for pickup feel
+export function coin(pos: k.Vec2) {
+  return k.add([
+    k.pos(pos),
     k.sprite("coin"),
+    k.area(),              // keep one
+    k.anchor("center"),
     "coin",
   ]);
-  try { (c as any).play("spin"); } catch {}
-  return c;
 }
+
 
 export function checkpoint(x: number, y: number) {
   const f = k.add([
     k.pos(x, y),
-    k.area(),
-    k.rect(8, 16),
     k.sprite("checkpoint"),
+    k.area(),
     "checkpoint",
   ]);
   try { (f as any).play("idle"); } catch {}
@@ -56,9 +54,8 @@ export function checkpoint(x: number, y: number) {
 export function exitDoor(x: number, y: number) {
   const d = k.add([
     k.pos(x, y),
-    k.area(),
-    k.rect(16, 24),
     k.sprite("door"),
+    k.area(),
     "exit",
   ]);
   try { (d as any).play("idle"); } catch {}
