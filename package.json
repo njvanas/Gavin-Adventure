@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "repository": {
     "type": "git",
@@ -17,12 +19,13 @@
   "bugs": {
     "url": "https://github.com/Barend183/Ants-Adventure/issues"
   },
-  "homepage": "https://github.com/Barend183/Ants-Adventure#readme",
+  "homepage": "https://Barend183.github.io/Ants-Adventure/",
   "description": "",
   "dependencies": {
     "kaboom": "^3000.1.17"
   },
   "devDependencies": {
+    "gh-pages": "^6.3.0",
     "typescript": "^5.9.2",
     "vite": "^7.1.1"
   }
