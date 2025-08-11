@@ -26,27 +26,17 @@ export const SOUNDS = {
   bg_level1: "/audio/bg_level1.ogg",
 };
 
-const SILENT_WAV_DATA_URI =
-  "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=";
-// (This is a ~0.01s silent PCM WAV)
+// --- below your SOUNDS export ---
+export const HAS_SOUND = new Set<string>();
 
-// Helper to check if a URL returns audio content
 async function urlHasAudio(url: string): Promise<boolean> {
   try {
-    // Prefer HEAD to avoid downloading; fallback to GET if HEAD not allowed.
     let res = await fetch(url, { method: "HEAD" });
-    if (!res.ok) return false;
-    const ct = res.headers.get("content-type") || "";
-    if (ct.startsWith("audio/")) return true;
-
-    // Some dev servers don't set content-type on HEAD; do a light GET and sniff
+    if (res.ok && (res.headers.get("content-type") || "").startsWith("audio/")) return true;
+    // Some dev servers don't set type on HEAD; try GET headers
     res = await fetch(url, { method: "GET" });
-    if (!res.ok) return false;
-    const ct2 = res.headers.get("content-type") || "";
-    return ct2.startsWith("audio/");
-  } catch {
-    return false;
-  }
+    return res.ok && (res.headers.get("content-type") || "").startsWith("audio/");
+  } catch { return false; }
 }
 
 let loaded = false;
@@ -119,20 +109,18 @@ export async function loadAssets() {
     await k.loadSprite(name, source, { sliceX, sliceY, anims });
   }
 
-  // ---- Sounds (NEW robust loader) ----
+  // ---- Sounds: load ONLY if the URL really serves audio ----
   for (const [name, url] of Object.entries(SOUNDS)) {
-    let src: string = url as string;
-    const ok = await urlHasAudio(src);
+    const ok = await urlHasAudio(url as string);
     if (!ok) {
-      console.warn(`[assets] Sound not found or not audio: ${name} (${url}). Using silent placeholder.`);
-      src = SILENT_WAV_DATA_URI;
+      console.warn(`[assets] Skipping sound '${name}' — not found or not audio: ${url}`);
+      continue; // don't attempt to load or decode
     }
     try {
-      await k.loadSound(name, src);
+      await k.loadSound(name, url as string);
+      HAS_SOUND.add(name);
     } catch (e) {
-      // Final fallback: force silent data URI
-      try { await k.loadSound(name, SILENT_WAV_DATA_URI); }
-      catch { console.warn(`[assets] Failed to register sound ${name}`, e); }
+      console.warn(`[assets] Failed to load sound '${name}':`, e);
     }
   }
 
