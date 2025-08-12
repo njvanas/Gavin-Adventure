@@ -1,4 +1,4 @@
-# Super Platformer Adventure
+# Gavin Adventure
 
 A complete 2D side-scrolling platformer game inspired by Super Mario Bros., built with React and TypeScript. Features 5 unique worlds, 25 levels, epic boss battles, and classic platformer mechanics.
 
@@ -43,10 +43,10 @@ A complete 2D side-scrolling platformer game inspired by Super Mario Bros., buil
 ### Installation
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/super-platformer-adventure.git
+git clone https://github.com/dolfie/Gavin-Adventure.git
 
 # Navigate to project directory
-cd super-platformer-adventure
+cd Gavin-Adventure
 
 # Install dependencies
 npm install
@@ -67,17 +67,18 @@ npm run preview
 ## 🌐 GitHub Pages Deployment
 
 ### Automatic Deployment
-1. Fork this repository
-2. Go to repository Settings → Pages
-3. Select "GitHub Actions" as the source
-4. The game will automatically deploy on every push to main branch
+The game automatically deploys to GitHub Pages on every push to the main branch using GitHub Actions.
+
+**Setup Instructions:**
+1. Go to your repository Settings → Pages
+2. Select "GitHub Actions" as the source
+3. The workflow will automatically build and deploy your game
 
 ### Manual Deployment
+If you prefer manual deployment:
 1. Build the project: `npm run build`
-2. Copy the `dist` folder contents to your `docs` folder
-3. Enable GitHub Pages in repository settings
-4. Select `/docs` folder as the source
-5. Your game will be available at `https://yourusername.github.io/super-platformer-adventure`
+2. Deploy to GitHub Pages: `npm run deploy`
+3. Your game will be available at `https://dolfie.github.io/Gavin-Adventure`
 
 ## 🎨 Technical Features
 
@@ -183,4 +184,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Ready to play?** Visit the [live demo](https://yourusername.github.io/super-platformer-adventure) or clone the repository to start your platformer adventure!
+**Ready to play?** Visit the [live demo](https://dolfie.github.io/Gavin-Adventure) or clone the repository to start your platformer adventure!
