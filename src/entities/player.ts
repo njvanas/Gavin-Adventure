@@ -1,5 +1,7 @@
 import { k } from "../game";
 
+export const SPAWN_Y_OFFSET = 24;
+
 export type Player = ReturnType<typeof spawnPlayer>;
 
 export function spawnPlayer(p = k.vec2(64, 0), useStickman = false) {

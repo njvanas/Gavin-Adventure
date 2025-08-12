@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Coin Generator</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        canvas { border: 1px solid #ccc; margin: 10px; }
+        .controls { margin: 20px 0; }
+        button { padding: 10px 20px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Golden Coin - Sprite Generator</h1>
+    <div class="controls">
+        <button onclick="generateCoinSprite()">Generate Coin Sprite</button>
+        <button onclick="downloadSprite()">Download PNG</button>
+    </div>
+    <canvas id="spriteCanvas" width="96" height="16"></canvas>
+    <p>This generates a modern pixel art sprite sheet for the coin with 6 frames (16x16 each)</p>
+
+    <script>
+        const canvas = document.getElementById('spriteCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        function generateCoinSprite() {
+            ctx.clearRect(0, 0, 96, 16);
+            
+            // Generate 6 frames
+            for (let frame = 0; frame < 6; frame++) {
+                const x = frame * 16;
+                drawCoinFrame(ctx, x, 0, frame);
+            }
+        }
+        
+        function drawCoinFrame(ctx, x, y, frame) {
+            // Modern coin color palette
+            const colors = {
+                gold: '#FFD700',
+                highlight: '#FFF8DC',
+                shadow: '#B8860B',
+                outline: '#8B6914',
+                shine: '#FFFFFF'
+            };
+            
+            // Coin rotation effect
+            const rotation = (frame * Math.PI) / 3;
+            const scale = Math.abs(Math.cos(rotation));
+            
+            // Main coin body
+            ctx.fillStyle = colors.gold;
+            ctx.beginPath();
+            ctx.ellipse(x + 8, y + 8, 6 * scale, 6, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Coin highlight
+            ctx.fillStyle = colors.highlight;
+            ctx.beginPath();
+            ctx.ellipse(x + 6, y + 6, 3 * scale, 3, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Coin shadow
+            ctx.fillStyle = colors.shadow;
+            ctx.beginPath();
+            ctx.ellipse(x + 10, y + 10, 4 * scale, 4, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Shine effect
+            ctx.fillStyle = colors.shine;
+            ctx.fillRect(x + 5, y + 4, 2 * scale, 1);
+            ctx.fillRect(x + 6, y + 5, 1 * scale, 1);
+            
+            // Center detail
+            ctx.fillStyle = colors.shadow;
+            ctx.fillRect(x + 7, y + 7, 2 * scale, 2);
+            
+            // Outline
+            ctx.strokeStyle = colors.outline;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.ellipse(x + 8, y + 8, 6 * scale, 6, 0, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+        
+        function downloadSprite() {
+            const link = document.createElement('a');
+            link.download = 'coin.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+        
+        // Generate on load
+        generateCoinSprite();
+    </script>
+</body>
+</html>
