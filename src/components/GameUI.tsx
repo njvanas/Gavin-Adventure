@@ -6,9 +6,10 @@ interface GameUIProps {
   worlds: Array<{ name: string; theme: string; color: string }>;
   onShowWorldMap: () => void;
   onSpawnBoss: (bossId: number) => void;
+  onTogglePause: () => void;
 }
 
-const GameUI: React.FC<GameUIProps> = ({ gameState, worlds, onShowWorldMap, onSpawnBoss }) => {
+const GameUI: React.FC<GameUIProps> = ({ gameState, worlds, onShowWorldMap, onSpawnBoss, onTogglePause }) => {
   const currentWorld = worlds[gameState.currentWorld - 1];
   const isBossLevel = gameState.currentLevel % 5 === 0;
   const levelInWorld = ((gameState.currentLevel - 1) % 5) + 1;
