@@ -143,7 +143,7 @@ export default function level1() {
   }
 
   // Infinite Terrain System
-  const CHUNK_SIZE = 400; // Size of each terrain chunk
+  const CHUNK_SIZE = 600; // Increased from 400 to 600 for more spacing between platforms
   const RENDER_DISTANCE = 2; // Reduced from 3 to 2 for better performance
   const terrainChunks = new Map<number, TerrainChunk>(); // chunkIndex -> TerrainChunk
   
@@ -293,9 +293,9 @@ export default function level1() {
       const platform = solid(currentX, groundY, platformEnd - currentX, 24, k.rgb(139, 69, 19));
       chunk.platforms.push(platform);
       
-      // Add gaps for challenge (but not too many) - reduced frequency
-      if (Math.random() > 0.9 && currentX + platformWidth < endX - 100) { // Reduced from 0.8 to 0.9
-        const gapWidth = 30 + Math.random() * 40; // Reduced max gap width
+      // Add gaps for challenge (but not too many) - much less frequent
+      if (Math.random() > 0.95 && currentX + platformWidth < endX - 100) { // Reduced from 0.9 to 0.95 (very rare)
+        const gapWidth = 30 + Math.random() * 30; // Further reduced max gap width
         const hazardObj = hazard(currentX + platformWidth, groundY, gapWidth, 24);
         chunk.hazards.push(hazardObj);
         currentX += gapWidth;
@@ -305,7 +305,7 @@ export default function level1() {
     }
     
     // Generate floating platforms - make them reachable by jumping
-    for (let i = 0; i < 2 + Math.random() * 3; i++) { // Reduced from 3-7 to 2-5 platforms
+    for (let i = 0; i < Math.random() * 2; i++) { // Reduced to 0-2 platforms (much cleaner)
       const x = startX + Math.random() * (endX - startX - 100);
       // Adjust height to be easily reachable by jumping (max jump height is around 120-150 pixels)
       const y = groundY - 40 - Math.random() * 30; // Range: 40-70 pixels above ground (much more reachable)
@@ -322,14 +322,14 @@ export default function level1() {
     }
     
     // Generate coins on ground
-    for (let i = 0; i < 1 + Math.random() * 2; i++) { // Reduced from 2-5 to 1-3 coins
+    for (let i = 0; i < Math.random() * 2; i++) { // Reduced to 0-2 coins (less cluttered)
       const x = startX + Math.random() * (endX - startX - 50);
       const coinObj = coin(x, groundY - 30);
       chunk.coins.push(coinObj);
     }
     
     // Generate enemies
-    for (let i = 0; i < Math.random() * 2; i++) { // Reduced from 1-3 to 0-2 enemies
+    for (let i = 0; i < Math.random() * 1; i++) { // Reduced to 0-1 enemies (much less overwhelming)
       const x = startX + Math.random() * (endX - startX - 50);
       const enemy = spawnPatroller({ 
         x, 
@@ -578,8 +578,8 @@ export default function level1() {
   });
 
   // Add some decorative elements
-  // Floating protein particles
-  for (let i = 0; i < 15; i++) {
+  // Floating protein particles - reduced for cleaner look
+  for (let i = 0; i < 8; i++) { // Reduced from 15 to 8 particles
     const particle = k.add([
       k.pos(Math.random() * 800, Math.random() * 150),
       k.circle(1),
