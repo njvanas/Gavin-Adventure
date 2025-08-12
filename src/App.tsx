@@ -374,6 +374,10 @@ function App() {
     }, 3000);
   };
 
+  const togglePause = () => {
+    setGameState(prev => ({ ...prev, isPaused: !prev.isPaused }));
+  };
+
   // Game Won Screen
   if (gameState.gameWon) {
     return (
@@ -499,6 +503,49 @@ function App() {
     );
   }
 
+  // Pause Screen
+  if (gameState.isPaused && gameState.gameStarted) {
+    return (
+      <div className="min-h-screen overflow-hidden">
+        <GameBackground world={gameState.currentWorld} />
+        <div className="relative z-50 flex items-center justify-center min-h-screen">
+          <div className="bg-black/90 backdrop-blur-sm border-4 border-yellow-400 p-12 rounded-lg shadow-2xl max-w-2xl">
+            <h1 className="text-6xl font-bold text-yellow-400 mb-6 text-center pixel-font">
+              ⏸️ PAUSED
+            </h1>
+            <div className="text-white text-center pixel-font text-lg mb-8 space-y-4">
+              <p>🏆 Current Score: {gameState.score.toLocaleString()}</p>
+              <p>💰 Coins: {gameState.coins}</p>
+              <p>🍗 Chicken: {gameState.chicken}</p>
+              <p>💪 Strength: {gameState.strength}</p>
+              <p>🌍 World {gameState.currentWorld} - Level {gameState.currentLevel}</p>
+            </div>
+            <div className="flex justify-center space-x-4">
+              <button 
+                onClick={togglePause}
+                className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded pixel-font text-xl border-4 border-green-400 hover:border-green-300 transition-all duration-200 transform hover:scale-105"
+              >
+                ▶️ RESUME
+              </button>
+              <button 
+                onClick={() => setGameState(prev => ({ ...prev, showShop: true, isPaused: false }))}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded pixel-font text-xl border-4 border-blue-400 hover:border-blue-300 transition-all duration-200 transform hover:scale-105"
+              >
+                🏪 SHOP
+              </button>
+              <button 
+                onClick={showWorldMap}
+                className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded pixel-font text-xl border-4 border-purple-400 hover:border-purple-300 transition-all duration-200 transform hover:scale-105"
+              >
+                🗺️ MAP
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen overflow-hidden relative">
       <GameBackground world={gameState.currentWorld} />
@@ -508,6 +555,7 @@ function App() {
         worlds={WORLDS}
         onShowWorldMap={showWorldMap}
         onSpawnBoss={spawnBoss}
+        onTogglePause={togglePause}
       />
       
       <div style={{ transform: `translateX(-${gameState.cameraX}px)` }}>
@@ -584,6 +632,14 @@ function App() {
             health: Math.max(0, prev.health - 25)
           }))}
           onClose={() => setGameState(prev => ({ ...prev, currentBoss: null }))}
+        />
+      )}
+      
+      {gameState.showShop && (
+        <Shop
+          gameState={gameState}
+          onBuyChicken={buyChicken}
+          onClose={() => setGameState(prev => ({ ...prev, showShop: false }))}
         />
       )}
     </div>
