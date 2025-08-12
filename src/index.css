@@ -1,0 +1,365 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Pixel font */
+.pixel-font {
+  font-family: 'Press Start 2P', cursive;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
+
+/* Smooth parallax animations */
+@keyframes scrollSlow {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes scrollMedium {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+}
+
+@keyframes scrollFast {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-200%); }
+}
+
+/* Stars - static pattern */
+.bg-stars {
+  background-image: 
+    radial-gradient(2px 2px at 20px 30px, white, transparent),
+    radial-gradient(2px 2px at 40px 70px, white, transparent),
+    radial-gradient(1px 1px at 90px 40px, white, transparent),
+    radial-gradient(1px 1px at 130px 80px, white, transparent),
+    radial-gradient(2px 2px at 160px 30px, white, transparent),
+    radial-gradient(1px 1px at 200px 20px, white, transparent),
+    radial-gradient(2px 2px at 250px 60px, white, transparent);
+  background-size: 300px 150px;
+  background-repeat: repeat;
+}
+
+/* Mountains with proper parallax */
+.mountain-far {
+  position: relative;
+  width: 150%;
+  height: 100%;
+  background: linear-gradient(135deg, #4a5568 0%, #2d3748 50%, #1a202c 100%);
+  clip-path: polygon(
+    0% 100%, 10% 80%, 20% 85%, 30% 70%, 40% 75%, 
+    50% 60%, 60% 65%, 70% 55%, 80% 60%, 90% 45%, 
+    100% 50%, 110% 55%, 120% 40%, 130% 45%, 140% 35%, 150% 40%, 150% 100%
+  );
+  animation: scrollSlow 120s linear infinite;
+}
+
+.mountain-medium {
+  position: relative;
+  width: 150%;
+  height: 100%;
+  background: linear-gradient(135deg, #718096 0%, #4a5568 50%, #2d3748 100%);
+  clip-path: polygon(
+    0% 100%, 15% 70%, 25% 75%, 35% 60%, 45% 65%, 
+    55% 50%, 65% 55%, 75% 40%, 85% 45%, 95% 35%, 
+    105% 40%, 115% 30%, 125% 35%, 135% 25%, 145% 30%, 150% 25%, 150% 100%
+  );
+  animation: scrollSlow 80s linear infinite;
+}
+
+.mountain-near {
+  position: relative;
+  width: 150%;
+  height: 100%;
+  background: linear-gradient(135deg, #a0aec0 0%, #718096 50%, #4a5568 100%);
+  clip-path: polygon(
+    0% 100%, 12% 60%, 22% 65%, 32% 45%, 42% 50%, 
+    52% 35%, 62% 40%, 72% 25%, 82% 30%, 92% 20%, 
+    102% 25%, 112% 15%, 122% 20%, 132% 10%, 142% 15%, 150% 10%, 150% 100%
+  );
+  animation: scrollMedium 60s linear infinite;
+}
+
+/* Clouds */
+.clouds-container {
+  position: relative;
+  width: 150%;
+  height: 100%;
+  animation: scrollSlow 90s linear infinite;
+}
+
+.cloud {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 50px;
+}
+
+.cloud::before,
+.cloud::after {
+  content: '';
+  position: absolute;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 50px;
+}
+
+.cloud-1 {
+  width: 60px;
+  height: 20px;
+  top: 15%;
+  left: 10%;
+}
+
+.cloud-1::before {
+  width: 30px;
+  height: 30px;
+  top: -15px;
+  left: 10px;
+}
+
+.cloud-1::after {
+  width: 40px;
+  height: 25px;
+  top: -10px;
+  right: 5px;
+}
+
+.cloud-2 {
+  width: 80px;
+  height: 25px;
+  top: 25%;
+  left: 50%;
+}
+
+.cloud-2::before {
+  width: 40px;
+  height: 40px;
+  top: -20px;
+  left: 15px;
+}
+
+.cloud-2::after {
+  width: 50px;
+  height: 30px;
+  top: -15px;
+  right: 10px;
+}
+
+.cloud-3 {
+  width: 70px;
+  height: 22px;
+  top: 20%;
+  left: 80%;
+}
+
+.cloud-3::before {
+  width: 35px;
+  height: 35px;
+  top: -18px;
+  left: 12px;
+}
+
+.cloud-3::after {
+  width: 45px;
+  height: 28px;
+  top: -12px;
+  right: 8px;
+}
+
+.cloud-4 {
+  width: 65px;
+  height: 18px;
+  top: 30%;
+  left: 120%;
+}
+
+.cloud-4::before {
+  width: 32px;
+  height: 32px;
+  top: -16px;
+  left: 8px;
+}
+
+.cloud-4::after {
+  width: 42px;
+  height: 26px;
+  top: -10px;
+  right: 6px;
+}
+
+/* Trees */
+.trees-container {
+  position: relative;
+  width: 150%;
+  height: 100%;
+  animation: scrollMedium 40s linear infinite;
+}
+
+.tree {
+  position: absolute;
+  bottom: 0;
+}
+
+.tree::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 8px;
+  height: 40px;
+  background: #8B4513;
+  border: 1px solid #654321;
+}
+
+.tree::after {
+  content: '';
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 20px solid transparent;
+  border-right: 20px solid transparent;
+  border-bottom: 60px solid #228B22;
+  filter: drop-shadow(2px 2px 0px #1a5a1a);
+}
+
+.tree-1 { left: 20%; }
+.tree-2 { left: 45%; }
+.tree-3 { left: 70%; }
+.tree-4 { left: 95%; }
+.tree-5 { left: 125%; }
+
+/* Ground - fixed and continuous */
+.ground-surface {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 8px;
+  background: #228B22;
+  border-bottom: 2px solid #1a5a1a;
+}
+
+.ground-base {
+  position: absolute;
+  top: 8px;
+  left: 0;
+  width: 100%;
+  height: 24px;
+  background: linear-gradient(to bottom, #8B4513 0%, #654321 100%);
+  background-image: 
+    repeating-linear-gradient(
+      90deg,
+      transparent 0px,
+      transparent 15px,
+      rgba(0,0,0,0.1) 15px,
+      rgba(0,0,0,0.1) 16px
+    );
+}
+
+/* Grass tufts */
+.grass-container {
+  position: relative;
+  width: 150%;
+  height: 100%;
+  animation: scrollFast 30s linear infinite;
+}
+
+.grass-tuft {
+  position: absolute;
+  bottom: 0;
+  width: 12px;
+  height: 24px;
+  background: #228B22;
+  border: 1px solid #1a5a1a;
+  clip-path: polygon(
+    20% 100%, 30% 80%, 40% 90%, 50% 60%, 60% 85%, 70% 70%, 80% 100%
+  );
+}
+
+.grass-1 { left: 25%; }
+.grass-2 { left: 60%; }
+.grass-3 { left: 90%; }
+.grass-4 { left: 110%; }
+.grass-5 { left: 135%; }
+
+/* Hover effects */
+button:hover {
+  box-shadow: 
+    0 0 20px rgba(255, 255, 0, 0.5),
+    inset 0 0 20px rgba(255, 255, 0, 0.1);
+}
+
+/* Additional pixel art styling */
+* {
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
+
+/* World-specific decorations */
+.desert-dunes {
+  position: relative;
+  width: 150%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    45deg,
+    #DAA520 0px,
+    #DAA520 20px,
+    #CD853F 20px,
+    #CD853F 40px
+  );
+  animation: scrollMedium 50s linear infinite;
+}
+
+.snow-particles {
+  position: relative;
+  width: 150%;
+  height: 100%;
+  background-image: 
+    radial-gradient(2px 2px at 20px 30px, white, transparent),
+    radial-gradient(1px 1px at 40px 70px, white, transparent),
+    radial-gradient(1px 1px at 90px 40px, white, transparent);
+  background-size: 100px 100px;
+  animation: scrollSlow 30s linear infinite;
+}
+
+.cyber-grid {
+  position: relative;
+  width: 150%;
+  height: 100%;
+  background-image: 
+    linear-gradient(cyan 1px, transparent 1px),
+    linear-gradient(90deg, cyan 1px, transparent 1px);
+  background-size: 50px 50px;
+  opacity: 0.3;
+  animation: scrollFast 25s linear infinite;
+}
+
+.haunted-mist {
+  position: relative;
+  width: 150%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(139, 0, 139, 0.3) 25%,
+    rgba(139, 0, 139, 0.5) 50%,
+    rgba(139, 0, 139, 0.3) 75%,
+    transparent 100%
+  );
+  animation: scrollSlow 40s linear infinite;
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
