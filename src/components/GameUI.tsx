@@ -31,9 +31,22 @@ const GameUI: React.FC<GameUIProps> = ({ gameState, worlds, onShowWorldMap, onSp
             <div className="text-red-400">
               ⚔️ ATTACK: {gameState.attackPower}
             </div>
+            <div className="text-orange-400">
+              🍗 CHICKEN: {gameState.chicken}
+            </div>
+            <div className="text-purple-400">
+              💪 STRENGTH: {gameState.strength}
+            </div>
           </div>
           
           <div className="flex space-x-4">
+            <button
+              onClick={onTogglePause}
+              className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded border-2 border-yellow-400 transition-all duration-200"
+            >
+              ⏸️ PAUSE
+            </button>
+            
             <button
               onClick={onShowWorldMap}
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded border-2 border-blue-400 transition-all duration-200"
