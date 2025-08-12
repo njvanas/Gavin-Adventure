@@ -14,7 +14,6 @@ const Player: React.FC<PlayerProps> = ({ gameState, onUpdatePosition, onFlexBatt
   const [facingRight, setFacingRight] = useState(true);
   const [isFlexing, setIsFlexing] = useState(false);
   const [isClimbing, setIsClimbing] = useState(false);
-  const [isClimbing, setIsClimbing] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const keysPressed = useRef<Set<string>>(new Set());
   const animationFrameRef = useRef<number>();
