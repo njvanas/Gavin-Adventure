@@ -6,6 +6,10 @@ export const k: KaboomCtx = kaboom({
   letterbox: true,            // keep aspect ratio
   width: 800,
   height: 600,
+  // Performance optimizations
+  crisp: true,                // Crisp pixel art
+  pixelDensity: 1,           // Force 1:1 pixel ratio
+  touchToMouse: false,       // Disable touch to mouse conversion
 });
 
 // Global config

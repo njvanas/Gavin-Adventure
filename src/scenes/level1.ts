@@ -78,22 +78,18 @@ export default function level1() {
     k.z(100)
   ]);
 
-  k.onUpdate(() => {
-    coinsText.text = `💪 COINS: ${coins}`;
-    strengthText.text = `💪 STRENGTH: ${strength}%`;
-    chickenText.text = `🍗 CHICKEN: ${chickenNeeded} COINS`;
-    progressText.text = `🏃 PROGRESS: ${Math.floor(levelProgress)}m`;
-    terrainText.text = `🌍 TERRAIN: ${terrainChunks.size} chunks`;
-    
-    // Update strength color based on level
-    if (strength > 70) {
-      strengthText.color = k.rgb(0, 255, 0); // Green - strong
-    } else if (strength > 40) {
-      strengthText.color = k.rgb(255, 255, 0); // Yellow - weakening
-    } else {
-      strengthText.color = k.rgb(255, 0, 0); // Red - weak
-    }
-  });
+  const fpsText = k.add([
+    k.text("⚡ FPS: 60", { 
+      size: 16, 
+      font: "Arial"
+    }), 
+    k.pos(16, 136), 
+    k.fixed(),
+    k.color(255, 255, 0),
+    k.z(100)
+  ]);
+
+  // Initial UI update - will be called after terrainChunks is defined
 
   // Camera follow with smooth movement
   k.onUpdate(() => {
@@ -107,14 +103,48 @@ export default function level1() {
     
     // Update progress based on player position
     levelProgress = Math.max(levelProgress, (plr.pos.x - 160) / 10);
-    
-    // Manage terrain chunks based on player position
-    manageTerrainChunks();
   });
+
+  // Optimize terrain chunk management - only update every few frames to reduce stuttering
+  let frameCount = 0;
+  k.onUpdate(() => {
+    frameCount++;
+    // Only manage terrain chunks every 10 frames to reduce stuttering
+    if (frameCount % 10 === 0) {
+      manageTerrainChunks();
+    }
+    
+    // Only update UI every 5 frames to reduce stuttering
+    if (frameCount % 5 === 0) {
+      updateUI();
+    }
+  });
+
+  // Separate UI update function for better performance
+  function updateUI() {
+    coinsText.text = `💪 COINS: ${coins}`;
+    strengthText.text = `💪 STRENGTH: ${strength}%`;
+    chickenText.text = `🍗 CHICKEN: ${chickenNeeded} COINS`;
+    progressText.text = `🏃 PROGRESS: ${Math.floor(levelProgress)}m`;
+    terrainText.text = `🌍 TERRAIN: ${terrainChunks.size} chunks`;
+    
+    // Update FPS display
+    const currentFPS = Math.round(1 / k.dt());
+    fpsText.text = `⚡ FPS: ${currentFPS}`;
+    
+    // Update strength color based on level
+    if (strength > 70) {
+      strengthText.color = k.rgb(0, 255, 0); // Green - strong
+    } else if (strength > 40) {
+      strengthText.color = k.rgb(255, 255, 0); // Yellow - weakening
+    } else {
+      strengthText.color = k.rgb(255, 0, 0); // Red - weak
+    }
+  }
 
   // Infinite Terrain System
   const CHUNK_SIZE = 400; // Size of each terrain chunk
-  const RENDER_DISTANCE = 3; // How many chunks to keep active
+  const RENDER_DISTANCE = 2; // Reduced from 3 to 2 for better performance
   const terrainChunks = new Map<number, TerrainChunk>(); // chunkIndex -> TerrainChunk
   
   interface TerrainChunk {
@@ -161,7 +191,16 @@ export default function level1() {
       k.area(),
       k.z(20),
       "coin",
+      // Add a simple animation to make coins more visible
+      k.rotate(0),
     ]);
+
+  // Simple coin rotation animation
+  k.onUpdate(() => {
+    k.get("coin").forEach(coin => {
+      coin.rotate += 1;
+    });
+  });
 
   // Terrain chunk management
   function manageTerrainChunks() {
@@ -211,13 +250,22 @@ export default function level1() {
     const chunk = terrainChunks.get(chunkIndex);
     if (!chunk) return;
     
-    // Destroy all game objects in this chunk
-    chunk.platforms.forEach(obj => k.destroy(obj));
-    chunk.coins.forEach(obj => k.destroy(obj));
-    chunk.enemies.forEach(obj => k.destroy(obj));
-    chunk.checkpoints.forEach(obj => k.destroy(obj));
-    chunk.chickenShops.forEach(obj => k.destroy(obj));
-    chunk.hazards.forEach(obj => k.destroy(obj));
+    // Batch destroy all game objects in this chunk for better performance
+    const allObjects = [
+      ...chunk.platforms,
+      ...chunk.coins,
+      ...chunk.enemies,
+      ...chunk.checkpoints,
+      ...chunk.chickenShops,
+      ...chunk.hazards
+    ];
+    
+    // Destroy all objects at once
+    allObjects.forEach(obj => {
+      if (obj && obj.exists && obj.exists()) {
+        k.destroy(obj);
+      }
+    });
     
     // Clear arrays
     chunk.platforms = [];
@@ -235,19 +283,19 @@ export default function level1() {
   function generateChunkTerrain(chunk: TerrainChunk) {
     const { startX, endX } = chunk;
     
-    // Generate ground platforms
+    // Generate ground platforms - simplified for better performance
     let currentX = startX;
     while (currentX < endX) {
-      const platformWidth = 100 + Math.random() * 200;
+      const platformWidth = 150 + Math.random() * 150; // Reduced variation for better performance
       const platformEnd = Math.min(currentX + platformWidth, endX);
       
       // Ground platform
       const platform = solid(currentX, groundY, platformEnd - currentX, 24, k.rgb(139, 69, 19));
       chunk.platforms.push(platform);
       
-      // Add gaps for challenge (but not too many)
-      if (Math.random() > 0.8 && currentX + platformWidth < endX - 100) {
-        const gapWidth = 30 + Math.random() * 50;
+      // Add gaps for challenge (but not too many) - reduced frequency
+      if (Math.random() > 0.9 && currentX + platformWidth < endX - 100) { // Reduced from 0.8 to 0.9
+        const gapWidth = 30 + Math.random() * 40; // Reduced max gap width
         const hazardObj = hazard(currentX + platformWidth, groundY, gapWidth, 24);
         chunk.hazards.push(hazardObj);
         currentX += gapWidth;
@@ -256,10 +304,11 @@ export default function level1() {
       currentX = platformEnd;
     }
     
-    // Generate floating platforms
-    for (let i = 0; i < 3 + Math.random() * 4; i++) {
+    // Generate floating platforms - make them reachable by jumping
+    for (let i = 0; i < 2 + Math.random() * 3; i++) { // Reduced from 3-7 to 2-5 platforms
       const x = startX + Math.random() * (endX - startX - 100);
-      const y = groundY - 80 - Math.random() * 120;
+      // Adjust height to be easily reachable by jumping (max jump height is around 120-150 pixels)
+      const y = groundY - 40 - Math.random() * 30; // Range: 40-70 pixels above ground (much more reachable)
       const width = 60 + Math.random() * 80;
       
       const platform = solid(x, y, width, 12, k.rgb(160, 82, 45));
@@ -273,14 +322,14 @@ export default function level1() {
     }
     
     // Generate coins on ground
-    for (let i = 0; i < 2 + Math.random() * 3; i++) {
+    for (let i = 0; i < 1 + Math.random() * 2; i++) { // Reduced from 2-5 to 1-3 coins
       const x = startX + Math.random() * (endX - startX - 50);
       const coinObj = coin(x, groundY - 30);
       chunk.coins.push(coinObj);
     }
     
     // Generate enemies
-    for (let i = 0; i < 1 + Math.random() * 2; i++) {
+    for (let i = 0; i < Math.random() * 2; i++) { // Reduced from 1-3 to 0-2 enemies
       const x = startX + Math.random() * (endX - startX - 50);
       const enemy = spawnPatroller({ 
         x, 
@@ -319,6 +368,9 @@ export default function level1() {
   for (let i = 0; i <= RENDER_DISTANCE; i++) {
     hydrateChunk(i);
   }
+
+  // Now that terrainChunks is defined, we can call updateUI
+  updateUI();
 
   // Enhanced collisions with bodybuilding theme
   plr.onCollide("coin", (c) => {
@@ -435,25 +487,70 @@ export default function level1() {
     }
   });
 
-  // Enemy collision - they steal your gains!
-  plr.onCollide("enemy", () => {
-    strength -= 20; // Enemies drain your strength!
-    if (strength < 0) strength = 0;
-    
-    k.shake(4);
-    // Add strength drain effect
-    k.add([
-      k.pos(plr.pos.x, plr.pos.y - 20),
-      k.text("GAINS STOLEN!", { size: 16, font: "Arial" }),
-      k.color(255, 0, 0),
-      k.move(k.vec2(0, -40), 70),
-      k.opacity(0),
-      k.lifespan(1.2),
-      k.z(50)
-    ]);
-    
-    // Push player back
-    plr.move(-100, 0);
+  // Enhanced enemy collision with stomping mechanics
+  plr.onCollide("enemy", (enemy) => {
+    // Check if player is falling and above the enemy (stomping)
+    if (plr.vel.y > 0 && plr.pos.y < enemy.pos.y - 8) {
+      // STOMP! Kill the enemy and get a boost
+      k.destroy(enemy);
+      strength += 5; // Stomping enemies gives you strength!
+      if (strength > 100) strength = 100;
+      
+      // Bounce effect
+      plr.vel.y = -300;
+      
+      // Stomp effect
+      k.add([
+        k.pos(plr.pos.x, plr.pos.y - 20),
+        k.text("STOMP!", { size: 18, font: "Arial" }),
+        k.color(255, 255, 0),
+        k.move(k.vec2(0, -40), 60),
+        k.opacity(0),
+        k.lifespan(1.2),
+        k.z(50)
+      ]);
+      
+      // Strength boost effect
+      k.add([
+        k.pos(plr.pos.x, plr.pos.y - 40),
+        k.text("+5 STRENGTH!", { size: 16, font: "Arial" }),
+        k.color(0, 255, 0),
+        k.move(k.vec2(0, -30), 50),
+        k.opacity(0),
+        k.lifespan(1),
+        k.z(50)
+      ]);
+      
+      k.shake(2);
+      
+      // Remove enemy from chunk tracking
+      for (const chunk of terrainChunks.values()) {
+        const enemyIndex = chunk.enemies.indexOf(enemy);
+        if (enemyIndex !== -1) {
+          chunk.enemies.splice(enemyIndex, 1);
+          break;
+        }
+      }
+    } else {
+      // Side collision - enemy steals your gains
+      strength -= 20;
+      if (strength < 0) strength = 0;
+      
+      k.shake(4);
+      // Add strength drain effect
+      k.add([
+        k.pos(plr.pos.x, plr.pos.y - 20),
+        k.text("GAINS STOLEN!", { size: 16, font: "Arial" }),
+        k.color(255, 0, 0),
+        k.move(k.vec2(0, -40), 70),
+        k.opacity(0),
+        k.lifespan(1.2),
+        k.z(50)
+      ]);
+      
+      // Push player back
+      plr.move(-100, 0);
+    }
   });
 
   // Enhanced respawn handling

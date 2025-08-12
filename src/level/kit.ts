@@ -29,9 +29,9 @@ export function hazard(x: number, y: number, w: number, h: number) {
   ]);
 }
 
-export function coin(pos: k.Vec2) {
+export function coin(pos: { x: number; y: number }) {
   return k.add([
-    k.pos(pos),
+    k.pos(pos.x, pos.y),
     k.sprite("coin"),
     k.area(),              // keep one
     k.anchor("center"),

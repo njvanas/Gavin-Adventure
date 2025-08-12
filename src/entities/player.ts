@@ -18,6 +18,7 @@ export function spawnPlayer(p = k.vec2(64, 0), useStickman = false) {
     k.body({ jumpForce: JUMP }),
     k.color(255, 255, 255),
     k.opacity(useStickman ? 0 : 1),
+    k.scale(1, 1),
     "player",
   ]);
 
@@ -51,7 +52,7 @@ export function spawnPlayer(p = k.vec2(64, 0), useStickman = false) {
     }
   });
 
-  for (const key of ["space", "up", "w"]) {
+  for (const key of ["space", "up", "w"] as const) {
     k.onKeyPress(key, () => {
       if (ducking) return;
       if (plr.isGrounded()) {

@@ -121,6 +121,7 @@ export default function Title() {
     k.area(),
     k.fixed(),
     k.color(0, 255, 0),
+    k.scale(1, 1),
     k.z(100)
   ]);
 
@@ -145,7 +146,8 @@ export default function Title() {
     const particle = k.add([
       k.pos(Math.random() * 800, Math.random() * 600),
       k.circle(2),
-      k.color(255, 165, 0, 0.6),
+      k.color(255, 165, 0),
+      k.opacity(0.6),
       k.move(k.vec2(0, -30), 0),
       k.z(50),
       k.lifespan(4)

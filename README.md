@@ -42,6 +42,13 @@ The game features a revolutionary **infinite terrain system** that dynamically m
 - **Enemies**: -20 strength (they steal your gains!)
 - **Cardio zones**: -15 strength (drains your gains!)
 - **Chicken shop**: Restores to 100% strength
+- **Stomping enemies**: +5 strength (classic Mario-style!)
+
+### **Combat & Movement**
+- **Stomping**: Jump on enemies to kill them and gain strength
+- **Bounce effect**: Stomping enemies gives you a boost upward
+- **Side collision**: Touching enemies from the side steals your gains
+- **Platform accessibility**: All floating platforms are reachable by jumping
 
 ### **Coin Economy**
 - **Chicken cost**: Starts at 50 coins, increases by 25 each level

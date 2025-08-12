@@ -90,7 +90,7 @@ export function buildFromTiled(map: TiledMap): BuiltMapRefs {
   // Object layers
   const coins = map.layers.find(l => l.name === "coins" && l.type === "objectgroup");
   coins?.objects?.forEach(o => {
-    coin(o.x, o.y);
+    coin(k.vec2(o.x, o.y));
   });
 
   const entities = map.layers.find(l => l.name === "entities" && l.type === "objectgroup");

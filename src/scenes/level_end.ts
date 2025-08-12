@@ -80,6 +80,7 @@ export default function level_end(data?: LevelEndData) {
       k.color(230, 230, 240),
       k.area(),
       k.fixed(),
+      k.scale(1, 1),
       k.z(11),
       { onClick },
     ]);
