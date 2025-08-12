@@ -1,12 +1,10 @@
-import { defineConfig } from "vite";
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
+// https://vitejs.dev/config/
 export default defineConfig({
-  // Set the base path to your repo name so assets resolve correctly on GitHub Pages
-  base: "/Gavin-Adventure/",
-  server: {
-    port: 5173,
-  },
-  build: {
-    outDir: "dist",
+  plugins: [react()],
+  optimizeDeps: {
+    exclude: ['lucide-react'],
   },
 });
