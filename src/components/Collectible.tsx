@@ -1,12 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { COINS, CHICKEN, DUMBBELLS, SUPER_SERUM } from '../config/Assets';
+import SpriteRenderer from './SpriteRenderer';
 
 interface CollectibleProps {
   id: number;
   x: number;
   y: number;
-  type: 'coin' | 'gem';
+  type: 'coin' | 'gem' | 'chicken' | 'dumbbell' | 'serum';
   playerPosition: { x: number; y: number };
-  onCollect: (id: number, type: 'coin' | 'gem') => void;
+  onCollect: (id: number, type: string, value: number, strength?: number) => void;
+  rarity?: 'common' | 'rare' | 'epic' | 'legendary';
 }
 
 const Collectible: React.FC<CollectibleProps> = ({ 
@@ -15,63 +18,140 @@ const Collectible: React.FC<CollectibleProps> = ({
   y, 
   type, 
   playerPosition, 
-  onCollect 
+  onCollect,
+  rarity = 'common'
 }) => {
-  const [collected, setCollected] = useState(false);
-  const [bounce, setBounce] = useState(0);
-  
-  const groundLevel = 128;
+  const [isCollected, setIsCollected] = useState(false);
+  const [isFloating, setIsFloating] = useState(false);
+  const [floatOffset, setFloatOffset] = useState(0);
 
+  // Get the appropriate asset based on type
+  const getCollectibleAsset = () => {
+    switch (type) {
+      case 'coin':
+        return COINS[0]; // Gold coin
+      case 'gem':
+        return COINS[1]; // Silver coin (gem)
+      case 'chicken':
+        return CHICKEN;
+      case 'dumbbell':
+        // Randomly select a dumbbell based on rarity
+        if (rarity === 'legendary') return DUMBBELLS[2]; // Large
+        if (rarity === 'epic') return DUMBBELLS[1]; // Medium
+        return DUMBBELLS[0]; // Small
+      case 'serum':
+        return SUPER_SERUM;
+      default:
+        return COINS[0];
+    }
+  };
+
+  const asset = getCollectibleAsset();
+
+  // Floating animation
   useEffect(() => {
-    const bounceInterval = setInterval(() => {
-      setBounce(prev => (prev + 1) % 60);
+    if (isCollected) return;
+
+    const floatInterval = setInterval(() => {
+      setFloatOffset(prev => (prev + 0.5) % (Math.PI * 2));
     }, 50);
 
-    return () => clearInterval(bounceInterval);
-  }, []);
+    return () => clearInterval(floatInterval);
+  }, [isCollected]);
 
+  // Check collision with player
   useEffect(() => {
+    if (isCollected) return;
+
+    const playerSize = 64;
+    const collectibleSize = (asset.width || 32);
+    
     const distance = Math.sqrt(
-      Math.pow(playerPosition.x - x, 2) + Math.pow((groundLevel + playerPosition.y) - (groundLevel + y), 2)
+      Math.pow(x - playerPosition.x, 2) + 
+      Math.pow(y - playerPosition.y, 2)
     );
 
-    if (distance < 50 && !collected) {
-      setCollected(true);
-      onCollect(id, type);
+    if (distance < (playerSize + collectibleSize) / 2) {
+      collectItem();
     }
-  }, [playerPosition, x, y, id, type, onCollect, collected]);
+  }, [x, y, playerPosition, isCollected, asset.width]);
 
-  if (collected) return null;
+  const collectItem = () => {
+    if (isCollected) return;
 
-  const bounceOffset = Math.sin(bounce * 0.2) * 8;
+    setIsCollected(true);
+    
+    // Call the collect callback with appropriate values
+    const value = asset.properties.value || 0;
+    const strength = asset.properties.strength || 0;
+    
+    onCollect(id, type, value, strength);
+    
+    // Add collection effect
+    setIsFloating(true);
+    setTimeout(() => setIsFloating(false), 1000);
+  };
+
+  if (isCollected) {
+    return null;
+  }
+
+  const rarityColors = {
+    common: 'border-gray-400',
+    rare: 'border-blue-400',
+    epic: 'border-purple-400',
+    legendary: 'border-yellow-400'
+  };
+
+  const rarityGlow = {
+    common: '',
+    rare: 'shadow-blue-400',
+    epic: 'shadow-purple-400',
+    legendary: 'shadow-yellow-400'
+  };
 
   return (
     <div
-      className="absolute z-30 transition-all duration-200 hover:scale-110"
+      className={`absolute z-30 ${rarityGlow[rarity]}`}
       style={{
         left: x,
-        bottom: groundLevel + y + bounceOffset,
-        width: 32,
-        height: 32
+        bottom: 128 + y + Math.sin(floatOffset) * 5, // Ground level + offset + floating effect
+        transform: `scale(${isFloating ? 1.5 : 1})`,
+        transition: 'transform 0.3s ease-out'
       }}
     >
-      {type === 'coin' ? (
-        <div className="w-8 h-8 bg-yellow-400 border-2 border-yellow-600 rounded-full flex items-center justify-center pixel-font text-lg animate-spin">
-          💰
-        </div>
-      ) : (
-        <div className="w-8 h-8 bg-purple-400 border-2 border-purple-600 rounded-sm flex items-center justify-center pixel-font text-lg animate-pulse">
-          💎
+      {/* Rarity border */}
+      <div className={`absolute inset-0 border-2 ${rarityColors[rarity]} rounded-full opacity-50`}></div>
+      
+      {/* Main sprite */}
+      <SpriteRenderer
+        asset={asset}
+        x={0}
+        y={0}
+        scale={1}
+        isActive={true}
+        className="relative z-10"
+      />
+      
+      {/* Collection effect */}
+      {isFloating && (
+        <div className="absolute inset-0 bg-yellow-400 rounded-full animate-ping opacity-75"></div>
+      )}
+      
+      {/* Rarity indicator */}
+      {rarity !== 'common' && (
+        <div className={`absolute -top-2 -right-2 w-3 h-3 rounded-full border-2 ${rarityColors[rarity]} bg-white text-xs flex items-center justify-center`}>
+          {rarity === 'rare' && 'R'}
+          {rarity === 'epic' && 'E'}
+          {rarity === 'legendary' && 'L'}
         </div>
       )}
       
-      {/* Collection hint */}
-      <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-white pixel-font text-xs opacity-75">
-        {type === 'coin' ? '+10' : '+50'}
+      {/* Value display */}
+      <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-white pixel-font text-xs text-center opacity-75">
+        {asset.properties.value && `+${asset.properties.value}`}
+        {asset.properties.strength && `💪+${asset.properties.strength}`}
       </div>
-      
-      {/* Glow effect */}
-      <div className={`absolute inset-0 ${type === 'coin' ? 'bg-yellow-400' : 'bg-purple-400'} rounded-full opacity-30 animate-ping`}></div>
     </div>
   );
 };

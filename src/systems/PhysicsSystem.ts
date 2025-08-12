@@ -1,304 +1,174 @@
 import { PlayerState, Platform, Enemy, GamePhysics } from '../types/GameTypes';
 
+export interface PhysicsBody {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  velocityX: number;
+  velocityY: number;
+  onGround: boolean;
+  canJump: boolean;
+}
+
+export interface PhysicsConfig {
+  gravity: number;
+  maxFallSpeed: number;
+  moveSpeed: number;
+  jumpPower: number;
+  acceleration: number;
+  deceleration: number;
+  airResistance: number;
+  jumpCutoff: number;
+}
+
 export class PhysicsSystem {
-  private physics: GamePhysics = {
-    gravity: 0.8,
-    friction: 0.85,
-    airResistance: 0.98,
-    terminalVelocity: 16,
-    jumpBufferTime: 150, // ms
-    coyoteTime: 100 // ms
-  };
+  private config: PhysicsConfig;
 
-  private jumpBuffer: number = 0;
-  private coyoteTimer: number = 0;
-  private lastGroundedTime: number = 0;
+  constructor(config: Partial<PhysicsConfig> = {}) {
+    this.config = {
+      gravity: 0.8,
+      maxFallSpeed: 12,
+      moveSpeed: 6,
+      jumpPower: 15,
+      acceleration: 0.8,
+      deceleration: 0.9,
+      airResistance: 0.85,
+      jumpCutoff: 0.5,
+      ...config
+    };
+  }
 
-  updatePlayer(player: PlayerState, platforms: Platform[], deltaTime: number): PlayerState {
-    const newPlayer = { ...player };
+  updatePlayerPhysics(
+    body: PhysicsBody,
+    input: { left: boolean; right: boolean; jump: boolean; jumpPressed: boolean }
+  ): PhysicsBody {
+    const newBody = { ...body };
+    
+    // Horizontal movement with acceleration
+    if (input.left) {
+      newBody.velocityX = Math.max(
+        -this.config.moveSpeed,
+        newBody.velocityX - this.config.acceleration
+      );
+    } else if (input.right) {
+      newBody.velocityX = Math.min(
+        this.config.moveSpeed,
+        newBody.velocityX + this.config.acceleration
+      );
+    } else {
+      // Apply deceleration when no input
+      if (newBody.onGround) {
+        newBody.velocityX *= this.config.deceleration;
+      } else {
+        newBody.velocityX *= this.config.airResistance;
+      }
+      
+      // Stop completely if very slow
+      if (Math.abs(newBody.velocityX) < 0.1) {
+        newBody.velocityX = 0;
+      }
+    }
+
+    // Jumping with variable height
+    if (input.jumpPressed && newBody.canJump && newBody.onGround) {
+      newBody.velocityY = -this.config.jumpPower;
+      newBody.onGround = false;
+      newBody.canJump = false;
+    }
+
+    // Variable jump height - cut jump short if button released
+    if (input.jump && newBody.velocityY < 0) {
+      // Continue jump
+    } else if (!input.jump && newBody.velocityY < 0) {
+      // Cut jump short
+      newBody.velocityY *= this.config.jumpCutoff;
+    }
 
     // Apply gravity
-    if (!newPlayer.isGrounded) {
-      newPlayer.velocity.y += this.physics.gravity;
-      newPlayer.velocity.y = Math.min(newPlayer.velocity.y, this.physics.terminalVelocity);
-    }
-
-    // Handle jump buffering and coyote time
-    if (newPlayer.isGrounded) {
-      this.lastGroundedTime = Date.now();
-      this.coyoteTimer = this.physics.coyoteTime;
-    } else {
-      this.coyoteTimer = Math.max(0, this.coyoteTimer - deltaTime);
-    }
-
-    // Apply horizontal friction
-    if (newPlayer.isGrounded) {
-      newPlayer.velocity.x *= this.physics.friction;
-    } else {
-      newPlayer.velocity.x *= this.physics.airResistance;
+    if (!newBody.onGround) {
+      newBody.velocityY = Math.min(
+        this.config.maxFallSpeed,
+        newBody.velocityY + this.config.gravity
+      );
     }
 
     // Update position
-    newPlayer.position.x += newPlayer.velocity.x;
-    newPlayer.position.y += newPlayer.velocity.y;
+    newBody.x += newBody.velocityX;
+    newBody.y += newBody.velocityY;
 
-    // Collision detection and response
-    const collisionResult = this.checkPlatformCollisions(newPlayer, platforms);
-    newPlayer.position = collisionResult.position;
-    newPlayer.velocity = collisionResult.velocity;
-    newPlayer.isGrounded = collisionResult.isGrounded;
-
-    // Update invulnerability
-    if (newPlayer.invulnerable) {
-      newPlayer.invulnerabilityTimer -= deltaTime;
-      if (newPlayer.invulnerabilityTimer <= 0) {
-        newPlayer.invulnerable = false;
-      }
+    // Reset jump ability when landing
+    if (newBody.onGround && newBody.velocityY >= 0) {
+      newBody.canJump = true;
     }
 
-    return newPlayer;
+    return newBody;
   }
 
-  private checkPlatformCollisions(player: PlayerState, platforms: Platform[]) {
-    let newPosition = { ...player.position };
-    let newVelocity = { ...player.velocity };
-    let isGrounded = false;
-
-    const playerBounds = this.getPlayerBounds(player);
-
-    for (const platform of platforms) {
-      if (!platform.isActive) continue;
-
-      const platformBounds = {
-        left: platform.x,
-        right: platform.x + platform.width,
-        top: platform.y,
-        bottom: platform.y + platform.height
-      };
-
-      // Check for collision
-      if (this.boundsIntersect(playerBounds, platformBounds)) {
-        const overlapX = Math.min(playerBounds.right - platformBounds.left, platformBounds.right - playerBounds.left);
-        const overlapY = Math.min(playerBounds.bottom - platformBounds.top, platformBounds.bottom - playerBounds.top);
-
-        // Resolve collision based on smallest overlap
-        if (overlapX < overlapY) {
-          // Horizontal collision
-          if (playerBounds.left < platformBounds.left) {
-            newPosition.x = platformBounds.left - this.getPlayerWidth(player);
-          } else {
-            newPosition.x = platformBounds.right;
-          }
-          newVelocity.x = 0;
-        } else {
-          // Vertical collision
-          if (playerBounds.top < platformBounds.top) {
-            // Landing on top of platform
-            newPosition.y = platformBounds.top - this.getPlayerHeight(player);
-            newVelocity.y = 0;
-            isGrounded = true;
-
-            // Handle special platform types
-            if (platform.type === 'question' && platform.contains) {
-              this.activateQuestionBlock(platform);
-            } else if (platform.type === 'breakable' && player.size !== 'small' && newVelocity.y < 0) {
-              this.breakBlock(platform);
-            }
-          } else {
-            // Hitting platform from below
-            newPosition.y = platformBounds.bottom;
-            newVelocity.y = 0;
-          }
-        }
-      }
-    }
-
-    return {
-      position: newPosition,
-      velocity: newVelocity,
-      isGrounded
-    };
+  checkCollision(body1: PhysicsBody, body2: PhysicsBody): boolean {
+    return (
+      body1.x < body2.x + body2.width &&
+      body1.x + body1.width > body2.x &&
+      body1.y < body2.y + body2.height &&
+      body1.y + body1.height > body2.y
+    );
   }
 
-  private getPlayerBounds(player: PlayerState) {
-    const width = this.getPlayerWidth(player);
-    const height = this.getPlayerHeight(player);
+  resolveCollision(body: PhysicsBody, obstacle: PhysicsBody): PhysicsBody {
+    const newBody = { ...body };
     
-    return {
-      left: player.position.x,
-      right: player.position.x + width,
-      top: player.position.y,
-      bottom: player.position.y + height
-    };
-  }
+    // Calculate overlap
+    const overlapX = Math.min(
+      body.x + body.width - obstacle.x,
+      obstacle.x + obstacle.width - body.x
+    );
+    const overlapY = Math.min(
+      body.y + body.height - obstacle.y,
+      obstacle.y + obstacle.height - body.y
+    );
 
-  private getPlayerWidth(player: PlayerState): number {
-    return player.size === 'small' ? 32 : 32;
-  }
-
-  private getPlayerHeight(player: PlayerState): number {
-    return player.size === 'small' ? 32 : 64;
-  }
-
-  private boundsIntersect(a: any, b: any): boolean {
-    return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
-  }
-
-  private activateQuestionBlock(platform: Platform) {
-    if (platform.contains) {
-      // Spawn power-up or coin
-      platform.isActive = false;
-      // Trigger power-up spawn event
-    }
-  }
-
-  private breakBlock(platform: Platform) {
-    platform.isActive = false;
-    // Trigger break animation and sound
-  }
-
-  // Jump mechanics with variable height
-  initiateJump(player: PlayerState): PlayerState {
-    const newPlayer = { ...player };
-    
-    if (newPlayer.isGrounded || this.coyoteTimer > 0) {
-      newPlayer.velocity.y = -newPlayer.jumpPower;
-      newPlayer.isJumping = true;
-      newPlayer.jumpHoldTime = 0;
-      newPlayer.isGrounded = false;
-      this.coyoteTimer = 0;
+    // Resolve collision based on overlap direction
+    if (overlapX < overlapY) {
+      // Horizontal collision
+      if (body.x < obstacle.x) {
+        newBody.x = obstacle.x - body.width;
+      } else {
+        newBody.x = obstacle.x + obstacle.width;
+      }
+      newBody.velocityX = 0;
     } else {
-      // Buffer the jump
-      this.jumpBuffer = this.physics.jumpBufferTime;
-    }
-
-    return newPlayer;
-  }
-
-  continueJump(player: PlayerState, deltaTime: number): PlayerState {
-    const newPlayer = { ...player };
-    
-    if (newPlayer.isJumping && newPlayer.jumpHoldTime < newPlayer.maxJumpHoldTime) {
-      newPlayer.jumpHoldTime += deltaTime;
-      // Apply additional upward force for variable jump height
-      const jumpForce = (1 - newPlayer.jumpHoldTime / newPlayer.maxJumpHoldTime) * 0.5;
-      newPlayer.velocity.y -= jumpForce;
-    }
-
-    return newPlayer;
-  }
-
-  releaseJump(player: PlayerState): PlayerState {
-    const newPlayer = { ...player };
-    newPlayer.isJumping = false;
-    
-    // Reduce upward velocity for shorter jumps
-    if (newPlayer.velocity.y < 0) {
-      newPlayer.velocity.y *= 0.5;
-    }
-    
-    return newPlayer;
-  }
-
-  updateEnemies(enemies: Enemy[], platforms: Platform[], deltaTime: number): Enemy[] {
-    return enemies.map(enemy => {
-      const newEnemy = { ...enemy };
-
-      // Apply gravity
-      if (!newEnemy.isGrounded) {
-        newEnemy.velocity.y += this.physics.gravity;
-        newEnemy.velocity.y = Math.min(newEnemy.velocity.y, this.physics.terminalVelocity);
-      }
-
-      // Apply movement based on enemy type
-      switch (newEnemy.type) {
-        case 'goomba':
-          newEnemy.velocity.x = newEnemy.direction * 1;
-          break;
-        case 'koopa':
-          if (newEnemy.state === 'walking') {
-            newEnemy.velocity.x = newEnemy.direction * 1.5;
-          } else if (newEnemy.state === 'shell') {
-            newEnemy.velocity.x *= 0.95; // Friction for shell
-          }
-          break;
-      }
-
-      // Update position
-      newEnemy.x += newEnemy.velocity.x;
-      newEnemy.y += newEnemy.velocity.y;
-
-      // Platform collision for enemies
-      const enemyCollision = this.checkEnemyPlatformCollisions(newEnemy, platforms);
-      newEnemy.x = enemyCollision.x;
-      newEnemy.y = enemyCollision.y;
-      newEnemy.velocity = enemyCollision.velocity;
-      newEnemy.isGrounded = enemyCollision.isGrounded;
-
-      // Turn around at edges or walls
-      if (enemyCollision.hitWall) {
-        newEnemy.direction *= -1;
-      }
-
-      return newEnemy;
-    });
-  }
-
-  private checkEnemyPlatformCollisions(enemy: Enemy, platforms: Platform[]) {
-    // Similar to player collision but simpler
-    let newX = enemy.x;
-    let newY = enemy.y;
-    let newVelocity = { ...enemy.velocity };
-    let isGrounded = false;
-    let hitWall = false;
-
-    const enemyBounds = {
-      left: newX,
-      right: newX + 32,
-      top: newY,
-      bottom: newY + 32
-    };
-
-    for (const platform of platforms) {
-      if (!platform.isActive) continue;
-
-      const platformBounds = {
-        left: platform.x,
-        right: platform.x + platform.width,
-        top: platform.y,
-        bottom: platform.y + platform.height
-      };
-
-      if (this.boundsIntersect(enemyBounds, platformBounds)) {
-        const overlapX = Math.min(enemyBounds.right - platformBounds.left, platformBounds.right - enemyBounds.left);
-        const overlapY = Math.min(enemyBounds.bottom - platformBounds.top, platformBounds.bottom - enemyBounds.top);
-
-        if (overlapX < overlapY) {
-          // Horizontal collision - hit wall
-          hitWall = true;
-          if (enemyBounds.left < platformBounds.left) {
-            newX = platformBounds.left - 32;
-          } else {
-            newX = platformBounds.right;
-          }
-          newVelocity.x = 0;
-        } else {
-          // Vertical collision
-          if (enemyBounds.top < platformBounds.top) {
-            newY = platformBounds.top - 32;
-            newVelocity.y = 0;
-            isGrounded = true;
-          }
-        }
+      // Vertical collision
+      if (body.y < obstacle.y) {
+        // Landing on top
+        newBody.y = obstacle.y - body.height;
+        newBody.velocityY = 0;
+        newBody.onGround = true;
+      } else {
+        // Hitting head
+        newBody.y = obstacle.y + obstacle.height;
+        newBody.velocityY = 0;
       }
     }
 
-    return {
-      x: newX,
-      y: newY,
-      velocity: newVelocity,
-      isGrounded,
-      hitWall
-    };
+    return newBody;
+  }
+
+  // Check if player can jump through platform from below
+  canJumpThrough(body: PhysicsBody, platform: PhysicsBody): boolean {
+    return (
+      body.velocityY < 0 && // Moving upward
+      body.y + body.height > platform.y && // Below platform
+      body.y + body.height < platform.y + platform.height / 2 // Close to platform bottom
+    );
+  }
+
+  // Get physics configuration
+  getConfig(): PhysicsConfig {
+    return { ...this.config };
+  }
+
+  // Update physics configuration (for power-ups)
+  updateConfig(newConfig: Partial<PhysicsConfig>): void {
+    this.config = { ...this.config, ...newConfig };
   }
 }
