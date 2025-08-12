@@ -22,8 +22,7 @@ export default function level1() {
   const scoreText = k.add([
     k.text("Score: 0", { 
       size: 16, 
-      font: "Arial",
-      width: 200
+      font: "Arial"
     }), 
     k.pos(16, 16), 
     k.fixed(),
