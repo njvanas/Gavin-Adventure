@@ -67,11 +67,23 @@ export default function level1() {
     k.z(100)
   ]);
 
+  const terrainText = k.add([
+    k.text("🌍 TERRAIN: 0 chunks", { 
+      size: 16, 
+      font: "Arial"
+    }), 
+    k.pos(16, 112), 
+    k.fixed(),
+    k.color(34, 139, 34),
+    k.z(100)
+  ]);
+
   k.onUpdate(() => {
     coinsText.text = `💪 COINS: ${coins}`;
     strengthText.text = `💪 STRENGTH: ${strength}%`;
     chickenText.text = `🍗 CHICKEN: ${chickenNeeded} COINS`;
     progressText.text = `🏃 PROGRESS: ${Math.floor(levelProgress)}m`;
+    terrainText.text = `🌍 TERRAIN: ${terrainChunks.size} chunks`;
     
     // Update strength color based on level
     if (strength > 70) {
@@ -95,7 +107,28 @@ export default function level1() {
     
     // Update progress based on player position
     levelProgress = Math.max(levelProgress, (plr.pos.x - 160) / 10);
+    
+    // Manage terrain chunks based on player position
+    manageTerrainChunks();
   });
+
+  // Infinite Terrain System
+  const CHUNK_SIZE = 400; // Size of each terrain chunk
+  const RENDER_DISTANCE = 3; // How many chunks to keep active
+  const terrainChunks = new Map<number, TerrainChunk>(); // chunkIndex -> TerrainChunk
+  
+  interface TerrainChunk {
+    index: number;
+    startX: number;
+    endX: number;
+    platforms: any[];
+    coins: any[];
+    enemies: any[];
+    checkpoints: any[];
+    chickenShops: any[];
+    hazards: any[];
+    isHydrated: boolean;
+  }
 
   // Modern platform helpers with better colors
   const solid = (x: number, y: number, w: number, h: number, color = k.rgb(139, 69, 19)) =>
@@ -120,35 +153,6 @@ export default function level1() {
       "hazard",
     ]);
 
-  // Initial level layout
-  solid(120, groundY, 420, 24, k.rgb(139, 69, 19));        // left floor
-  hazard(540, groundY, 48, 24);        // gap hazard (cardio zone!)
-  solid(588, groundY, 340, 24, k.rgb(139, 69, 19));        // right floor
-  solid(380, groundY - 80, 64, 12, k.rgb(160, 82, 45));     // weight bench platform
-  
-  // Add more platforms for variety
-  solid(200, groundY - 120, 48, 12, k.rgb(160, 82, 45));    // protein shake platform
-  solid(600, groundY - 140, 48, 12, k.rgb(160, 82, 45));    // dumbbell platform
-  solid(400, groundY - 160, 64, 12, k.rgb(160, 82, 45));    // high-intensity platform
-
-  // Moving platform (treadmill!)
-  const treadmill = k.add([
-    k.pos(520, groundY - 50),
-    k.rect(60, 10),
-    k.area(),
-    k.body({ isStatic: true }),
-    k.color(70, 130, 180),
-    k.z(10),
-    "solid",
-    "treadmill",
-  ]);
-  const tStart = treadmill.pos.clone();
-  let t = 0;
-  k.onUpdate(() => {
-    t += k.dt();
-    treadmill.pos.x = tStart.x + Math.sin(t) * 40;
-  });
-
   // Enhanced coins with better positioning (protein sources!)
   const coin = (x: number, y: number) =>
     k.add([
@@ -158,47 +162,163 @@ export default function level1() {
       k.z(20),
       "coin",
     ]);
-  
-  // Better coin placement for jump arc and exploration
-  [420, 455, 490, 625].forEach((x, i) =>
-    coin(x, groundY - 110 + (i % 2 ? -6 : 0)),
-  );
-  
-  // Add more coins on platforms
-  [220, 620, 420].forEach((x, i) =>
-    coin(x, groundY - 130 + (i % 2 ? -10 : 0)),
-  );
 
-  // Chicken shop (goal instead of princess!)
-  k.add([
-    k.pos(940, groundY - 24),
-    k.sprite("door"),
-    k.area(),
-    k.z(15),
-    "chicken_shop",
-  ]);
+  // Terrain chunk management
+  function manageTerrainChunks() {
+    const playerChunkIndex = Math.floor(plr.pos.x / CHUNK_SIZE);
+    
+    // Hydrate new chunks ahead
+    for (let i = playerChunkIndex; i <= playerChunkIndex + RENDER_DISTANCE; i++) {
+      if (!terrainChunks.has(i)) {
+        hydrateChunk(i);
+      }
+    }
+    
+    // Dehydrate old chunks behind
+    for (const [index, chunk] of terrainChunks.entries()) {
+      if (index < playerChunkIndex - RENDER_DISTANCE) {
+        dehydrateChunk(index);
+      }
+    }
+  }
 
-  // Enhanced checkpoint with visual feedback
-  let respawn = spawn.clone();
-  const checkpoint = k.add([
-    k.pos(700, groundY - 24),
-    k.sprite("checkpoint"),
-    k.area(),
-    k.z(15),
-    "checkpoint",
-  ]);
+  function hydrateChunk(chunkIndex: number) {
+    if (terrainChunks.has(chunkIndex)) return; // Already hydrated
+    
+    const startX = chunkIndex * CHUNK_SIZE;
+    const endX = startX + CHUNK_SIZE;
+    
+    const chunk: TerrainChunk = {
+      index: chunkIndex,
+      startX,
+      endX,
+      platforms: [],
+      coins: [],
+      enemies: [],
+      checkpoints: [],
+      chickenShops: [],
+      hazards: [],
+      isHydrated: true
+    };
+    
+    // Generate terrain for this chunk
+    generateChunkTerrain(chunk);
+    
+    terrainChunks.set(chunkIndex, chunk);
+  }
 
-  // Checkpoint glow effect
-  let checkpointGlow = 0;
-  k.onUpdate(() => {
-    checkpointGlow += k.dt() * 3;
-    // Remove opacity animation to fix linter error
-  });
+  function dehydrateChunk(chunkIndex: number) {
+    const chunk = terrainChunks.get(chunkIndex);
+    if (!chunk) return;
+    
+    // Destroy all game objects in this chunk
+    chunk.platforms.forEach(obj => k.destroy(obj));
+    chunk.coins.forEach(obj => k.destroy(obj));
+    chunk.enemies.forEach(obj => k.destroy(obj));
+    chunk.checkpoints.forEach(obj => k.destroy(obj));
+    chunk.chickenShops.forEach(obj => k.destroy(obj));
+    chunk.hazards.forEach(obj => k.destroy(obj));
+    
+    // Clear arrays
+    chunk.platforms = [];
+    chunk.coins = [];
+    chunk.enemies = [];
+    chunk.checkpoints = [];
+    chunk.chickenShops = [];
+    chunk.hazards = [];
+    chunk.isHydrated = false;
+    
+    // Remove from map
+    terrainChunks.delete(chunkIndex);
+  }
 
-  // Add some enemy slimes (lazy people who don't work out!)
-  spawnPatroller({ x: 300, y: groundY - 12, speed: 40 });
-  spawnPatroller({ x: 500, y: groundY - 12, speed: 35 });
-  spawnPatroller({ x: 750, y: groundY - 12, speed: 45 });
+  function generateChunkTerrain(chunk: TerrainChunk) {
+    const { startX, endX } = chunk;
+    
+    // Generate ground platforms
+    let currentX = startX;
+    while (currentX < endX) {
+      const platformWidth = 100 + Math.random() * 200;
+      const platformEnd = Math.min(currentX + platformWidth, endX);
+      
+      // Ground platform
+      const platform = solid(currentX, groundY, platformEnd - currentX, 24, k.rgb(139, 69, 19));
+      chunk.platforms.push(platform);
+      
+      // Add gaps for challenge (but not too many)
+      if (Math.random() > 0.8 && currentX + platformWidth < endX - 100) {
+        const gapWidth = 30 + Math.random() * 50;
+        const hazardObj = hazard(currentX + platformWidth, groundY, gapWidth, 24);
+        chunk.hazards.push(hazardObj);
+        currentX += gapWidth;
+      }
+      
+      currentX = platformEnd;
+    }
+    
+    // Generate floating platforms
+    for (let i = 0; i < 3 + Math.random() * 4; i++) {
+      const x = startX + Math.random() * (endX - startX - 100);
+      const y = groundY - 80 - Math.random() * 120;
+      const width = 60 + Math.random() * 80;
+      
+      const platform = solid(x, y, width, 12, k.rgb(160, 82, 45));
+      chunk.platforms.push(platform);
+      
+      // Add coins on platforms
+      if (Math.random() > 0.3) {
+        const coinObj = coin(x + width/2, y - 20);
+        chunk.coins.push(coinObj);
+      }
+    }
+    
+    // Generate coins on ground
+    for (let i = 0; i < 2 + Math.random() * 3; i++) {
+      const x = startX + Math.random() * (endX - startX - 50);
+      const coinObj = coin(x, groundY - 30);
+      chunk.coins.push(coinObj);
+    }
+    
+    // Generate enemies
+    for (let i = 0; i < 1 + Math.random() * 2; i++) {
+      const x = startX + Math.random() * (endX - startX - 50);
+      const enemy = spawnPatroller({ 
+        x, 
+        y: groundY - 12, 
+        speed: 30 + Math.random() * 20 
+      });
+      chunk.enemies.push(enemy);
+    }
+    
+    // Add checkpoint (every few chunks)
+    if (chunk.index % 3 === 0) {
+      const checkpoint = k.add([
+        k.pos(startX + 200, groundY - 24),
+        k.sprite("checkpoint"),
+        k.area(),
+        k.z(15),
+        "checkpoint",
+      ]);
+      chunk.checkpoints.push(checkpoint);
+    }
+    
+    // Add chicken shop (every few chunks)
+    if (chunk.index % 5 === 0 && chunk.index > 0) {
+      const chickenShop = k.add([
+        k.pos(startX + 300, groundY - 24),
+        k.sprite("door"),
+        k.area(),
+        k.z(15),
+        "chicken_shop",
+      ]);
+      chunk.chickenShops.push(chickenShop);
+    }
+  }
+
+  // Initialize first few chunks
+  for (let i = 0; i <= RENDER_DISTANCE; i++) {
+    hydrateChunk(i);
+  }
 
   // Enhanced collisions with bodybuilding theme
   plr.onCollide("coin", (c) => {
@@ -248,7 +368,15 @@ export default function level1() {
   });
 
   plr.onCollide("checkpoint", (c) => {
-    respawn = c.pos.clone();
+    // Find which chunk this checkpoint belongs to
+    for (const chunk of terrainChunks.values()) {
+      if (chunk.checkpoints.includes(c)) {
+        // Set respawn to this checkpoint
+        respawn = c.pos.clone();
+        break;
+      }
+    }
+    
     // Checkpoint activation effect
     k.add([
       k.pos(c.pos.x, c.pos.y - 20),
@@ -292,8 +420,7 @@ export default function level1() {
       
       k.shake(5);
       
-      // Generate new endless level instead of going to level2
-      generateNewLevel();
+      // Progress continues infinitely - no need to generate new level
     } else {
       // Not enough coins
       k.add([
@@ -330,13 +457,13 @@ export default function level1() {
   });
 
   // Enhanced respawn handling
+  let respawn = spawn.clone();
   k.onUpdate(() => {
     if (strength <= 0) {
       k.wait(0.05, () => {
         plr.pos = respawn.clone().sub(k.vec2(0, SPAWN_Y_OFFSET));
         strength = 50; // Respawn with half strength
         plr.vel = k.vec2(0, 0);
-        // Remove scale access to fix linter error
         plr.area.shape = new k.Rect(k.vec2(-12, -16), 24, 32);
         
         // Respawn effect
@@ -364,8 +491,6 @@ export default function level1() {
       k.z(5),
       k.lifespan(3)
     ]);
-    
-    // Remove opacity animation to fix linter error
   }
 
   // Motivational messages
@@ -373,7 +498,9 @@ export default function level1() {
     "💪 GAINS DON'T COME EASY!",
     "🍗 CHICKEN = STRENGTH!",
     "🏋️ NO PAIN, NO GAIN!",
-    "💪 LIFT HEAVY, EAT HEAVY!"
+    "💪 LIFT HEAVY, EAT HEAVY!",
+    "🌍 INFINITE TERRAIN!",
+    "🏃 NEVER STOP RUNNING!"
   ];
   
   let messageIndex = 0;
@@ -388,79 +515,4 @@ export default function level1() {
     ]);
     messageIndex = (messageIndex + 1) % messages.length;
   });
-
-  // Function to generate new endless level
-  function generateNewLevel() {
-    // Clear existing level elements (except UI and player)
-    k.destroyAll("solid");
-    k.destroyAll("hazard");
-    k.destroyAll("coin");
-    k.destroyAll("enemy");
-    k.destroyAll("checkpoint");
-    k.destroyAll("chicken_shop");
-    
-    // Reset player position
-    plr.pos = k.vec2(160, groundY - 24);
-    plr.vel = k.vec2(0, 0);
-    
-    // Generate new endless level
-    let currentX = 120;
-    const levelLength = 2000; // Make each level longer
-    
-    for (let i = 0; i < levelLength; i += 200) {
-      // Ground platform
-      solid(currentX, groundY, 200, 24, k.rgb(139, 69, 19));
-      
-      // Add some gaps for challenge
-      if (Math.random() > 0.7) {
-        hazard(currentX + 100, groundY, 50, 24);
-      }
-      
-      // Add floating platforms
-      if (Math.random() > 0.5) {
-        const platformY = groundY - 80 - Math.random() * 80;
-        solid(currentX + 50, platformY, 80, 12, k.rgb(160, 82, 45));
-        
-        // Add coins on platforms
-        coin(currentX + 80, platformY - 20);
-      }
-      
-      // Add coins on ground
-      if (Math.random() > 0.3) {
-        coin(currentX + 100, groundY - 30);
-      }
-      
-      // Add enemies
-      if (Math.random() > 0.8) {
-        spawnPatroller({ 
-          x: currentX + 100, 
-          y: groundY - 12, 
-          speed: 30 + Math.random() * 20 
-        });
-      }
-      
-      currentX += 200;
-    }
-    
-    // Add new chicken shop at the end
-    k.add([
-      k.pos(currentX - 100, groundY - 24),
-      k.sprite("door"),
-      k.area(),
-      k.z(15),
-      "chicken_shop",
-    ]);
-    
-    // Add new checkpoint
-    k.add([
-      k.pos(currentX - 300, groundY - 24),
-      k.sprite("checkpoint"),
-      k.area(),
-      k.z(15),
-      "checkpoint",
-    ]);
-    
-    // Reset progress for new level
-    levelProgress = 0;
-  }
 }
