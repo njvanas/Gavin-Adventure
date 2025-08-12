@@ -197,7 +197,7 @@ export default function level1() {
       k.text("+10 COINS!", { size: 16, font: "Arial" }),
       k.color(255, 215, 0),
       k.move(k.vec2(0, -50), 100),
-      k.fade(0, 1),
+      k.opacity(0),
       k.lifespan(1),
       k.z(50)
     ]);
@@ -208,7 +208,7 @@ export default function level1() {
       k.text("+2 STRENGTH!", { size: 14, font: "Arial" }),
       k.color(0, 255, 0),
       k.move(k.vec2(0, -30), 80),
-      k.fade(0, 1),
+      k.opacity(0),
       k.lifespan(0.8),
       k.z(50)
     ]);
@@ -225,7 +225,7 @@ export default function level1() {
       k.text("CARDIO DRAIN!", { size: 14, font: "Arial" }),
       k.color(255, 0, 0),
       k.move(k.vec2(0, -30), 80),
-      k.fade(0, 1),
+      k.opacity(0),
       k.lifespan(0.8),
       k.z(50)
     ]);
@@ -239,7 +239,7 @@ export default function level1() {
       k.text("CHECKPOINT!", { size: 16, font: "Arial" }),
       k.color(0, 255, 0),
       k.move(k.vec2(0, -40), 60),
-      k.fade(0, 1),
+      k.opacity(0),
       k.lifespan(1.5),
       k.z(50)
     ]);
@@ -259,7 +259,7 @@ export default function level1() {
         k.text("🍗 CHICKEN ACQUIRED!", { size: 18, font: "Arial" }),
         k.color(255, 165, 0),
         k.move(k.vec2(0, -50), 60),
-        k.fade(0, 1),
+        k.opacity(0),
         k.lifespan(2),
         k.z(50)
       ]);
@@ -269,7 +269,7 @@ export default function level1() {
         k.text("💪 STRENGTH RESTORED!", { size: 16, font: "Arial" }),
         k.color(0, 255, 0),
         k.move(k.vec2(0, -40), 50),
-        k.fade(0, 1),
+        k.opacity(0),
         k.lifespan(1.8),
         k.z(50)
       ]);
@@ -285,7 +285,7 @@ export default function level1() {
         k.text("Need more coins!", { size: 16, font: "Arial" }),
         k.color(255, 0, 0),
         k.move(k.vec2(0, -30), 60),
-        k.fade(0, 1),
+        k.opacity(0),
         k.lifespan(1.5),
         k.z(50)
       ]);
@@ -304,7 +304,7 @@ export default function level1() {
       k.text("GAINS STOLEN!", { size: 16, font: "Arial" }),
       k.color(255, 0, 0),
       k.move(k.vec2(0, -40), 70),
-      k.fade(0, 1),
+      k.opacity(0),
       k.lifespan(1.2),
       k.z(50)
     ]);
@@ -329,7 +329,7 @@ export default function level1() {
           k.text("RESPAWNED!", { size: 16, font: "Arial" }),
           k.color(255, 255, 0),
           k.move(k.vec2(0, -30), 60),
-          k.fade(0, 1),
+          k.opacity(0),
           k.lifespan(1.5),
           k.z(50)
         ]);
@@ -368,7 +368,7 @@ export default function level1() {
       k.pos(400, 100),
       k.text(messages[messageIndex], { size: 20, font: "Arial" }),
       k.color(255, 255, 255),
-      k.fade(0, 1),
+      k.opacity(0),
       k.lifespan(2),
       k.z(200)
     ]);

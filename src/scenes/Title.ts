@@ -172,7 +172,7 @@ export default function Title() {
       k.pos(400, 100),
       k.text(messages[messageIndex], { size: 18, font: "Arial" }),
       k.color(255, 255, 255),
-      k.fade(0, 1),
+      k.opacity(0),
       k.lifespan(3),
       k.z(200)
     ]);

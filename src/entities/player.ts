@@ -104,7 +104,7 @@ export function spawnPlayer(p = k.vec2(64, 0), useStickman = false) {
       k.text("💪 FLEX!", { size: 18, font: "Arial" }),
       k.color(255, 255, 0),
       k.move(k.vec2(0, -40), 60),
-      k.fade(0, 1),
+      k.opacity(0),
       k.lifespan(1.5),
       k.z(50)
     ]);

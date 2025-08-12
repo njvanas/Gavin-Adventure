@@ -20,12 +20,12 @@ export const SPRITES = {
 } as const;
 
 export const SOUNDS = {
-  jump: "audio/jump.ogg",
-  coin: "audio/coin.ogg",
-  hit: "audio/hit.ogg",
-  checkpoint: "audio/checkpoint.ogg",
-  exit: "audio/exit.ogg",
-  bg_level1: "audio/bg_level1.ogg",
+  // jump: "audio/jump.ogg",
+  // coin: "audio/coin.ogg",
+  // hit: "audio/hit.ogg",
+  // checkpoint: "audio/checkpoint.ogg",
+  // exit: "audio/exit.ogg",
+  // bg_level1: "audio/bg_level1.ogg",
 };
 
 // --- below your SOUNDS export ---
