@@ -19,6 +19,8 @@ export interface GameState {
   attackPower: number;
   health: number;
   maxHealth: number;
+  strength: number;
+  chicken: number;
   gameStarted: boolean;
   showShop: boolean;
   currentBoss: number | null;
@@ -35,6 +37,7 @@ export interface GameState {
   unlockedLevels: number;
   totalLevels: number;
   cameraX: number;
+  isPaused: boolean;
 }
 
 const WORLDS = [
@@ -53,6 +56,8 @@ function App() {
     attackPower: 100,
     health: 100,
     maxHealth: 100,
+    strength: 50,
+    chicken: 0,
     gameStarted: false,
     showShop: false,
     currentBoss: null,
@@ -68,7 +73,8 @@ function App() {
     bossDefeated: [false, false, false, false, false],
     unlockedLevels: 1,
     totalLevels: 25,
-    cameraX: 0
+    cameraX: 0,
+    isPaused: false
   });
 
   const [collectibles, setCollectibles] = useState<Array<{id: number, x: number, y: number, type: 'coin' | 'gem'}>>([]);
@@ -226,6 +232,8 @@ function App() {
       attackPower: 100,
       health: 100,
       maxHealth: 100,
+      strength: 50,
+      chicken: 0,
       gameStarted: true,
       showShop: false,
       currentBoss: null,
@@ -241,7 +249,8 @@ function App() {
       bossDefeated: [false, false, false, false, false],
       unlockedLevels: 1,
       totalLevels: 25,
-      cameraX: 0
+      cameraX: 0,
+      isPaused: false
     });
   };
 
