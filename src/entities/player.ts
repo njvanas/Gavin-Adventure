@@ -22,6 +22,7 @@ export function spawnPlayer(p = k.vec2(64, 0), useStickman = false) {
     "player",
   ]);
 
+
   // Input
   const moveLeft = () => { 
     if (!ducking) {
