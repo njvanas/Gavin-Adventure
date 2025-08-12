@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gavin Sprite Generator</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        canvas { border: 1px solid #ccc; margin: 10px; }
+        .controls { margin: 20px 0; }
+        button { padding: 10px 20px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Gavin the Adventurer - Sprite Generator</h1>
+    <div class="controls">
+        <button onclick="generateGavinSprite()">Generate Gavin Sprite</button>
+        <button onclick="downloadSprite()">Download PNG</button>
+    </div>
+    <canvas id="spriteCanvas" width="192" height="32"></canvas>
+    <p>This generates a modern pixel art sprite sheet for Gavin with 8 frames (24x32 each)</p>
+
+    <script>
+        const canvas = document.getElementById('spriteCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        function generateGavinSprite() {
+            ctx.clearRect(0, 0, 192, 32);
+            
+            // Generate 8 frames
+            for (let frame = 0; frame < 8; frame++) {
+                const x = frame * 24;
+                drawGavinFrame(ctx, x, 0, frame);
+            }
+        }
+        
+        function drawGavinFrame(ctx, x, y, frame) {
+            // Modern color palette
+            const colors = {
+                skin: '#FFB366',
+                hair: '#8B4513',
+                shirt: '#4A90E2',
+                pants: '#2E4A6B',
+                boots: '#1A1A1A',
+                belt: '#8B4513',
+                outline: '#000000'
+            };
+            
+            // Base Gavin shape (buff adventurer)
+            if (frame === 0 || frame === 1) {
+                // Idle frames - slight breathing movement
+                const breath = frame === 1 ? 1 : 0;
+                
+                // Head
+                ctx.fillStyle = colors.skin;
+                ctx.fillRect(x + 8, y + 2 + breath, 8, 8);
+                
+                // Hair
+                ctx.fillStyle = colors.hair;
+                ctx.fillRect(x + 7, y + 1 + breath, 10, 4);
+                
+                // Shirt (buff torso)
+                ctx.fillStyle = colors.shirt;
+                ctx.fillRect(x + 6, y + 10 + breath, 12, 12);
+                
+                // Arms
+                ctx.fillStyle = colors.skin;
+                ctx.fillRect(x + 4, y + 12 + breath, 3, 8);
+                ctx.fillRect(x + 17, y + 12 + breath, 3, 8);
+                
+                // Pants
+                ctx.fillStyle = colors.pants;
+                ctx.fillRect(x + 7, y + 22 + breath, 10, 8);
+                
+                // Boots
+                ctx.fillStyle = colors.boots;
+                ctx.fillRect(x + 6, y + 30 + breath, 12, 2);
+                
+                // Belt
+                ctx.fillStyle = colors.belt;
+                ctx.fillRect(x + 6, y + 20 + breath, 12, 2);
+                
+            } else if (frame >= 2 && frame <= 5) {
+                // Running frames
+                const runPhase = (frame - 2) % 4;
+                const legOffset = Math.sin(runPhase * Math.PI / 2) * 2;
+                const armOffset = Math.cos(runPhase * Math.PI / 2) * 2;
+                
+                // Head
+                ctx.fillStyle = colors.skin;
+                ctx.fillRect(x + 8, y + 2, 8, 8);
+                
+                // Hair
+                ctx.fillStyle = colors.hair;
+                ctx.fillRect(x + 7, y + 1, 10, 4);
+                
+                // Shirt
+                ctx.fillStyle = colors.shirt;
+                ctx.fillRect(x + 6, y + 10, 12, 12);
+                
+                // Arms (swinging)
+                ctx.fillStyle = colors.skin;
+                ctx.fillRect(x + 4, y + 12 + armOffset, 3, 8);
+                ctx.fillRect(x + 17, y + 12 - armOffset, 3, 8);
+                
+                // Pants
+                ctx.fillStyle = colors.pants;
+                ctx.fillRect(x + 7, y + 22, 10, 8);
+                
+                // Boots (running)
+                ctx.fillStyle = colors.boots;
+                ctx.fillRect(x + 6, y + 30 + legOffset, 12, 2);
+                
+                // Belt
+                ctx.fillStyle = colors.belt;
+                ctx.fillRect(x + 6, y + 20, 12, 2);
+                
+            } else if (frame === 6) {
+                // Jump frame
+                // Head
+                ctx.fillStyle = colors.skin;
+                ctx.fillRect(x + 8, y + 2, 8, 8);
+                
+                // Hair
+                ctx.fillStyle = colors.hair;
+                ctx.fillRect(x + 7, y + 1, 10, 4);
+                
+                // Shirt
+                ctx.fillStyle = colors.shirt;
+                ctx.fillRect(x + 6, y + 10, 12, 12);
+                
+                // Arms (up)
+                ctx.fillStyle = colors.skin;
+                ctx.fillRect(x + 4, y + 8, 3, 8);
+                ctx.fillRect(x + 17, y + 8, 3, 8);
+                
+                // Pants
+                ctx.fillStyle = colors.pants;
+                ctx.fillRect(x + 7, y + 22, 10, 8);
+                
+                // Boots (bent)
+                ctx.fillStyle = colors.boots;
+                ctx.fillRect(x + 6, y + 30, 12, 2);
+                
+                // Belt
+                ctx.fillStyle = colors.belt;
+                ctx.fillRect(x + 6, y + 20, 12, 2);
+                
+            } else if (frame === 7) {
+                // Fall frame
+                // Head
+                ctx.fillStyle = colors.skin;
+                ctx.fillRect(x + 8, y + 2, 8, 8);
+                
+                // Hair
+                ctx.fillStyle = colors.hair;
+                ctx.fillRect(x + 7, y + 1, 10, 4);
+                
+                // Shirt
+                ctx.fillStyle = colors.shirt;
+                ctx.fillRect(x + 6, y + 10, 12, 12);
+                
+                // Arms (down)
+                ctx.fillStyle = colors.skin;
+                ctx.fillRect(x + 4, y + 16, 3, 8);
+                ctx.fillRect(x + 17, y + 16, 3, 8);
+                
+                // Pants
+                ctx.fillStyle = colors.pants;
+                ctx.fillRect(x + 7, y + 22, 10, 8);
+                
+                // Boots (straight)
+                ctx.fillStyle = colors.boots;
+                ctx.fillRect(x + 6, y + 30, 12, 2);
+                
+                // Belt
+                ctx.fillStyle = colors.belt;
+                ctx.fillRect(x + 6, y + 20, 12, 2);
+            }
+            
+            // Add outline
+            ctx.strokeStyle = colors.outline;
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x + 0.5, y + 0.5, 23, 31);
+        }
+        
+        function downloadSprite() {
+            const link = document.createElement('a');
+            link.download = 'gavin.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+        
+        // Generate on load
+        generateGavinSprite();
+    </script>
+</body>
+</html>

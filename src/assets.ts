@@ -5,15 +5,17 @@ import { k } from "./game";
  * colored placeholder sheets for any missing file automatically.
  */
 export const SPRITES = {
-  player:       { url: "sprites/player.png",      sliceX: 8, sliceY: 1, frameW: 16, frameH: 16,
+  player:       { url: "assets/sprites/gavin.png",      sliceX: 8, sliceY: 1, frameW: 24, frameH: 32,
                   anims: { idle:{from:0,to:1,speed:6,loop:true}, run:{from:2,to:5,speed:12,loop:true}, jump:6, fall:7, hurt:6 } },
-  enemy_slime:  { url: "sprites/enemy_slime.png", sliceX: 4, sliceY: 1, frameW: 14, frameH: 12,
+  enemy_slime:  { url: "assets/sprites/enemy_slime.png", sliceX: 4, sliceY: 1, frameW: 20, frameH: 16,
                   anims: { walk:{from:0,to:3,speed:8,loop:true} } },
-  coin:         { url: "sprites/coin.png",        sliceX: 6, sliceY: 1, frameW: 10, frameH: 10,
+  coin:         { url: "assets/sprites/coin.png",        sliceX: 6, sliceY: 1, frameW: 16, frameH: 16,
                   anims: { spin:{from:0,to:5,speed:12,loop:true} } },
-  checkpoint:   { url: "sprites/checkpoint.png",  sliceX: 2, sliceY: 1, frameW: 8,  frameH: 16,
+  checkpoint:   { url: "assets/sprites/checkpoint.png",  sliceX: 2, sliceY: 1, frameW: 16,  frameH: 24,
                   anims: { idle:{from:0,to:1,speed:4,loop:true} } },
-  door:         { url: "sprites/door.png",        sliceX: 1, sliceY: 1, frameW: 16, frameH: 24,
+  door:         { url: "assets/sprites/door.png",        sliceX: 1, sliceY: 1, frameW: 24, frameH: 32,
+                  anims: { idle:0 } },
+  background:   { url: "assets/backgrounds/forest_bg.png", sliceX: 1, sliceY: 1, frameW: 800, frameH: 600,
                   anims: { idle:0 } },
 } as const;
 

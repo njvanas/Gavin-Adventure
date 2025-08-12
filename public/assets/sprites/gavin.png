@@ -1,0 +1,7 @@
+# This is a placeholder for the Gavin sprite sheet
+# The actual PNG file will be created with pixel art
+# Frame 0-1: Idle animation (breathing, slight movement)
+# Frame 2-5: Running animation (arms and legs moving)
+# Frame 6: Jump pose (arms up, legs bent)
+# Frame 7: Fall pose (arms down, legs straight)
+# Size: 24x32 pixels per frame, 8 frames total
