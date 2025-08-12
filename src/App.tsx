@@ -374,6 +374,10 @@ function App() {
     }, 3000);
   };
 
+  const togglePause = () => {
+    setGameState(prev => ({ ...prev, isPaused: !prev.isPaused }));
+  };
+
   // Game Won Screen
   if (gameState.gameWon) {
     return (
