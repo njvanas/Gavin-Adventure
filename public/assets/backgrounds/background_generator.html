@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Forest Background Generator</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        canvas { border: 1px solid #ccc; margin: 10px; }
+        .controls { margin: 20px 0; }
+        button { padding: 10px 20px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Forest Background - Generator</h1>
+    <div class="controls">
+        <button onclick="generateBackground()">Generate Background</button>
+        <button onclick="downloadBackground()">Download PNG</button>
+    </div>
+    <canvas id="bgCanvas" width="800" height="600"></canvas>
+    <p>This generates a modern pixel art forest background for the game</p>
+
+    <script>
+        const canvas = document.getElementById('bgCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        function generateBackground() {
+            ctx.clearRect(0, 0, 800, 600);
+            
+            // Sky gradient
+            const skyGradient = ctx.createLinearGradient(0, 0, 0, 300);
+            skyGradient.addColorStop(0, '#87CEEB');
+            skyGradient.addColorStop(1, '#B0E0E6');
+            ctx.fillStyle = skyGradient;
+            ctx.fillRect(0, 0, 800, 300);
+            
+            // Sun
+            ctx.fillStyle = '#FFD700';
+            ctx.beginPath();
+            ctx.arc(700, 80, 40, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Sun glow
+            ctx.fillStyle = 'rgba(255, 215, 0, 0.3)';
+            ctx.beginPath();
+            ctx.arc(700, 80, 60, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Distant mountains
+            ctx.fillStyle = '#8B7355';
+            ctx.beginPath();
+            ctx.moveTo(0, 300);
+            ctx.lineTo(200, 200);
+            ctx.lineTo(400, 250);
+            ctx.lineTo(600, 180);
+            ctx.lineTo(800, 220);
+            ctx.lineTo(800, 300);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Mountain shadows
+            ctx.fillStyle = '#6B4423';
+            ctx.beginPath();
+            ctx.moveTo(0, 300);
+            ctx.lineTo(150, 220);
+            ctx.lineTo(200, 200);
+            ctx.lineTo(200, 300);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Forest layer 1 (distant)
+            for (let i = 0; i < 20; i++) {
+                const x = i * 40 + Math.random() * 20;
+                const height = 60 + Math.random() * 40;
+                drawTree(ctx, x, 300, height, '#228B22', 0.6);
+            }
+            
+            // Forest layer 2 (mid)
+            for (let i = 0; i < 25; i++) {
+                const x = i * 32 + Math.random() * 15;
+                const height = 80 + Math.random() * 50;
+                drawTree(ctx, x, 320, height, '#32CD32', 0.8);
+            }
+            
+            // Forest layer 3 (close)
+            for (let i = 0; i < 30; i++) {
+                const x = i * 28 + Math.random() * 10;
+                const height = 100 + Math.random() * 60;
+                drawTree(ctx, x, 340, height, '#228B22', 1.0);
+            }
+            
+            // Ground
+            const groundGradient = ctx.createLinearGradient(0, 400, 0, 600);
+            groundGradient.addColorStop(0, '#8FBC8F');
+            groundGradient.addColorStop(1, '#556B2F');
+            ctx.fillStyle = groundGradient;
+            ctx.fillRect(0, 400, 800, 200);
+            
+            // Grass details
+            ctx.fillStyle = '#90EE90';
+            for (let i = 0; i < 100; i++) {
+                const x = Math.random() * 800;
+                const y = 400 + Math.random() * 50;
+                ctx.fillRect(x, y, 2, 8 + Math.random() * 10);
+            }
+            
+            // Clouds
+            drawCloud(ctx, 100, 60, 0.8);
+            drawCloud(ctx, 300, 40, 0.6);
+            drawCloud(ctx, 500, 70, 0.7);
+        }
+        
+        function drawTree(ctx, x, y, height, color, opacity) {
+            ctx.globalAlpha = opacity;
+            
+            // Tree trunk
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(x - 3, y, 6, height);
+            
+            // Tree leaves
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(x, y - height/2, height/2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.globalAlpha = 1.0;
+        }
+        
+        function drawCloud(ctx, x, y, size) {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.beginPath();
+            ctx.arc(x, y, 20 * size, 0, Math.PI * 2);
+            ctx.arc(x + 25 * size, y, 15 * size, 0, Math.PI * 2);
+            ctx.arc(x + 45 * size, y, 20 * size, 0, Math.PI * 2);
+            ctx.arc(x + 20 * size, y - 10 * size, 18 * size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        function downloadBackground() {
+            const link = document.createElement('a');
+            link.download = 'forest_bg.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+        
+        // Generate on load
+        generateBackground();
+    </script>
+</body>
+</html>
