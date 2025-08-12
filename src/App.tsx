@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import GameBackground from './components/GameBackground';
 import Player from './components/Player';
 import GameUI from './components/GameUI';
@@ -11,34 +11,8 @@ import PowerUp from './components/PowerUp';
 import LevelGoal from './components/LevelGoal';
 import WorldMap from './components/WorldMap';
 import GameMenu from './components/GameMenu';
-
-export interface GameState {
-  coins: number;
-  lives: number;
-  score: number;
-  attackPower: number;
-  health: number;
-  maxHealth: number;
-  strength: number;
-  chicken: number;
-  gameStarted: boolean;
-  showShop: boolean;
-  currentBoss: number | null;
-  playerPosition: { x: number; y: number };
-  currentWorld: number;
-  currentLevel: number;
-  levelComplete: boolean;
-  gameOver: boolean;
-  gameWon: boolean;
-  powerUpActive: string | null;
-  powerUpTimer: number;
-  showWorldMap: boolean;
-  bossDefeated: boolean[];
-  unlockedLevels: number;
-  totalLevels: number;
-  cameraX: number;
-  isPaused: boolean;
-}
+import { GameEngine } from './systems/GameEngine';
+import { GameState, LevelData, Platform, Enemy as EnemyType, Collectible as CollectibleType, PowerUp as PowerUpType } from './types/GameTypes';
 
 const WORLDS = [
   { name: 'Jungle Ruins', theme: 'jungle', color: '#228B22' },
@@ -49,6 +23,7 @@ const WORLDS = [
 ];
 
 function App() {
+  const gameEngineRef = useRef<GameEngine | null>(null);
   const [gameState, setGameState] = useState<GameState>({
     coins: 0,
     lives: 3,
@@ -61,9 +36,6 @@ function App() {
     gameStarted: false,
     showShop: false,
     currentBoss: null,
-    playerPosition: { x: 100, y: 0 },
-    currentWorld: 1,
-    currentLevel: 1,
     levelComplete: false,
     gameOver: false,
     gameWon: false,
@@ -74,14 +46,53 @@ function App() {
     unlockedLevels: 1,
     totalLevels: 25,
     cameraX: 0,
-    isPaused: false
+    isPaused: false,
+    currentWorld: 1,
+    currentLevel: 1,
+    lastCheckpoint: null,
+    checkpointReached: false,
   });
 
-  const [collectibles, setCollectibles] = useState<Array<{id: number, x: number, y: number, type: 'coin' | 'gem'}>>([]);
+  // Separate player state for position and physics
+  const [playerState, setPlayerState] = useState({
+    position: { x: 100, y: 0 },
+    velocity: { x: 0, y: 0 },
+    onGround: false,
+    canJump: true,
+  });
+
+  const [collectibles, setCollectibles] = useState<Array<{id: number, x: number, y: number, type: 'coin' | 'gem' | 'chicken' | 'dumbbell' | 'serum'}>>([]);
   const [enemies, setEnemies] = useState<Array<{id: number, x: number, y: number, type: 'goomba' | 'koopa' | 'spiker'}>>([]);
   const [obstacles, setObstacles] = useState<Array<{id: number, x: number, y: number, type: 'block' | 'pipe' | 'platform'}>>([]);
   const [powerUps, setPowerUps] = useState<Array<{id: number, x: number, y: number, type: 'attack' | 'shield' | 'speed'}>>([]);
   const [levelGoal, setLevelGoal] = useState<{x: number, y: number} | null>(null);
+
+  // Debug logging
+  useEffect(() => {
+    console.log('Game state changed:', gameState);
+  }, [gameState]);
+
+  // Initialize GameEngine
+  useEffect(() => {
+    if (!gameEngineRef.current) {
+      gameEngineRef.current = new GameEngine();
+      console.log('GameEngine initialized');
+    }
+
+    return () => {
+      if (gameEngineRef.current) {
+        gameEngineRef.current.destroy();
+      }
+    };
+  }, []);
+
+  // Sync game state with engine - simplified for now
+  useEffect(() => {
+    if (gameState.gameStarted) {
+      console.log('Game started, initializing basic game...');
+      // For now, just start the basic game without complex engine integration
+    }
+  }, [gameState.gameStarted]);
 
   // Power-up timer
   useEffect(() => {
@@ -125,7 +136,7 @@ function App() {
         newCollectibles.push({
           id: i,
           x: 200 + i * (levelWidth / collectibleCount) + Math.random() * 150,
-          y: Math.random() * 100,
+          y: 0, // Ground level
           type: Math.random() > 0.7 ? 'gem' : 'coin' as 'coin' | 'gem'
         });
       }
@@ -149,7 +160,7 @@ function App() {
         newEnemies.push({
           id: i + 1000,
           x: 400 + i * (levelWidth / enemyCount) + Math.random() * 200,
-          y: Math.random() * 50,
+          y: 0, // Ground level
           type: enemyType as 'goomba' | 'koopa' | 'spiker'
         });
       }
@@ -163,8 +174,8 @@ function App() {
         newObstacles.push({
           id: i + 2000,
           x: 500 + i * (levelWidth / obstacleCount) + Math.random() * 150,
-          y: Math.random() * 80,
-          type: obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)]
+          y: 0, // Ground level
+          type: obstacleTypes[Math.floor(Math.random() * obstacleCount) % obstacleTypes.length]
         });
       }
       setObstacles(newObstacles);
@@ -177,8 +188,8 @@ function App() {
         newPowerUps.push({
           id: i + 3000,
           x: 600 + i * (levelWidth / powerUpCount) + Math.random() * 300,
-          y: Math.random() * 80,
-          type: powerUpTypes[Math.floor(Math.random() * powerUpTypes.length)]
+          y: 0, // Ground level
+          type: powerUpTypes[Math.floor(Math.random() * powerUpCount) % powerUpTypes.length]
         });
       }
       setPowerUps(newPowerUps);
@@ -196,12 +207,26 @@ function App() {
   }, [gameState.gameStarted, gameState.currentWorld, gameState.currentLevel, gameState.levelComplete, gameState.showWorldMap]);
 
   const startGame = () => {
+    console.log('Starting game...');
     setGameState(prev => ({ 
       ...prev, 
       gameStarted: true,
       gameOver: false,
       gameWon: false,
-      showWorldMap: false
+      showWorldMap: false,
+      levelComplete: false,
+      currentWorld: 1,
+      currentLevel: 1,
+      cameraX: 0
+    }));
+    
+    // Reset player position
+    setPlayerState(prev => ({
+      ...prev,
+      position: { x: 100, y: 0 },
+      velocity: { x: 0, y: 0 },
+      onGround: false,
+      canJump: true,
     }));
   };
 
@@ -218,7 +243,6 @@ function App() {
         currentLevel: level,
         showWorldMap: false,
         levelComplete: false,
-        playerPosition: { x: 100, y: 0 },
         cameraX: 0
       }));
     }
@@ -237,7 +261,6 @@ function App() {
       gameStarted: true,
       showShop: false,
       currentBoss: null,
-      playerPosition: { x: 100, y: 0 },
       currentWorld: 1,
       currentLevel: 1,
       levelComplete: false,
@@ -250,16 +273,27 @@ function App() {
       unlockedLevels: 1,
       totalLevels: 25,
       cameraX: 0,
-      isPaused: false
+      isPaused: false,
+      lastCheckpoint: null,
+      checkpointReached: false
     });
   };
 
-  const collectItem = useCallback((id: number, type: 'coin' | 'gem') => {
+  const collectItem = useCallback((id: number, type: string, value: number, strength?: number) => {
     setCollectibles(prev => prev.filter(item => item.id !== id));
+    
+    // Apply strength boost if provided
+    if (strength) {
+      setGameState(prev => ({
+        ...prev,
+        strength: prev.strength + strength
+      }));
+    }
+    
     setGameState(prev => ({
       ...prev,
-      coins: prev.coins + (type === 'coin' ? 10 : 50),
-      score: prev.score + (type === 'coin' ? 100 : 500)
+      coins: prev.coins + value,
+      score: prev.score + (value * 10)
     }));
   }, []);
 
@@ -296,11 +330,19 @@ function App() {
         lives: newLives,
         gameOver: gameOver,
         attackPower: Math.max(25, prev.attackPower * 0.75), // Reduce attack power by 25%
-        playerPosition: newHealth <= 0 ? { x: 100, y: 0 } : prev.playerPosition,
         cameraX: newHealth <= 0 ? 0 : prev.cameraX
       };
     });
-  }, []);
+    
+    // Reset player position if health reaches 0
+    if (gameState.health - damage <= 0) {
+      setPlayerState(prev => ({
+        ...prev,
+        position: { x: 100, y: 0 },
+        velocity: { x: 0, y: 0 }
+      }));
+    }
+  }, [gameState.health]);
 
   const spawnBoss = (bossId: number) => {
     setGameState(prev => ({ ...prev, currentBoss: bossId }));
@@ -328,9 +370,13 @@ function App() {
   };
 
   const updatePlayerPosition = (x: number, y: number) => {
+    setPlayerState(prev => ({ 
+      ...prev, 
+      position: { x, y }
+    }));
+    
     setGameState(prev => ({ 
       ...prev, 
-      playerPosition: { x, y },
       cameraX: Math.max(0, x - window.innerWidth / 2)
     }));
     
@@ -368,8 +414,13 @@ function App() {
       setGameState(prev => ({
         ...prev,
         levelComplete: false,
-        playerPosition: { x: 100, y: 0 },
         cameraX: 0
+      }));
+      
+      setPlayerState(prev => ({
+        ...prev,
+        position: { x: 100, y: 0 },
+        velocity: { x: 0, y: 0 }
       }));
     }, 3000);
   };
@@ -378,72 +429,142 @@ function App() {
     setGameState(prev => ({ ...prev, isPaused: !prev.isPaused }));
   };
 
+  const buyChicken = () => {
+    if (gameState.coins >= 50) {
+      setGameState(prev => ({
+        ...prev,
+        coins: prev.coins - 50,
+        chicken: prev.chicken + 1
+      }));
+    }
+  };
+
+  // Test level creation for GameEngine
+  const createTestLevel = () => {
+    console.log('Creating test level...');
+    if (!gameEngineRef.current) {
+      console.log('No game engine available');
+      return;
+    }
+    
+    const testLevel: LevelData = {
+      id: 1,
+      world: 1,
+      level: 1,
+      name: 'Test Level',
+      theme: 'gym',
+      background: 'gym-bg',
+      music: 'gym-music',
+      width: 2000,
+      height: 600,
+      playerStart: { x: 100, y: 0 },
+      goal: { x: 1800, y: 0 },
+      platforms: [
+        {
+          id: 1,
+          type: 'solid',
+          position: { x: 0, y: 128 },
+          width: 2000,
+          height: 32,
+          isActive: true,
+          contains: null,
+          breakable: false,
+          conveyorSpeed: 0,
+          movePattern: null,
+          moveDistance: 0,
+          moveSpeed: 0,
+          moveTimer: 0,
+          originalPosition: { x: 0, y: 128 }
+        },
+        {
+          id: 2,
+          type: 'solid',
+          position: { x: 400, y: 96 },
+          width: 200,
+          height: 32,
+          isActive: true,
+          contains: null,
+          breakable: false,
+          conveyorSpeed: 0,
+          movePattern: null,
+          moveDistance: 0,
+          moveSpeed: 0,
+          moveTimer: 0,
+          originalPosition: { x: 400, y: 96 }
+        }
+      ],
+      enemies: [],
+      collectibles: [],
+      powerUps: [],
+      checkpoints: [],
+      hazards: [],
+      decorations: [],
+      parallaxLayers: []
+    };
+    
+    console.log('Loading test level into GameEngine...', testLevel);
+    gameEngineRef.current.loadLevel(testLevel);
+    console.log('Test level loaded successfully');
+  };
+
   // Game Won Screen
   if (gameState.gameWon) {
     return (
       <div className="min-h-screen overflow-hidden">
         <GameBackground world={5} />
         <div className="relative z-50 flex items-center justify-center min-h-screen">
-          <div className="bg-black/90 backdrop-blur-sm border-4 border-yellow-400 p-12 rounded-lg shadow-2xl max-w-2xl">
-            <h1 className="text-6xl font-bold text-yellow-400 mb-6 text-center pixel-font animate-pulse">
-              🏆 VICTORY! 🏆
-            </h1>
-            <div className="text-green-400 text-center pixel-font text-lg mb-8 space-y-4">
-              <p>🎉 You conquered all 5 worlds!</p>
-              <p>👑 Final Score: {gameState.score.toLocaleString()}</p>
-              <p>💰 Total Coins: {gameState.coins}</p>
-              <p>⚔️ Final Attack Power: {gameState.attackPower}</p>
-              <p className="text-yellow-400">You are the ultimate platformer champion!</p>
+          <div className="bg-black/90 border-4 border-yellow-400 rounded-lg p-8 text-center">
+            <h1 className="text-6xl font-bold text-yellow-400 mb-4 pixel-font">🏆 VICTORY! 🏆</h1>
+            <p className="text-2xl text-white mb-6 pixel-font">You've become the Ultimate Bodybuilding Champion!</p>
+            <div className="text-xl text-green-400 mb-6 pixel-font">
+              Final Score: {gameState.score.toLocaleString()}<br/>
+              Coins Collected: {gameState.coins}<br/>
+              Total Lives Lost: {3 - gameState.lives}
             </div>
-            <div className="flex justify-center space-x-4">
-              <button 
-                onClick={restartGame}
-                className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded pixel-font text-xl border-4 border-green-400 hover:border-green-300 transition-all duration-200 transform hover:scale-105"
-              >
-                PLAY AGAIN
-              </button>
-              <button 
-                onClick={showWorldMap}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded pixel-font text-xl border-4 border-blue-400 hover:border-blue-300 transition-all duration-200 transform hover:scale-105"
-              >
-                WORLD MAP
-              </button>
-            </div>
+            <button
+              onClick={restartGame}
+              className="bg-yellow-600 hover:bg-yellow-700 text-white px-8 py-4 rounded-lg border-2 border-yellow-400 text-xl font-bold transition-all duration-200 hover:scale-105"
+            >
+              🎮 Play Again
+            </button>
           </div>
         </div>
       </div>
     );
   }
 
-  // Game Over Screen
-  if (gameState.gameOver) {
+  // Start Screen
+  if (!gameState.gameStarted) {
     return (
       <div className="min-h-screen overflow-hidden">
-        <GameBackground world={gameState.currentWorld} />
+        <GameBackground world={1} />
         <div className="relative z-50 flex items-center justify-center min-h-screen">
-          <div className="bg-black/90 backdrop-blur-sm border-4 border-red-400 p-12 rounded-lg shadow-2xl max-w-2xl">
-            <h1 className="text-6xl font-bold text-red-400 mb-6 text-center pixel-font">
-              GAME OVER
-            </h1>
-            <div className="text-white text-center pixel-font text-lg mb-8 space-y-4">
-              <p>💀 Better luck next time!</p>
-              <p>🏆 Final Score: {gameState.score.toLocaleString()}</p>
-              <p>🌍 World Reached: {gameState.currentWorld}</p>
-              <p>📊 Level Reached: {gameState.currentLevel}</p>
-              <p>⚔️ Attack Power: {gameState.attackPower}</p>
-            </div>
-            <div className="flex justify-center space-x-4">
-              <button 
-                onClick={restartGame}
-                className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded pixel-font text-xl border-4 border-green-400 hover:border-green-300 transition-all duration-200 transform hover:scale-105"
+          <div className="bg-black/90 border-4 border-blue-400 rounded-lg p-8 text-center">
+            <h1 className="text-4xl font-bold text-blue-400 mb-4 pixel-font">Gavin Adventure</h1>
+            <p className="text-xl text-white mb-6 pixel-font">Mario-Style Bodybuilding Platformer</p>
+            <div className="space-y-4">
+              <button
+                onClick={startGame}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg border-2 border-blue-400 text-lg font-bold transition-all duration-200 hover:scale-105 block w-full"
               >
-                TRY AGAIN
+                🎮 Start Game
               </button>
-              <button 
-                onClick={showWorldMap}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded pixel-font text-xl border-4 border-blue-400 hover:border-blue-300 transition-all duration-200 transform hover:scale-105"
+              <button
+                onClick={() => {
+                  if (gameEngineRef.current) {
+                    console.log('Manual engine start test');
+                    gameEngineRef.current.start();
+                  }
+                }}
+                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg border-2 border-green-400 text-lg font-bold transition-all duration-200 hover:scale-105 block w-full"
               >
-                WORLD MAP
+                🔧 Test GameEngine
+              </button>
+              <button
+                onClick={createTestLevel}
+                className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg border-2 border-purple-400 text-lg font-bold transition-all duration-200 hover:scale-105 block w-full"
+              >
+                🗺️ Load Test Level
               </button>
             </div>
           </div>
@@ -488,17 +609,6 @@ function App() {
         worlds={WORLDS}
         onSelectLevel={selectLevel}
         onBack={() => setGameState(prev => ({ ...prev, showWorldMap: false }))}
-      />
-    );
-  }
-
-  // Start Screen
-  if (!gameState.gameStarted) {
-    return (
-      <GameMenu
-        onStartGame={startGame}
-        onShowWorldMap={showWorldMap}
-        gameState={gameState}
       />
     );
   }
@@ -571,7 +681,7 @@ function App() {
             x={item.x}
             y={item.y}
             type={item.type}
-            playerPosition={gameState.playerPosition}
+            playerPosition={playerState.position}
             onCollect={collectItem}
           />
         ))}
@@ -583,7 +693,7 @@ function App() {
             x={powerUp.x}
             y={powerUp.y}
             type={powerUp.type}
-            playerPosition={gameState.playerPosition}
+            playerPosition={playerState.position}
             onCollect={collectPowerUp}
           />
         ))}
@@ -595,7 +705,7 @@ function App() {
             x={enemy.x}
             y={enemy.y}
             type={enemy.type}
-            playerPosition={gameState.playerPosition}
+            playerPosition={playerState.position}
             onCollision={handleEnemyCollision}
             world={gameState.currentWorld}
           />
@@ -615,7 +725,7 @@ function App() {
           <LevelGoal
             x={levelGoal.x}
             y={levelGoal.y}
-            playerPosition={gameState.playerPosition}
+            playerPosition={playerState.position}
             isBossLevel={gameState.currentLevel % 5 === 0}
           />
         )}

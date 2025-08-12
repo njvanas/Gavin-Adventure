@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { GameState } from '../App';
+import { GameState } from '../types/GameTypes';
+import { GAVIN_SPRITES, AssetLoader } from '../config/Assets';
+import SpriteRenderer from './SpriteRenderer';
 
 interface PlayerProps {
   gameState: GameState;
@@ -7,6 +9,8 @@ interface PlayerProps {
 }
 
 const Player: React.FC<PlayerProps> = ({ gameState, onUpdatePosition }) => {
+  console.log('Player component rendered with gameState:', gameState);
+  
   const [position, setPosition] = useState({ x: 100, y: 0 });
   const [velocity, setVelocity] = useState({ x: 0, y: 0 });
   const [isJumping, setIsJumping] = useState(false);
@@ -14,6 +18,7 @@ const Player: React.FC<PlayerProps> = ({ gameState, onUpdatePosition }) => {
   const [isFlexing, setIsFlexing] = useState(false);
   const [isClimbing, setIsClimbing] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
+  const [currentSprite, setCurrentSprite] = useState(GAVIN_SPRITES[0]); // Start with idle
   const keysPressed = useRef<Set<string>>(new Set());
   const animationFrameRef = useRef<number>();
 
@@ -23,6 +28,21 @@ const Player: React.FC<PlayerProps> = ({ gameState, onUpdatePosition }) => {
   const moveSpeed = 6;
   const jumpPower = 15;
   const gravity = 0.8;
+
+  // Update sprite based on player state
+  useEffect(() => {
+    let newSprite = GAVIN_SPRITES[0]; // idle
+
+    if (isFlexing) {
+      newSprite = GAVIN_SPRITES.find(s => s.id === 'gavin-flex') || GAVIN_SPRITES[0];
+    } else if (isJumping) {
+      newSprite = GAVIN_SPRITES.find(s => s.id === 'gavin-jump') || GAVIN_SPRITES[0];
+    } else if (isRunning) {
+      newSprite = GAVIN_SPRITES.find(s => s.id === 'gavin-run') || GAVIN_SPRITES[0];
+    }
+
+    setCurrentSprite(newSprite);
+  }, [isJumping, isRunning, isFlexing]);
 
   // Smooth movement system
   useEffect(() => {
@@ -35,7 +55,7 @@ const Player: React.FC<PlayerProps> = ({ gameState, onUpdatePosition }) => {
         let running = false;
 
         // Horizontal movement
-        if (keysPressed.current.has('ArrowLeft') || keysPressed.current.has('a')) {
+        if (keysPressed.current.has('ArrowLeft') || keysPressed.current.has('a') || keysPressed.current.has('q')) {
           newVelX = -moveSpeed;
           setFacingRight(false);
           running = true;
@@ -48,8 +68,8 @@ const Player: React.FC<PlayerProps> = ({ gameState, onUpdatePosition }) => {
 
         setIsRunning(running);
 
-        // Climbing
-        if (keysPressed.current.has('ArrowUp') || keysPressed.current.has('w') || keysPressed.current.has(' ')) {
+        // Climbing and jumping
+        if (keysPressed.current.has('ArrowUp') || keysPressed.current.has('w') || keysPressed.current.has(' ') || keysPressed.current.has('z')) {
           if (!isJumping && !isClimbing) {
             // Check if near climbable obstacle
             const nearObstacle = checkNearObstacle(prev.x);
@@ -91,7 +111,9 @@ const Player: React.FC<PlayerProps> = ({ gameState, onUpdatePosition }) => {
       animationFrameRef.current = requestAnimationFrame(gameLoop);
     };
 
-    animationFrameRef.current = requestAnimationFrame(gameLoop);
+    // Start the game loop immediately
+    gameLoop();
+    
     return () => {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
@@ -102,6 +124,7 @@ const Player: React.FC<PlayerProps> = ({ gameState, onUpdatePosition }) => {
   // Key event handlers
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      console.log('Key pressed:', e.key);
       keysPressed.current.add(e.key);
       
       // Flex battle
@@ -111,20 +134,49 @@ const Player: React.FC<PlayerProps> = ({ gameState, onUpdatePosition }) => {
           setTimeout(() => setIsFlexing(false), 1500);
         }
       }
+
+      // Prevent default for game keys
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'Enter', 'w', 'a', 's', 'd', 'z', 'q'].includes(e.key)) {
+        e.preventDefault();
+      }
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
+      console.log('Key released:', e.key);
       keysPressed.current.delete(e.key);
+    };
+
+    // Add click/touch support for mobile
+    const handleClick = (e: MouseEvent) => {
+      console.log('Click detected');
+      // Simple click to jump for mobile
+      if (!isJumping && !isClimbing) {
+        setIsJumping(true);
+        setVelocity(prev => ({ ...prev, y: -jumpPower }));
+      }
+    };
+
+    const handleTouchStart = (e: TouchEvent) => {
+      console.log('Touch detected');
+      // Touch to jump for mobile
+      if (!isJumping && !isClimbing) {
+        setIsJumping(true);
+        setVelocity(prev => ({ ...prev, y: -jumpPower }));
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('click', handleClick);
+    window.addEventListener('touchstart', handleTouchStart);
     
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('click', handleClick);
+      window.removeEventListener('touchstart', handleTouchStart);
     };
-  }, [isFlexing]);
+  }, [isJumping, isClimbing]);
 
   useEffect(() => {
     onUpdatePosition(position.x, position.y);
@@ -142,153 +194,76 @@ const Player: React.FC<PlayerProps> = ({ gameState, onUpdatePosition }) => {
     return obstacles.some(obstacleX => Math.abs(x - obstacleX) < 50);
   }
 
+  const handleFlexComplete = () => {
+    // This will be called when the flex animation completes
+    console.log('Flex animation completed');
+  };
+
   return (
     <div 
-      className={`absolute z-40 transition-all duration-75 ${
-        isJumping ? 'animate-bounce' : ''
-      } ${isClimbing ? 'animate-pulse' : ''} ${
-        isRunning ? 'animate-pulse' : ''
-      }`}
+      className={`absolute z-40 transition-all duration-75 cursor-pointer`}
       style={{ 
         left: position.x, 
         bottom: groundLevel + position.y,
         width: playerSize,
-        height: playerSize,
-        transform: facingRight ? 'scaleX(1)' : 'scaleX(-1)'
+        height: playerSize
+      }}
+      onClick={(e) => {
+        console.log('Player clicked!');
+        // Click to jump
+        if (!isJumping && !isClimbing) {
+          setIsJumping(true);
+          setVelocity(prev => ({ ...prev, y: -jumpPower }));
+        }
+        e.stopPropagation();
       }}
     >
-      {/* Gavin's Body */}
-      <div className="relative w-full h-full">
-        {/* Head */}
-        <div 
-          className="absolute bg-yellow-300 border-2 border-yellow-600 rounded-sm"
-          style={{
-            width: playerSize * 0.4,
-            height: playerSize * 0.3,
-            top: 0,
-            left: '30%'
-          }}
-        >
-          {/* Eyes */}
-          <div className="absolute w-1 h-1 bg-black rounded-full" style={{ top: '30%', left: '25%' }}></div>
-          <div className="absolute w-1 h-1 bg-black rounded-full" style={{ top: '30%', right: '25%' }}></div>
-          {/* Mustache */}
-          <div className="absolute w-3 h-1 bg-black rounded-sm" style={{ top: '60%', left: '35%' }}></div>
-        </div>
-        
-        {/* Body */}
-        <div 
-          className={`absolute bg-red-600 border-2 border-red-800 rounded-sm ${
-            isFlexing ? 'animate-pulse bg-red-500 scale-110' : ''
-          } ${isRunning ? 'animate-pulse' : ''}`}
-          style={{
-            width: playerSize * 0.6,
-            height: playerSize * 0.5,
-            top: playerSize * 0.25,
-            left: '20%'
-          }}
-        >
-          {/* Muscles (get bigger with strength) */}
-          <div 
-            className={`absolute bg-red-700 rounded-full ${isFlexing ? 'animate-ping' : ''}`}
-            style={{
-              width: Math.min(playerSize * 0.15, 12),
-              height: Math.min(playerSize * 0.15, 12),
-              top: '20%',
-              left: '10%'
-            }}
-          ></div>
-          <div 
-            className={`absolute bg-red-700 rounded-full ${isFlexing ? 'animate-ping' : ''}`}
-            style={{
-              width: Math.min(playerSize * 0.15, 12),
-              height: Math.min(playerSize * 0.15, 12),
-              top: '20%',
-              right: '10%'
-            }}
-          ></div>
-        </div>
-        
-        {/* Arms */}
-        <div 
-          className={`absolute bg-yellow-300 border-2 border-yellow-600 rounded-sm ${
-            isFlexing ? 'animate-pulse scale-125' : ''
-          } ${isRunning ? 'animate-bounce' : ''}`}
-          style={{
-            width: playerSize * 0.15,
-            height: playerSize * 0.4,
-            top: playerSize * 0.3,
-            left: '5%'
-          }}
-        ></div>
-        <div 
-          className={`absolute bg-yellow-300 border-2 border-yellow-600 rounded-sm ${
-            isFlexing ? 'animate-pulse scale-125' : ''
-          } ${isRunning ? 'animate-bounce' : ''}`}
-          style={{
-            width: playerSize * 0.15,
-            height: playerSize * 0.4,
-            top: playerSize * 0.3,
-            right: '5%'
-          }}
-        ></div>
-        
-        {/* Legs */}
-        <div 
-          className={`absolute bg-blue-600 border-2 border-blue-800 rounded-sm ${
-            isRunning ? 'animate-bounce' : ''
-          }`}
-          style={{
-            width: playerSize * 0.2,
-            height: playerSize * 0.3,
-            bottom: 0,
-            left: '25%'
-          }}
-        ></div>
-        <div 
-          className={`absolute bg-blue-600 border-2 border-blue-800 rounded-sm ${
-            isRunning ? 'animate-bounce' : ''
-          }`}
-          style={{
-            width: playerSize * 0.2,
-            height: playerSize * 0.3,
-            bottom: 0,
-            right: '25%'
-          }}
-        ></div>
-        
-        {/* Flex effects */}
-        {isFlexing && (
-          <>
-            <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 pixel-font text-yellow-400 text-xs animate-bounce">
-              💪 {gameState.strength || 50}
-            </div>
-            <div className="absolute inset-0 bg-yellow-400/20 rounded-full animate-ping"></div>
-            <div className="absolute -top-4 -left-4 -right-4 -bottom-4 border-4 border-yellow-400 rounded-full animate-pulse"></div>
-          </>
-        )}
-        
-        {/* Climbing indicator */}
-        {isClimbing && (
-          <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 pixel-font text-green-400 text-xs">
-            🧗 CLIMBING
+      {/* Gavin's Sprite */}
+      <SpriteRenderer
+        asset={currentSprite}
+        x={0}
+        y={0}
+        scale={playerSize / 64} // Scale based on strength
+        direction={facingRight ? 'right' : 'left'}
+        isActive={true}
+        onAnimationComplete={isFlexing ? handleFlexComplete : undefined}
+        className="w-full h-full"
+        style={{ position: 'relative' }}
+      />
+      
+      {/* Flex effects */}
+      {isFlexing && (
+        <>
+          <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 pixel-font text-yellow-400 text-xs animate-bounce">
+            💪 {gameState.strength || 50}
           </div>
-        )}
-        
-        {/* Running effects */}
-        {isRunning && !isJumping && (
-          <>
-            <div className="absolute -bottom-4 left-2 w-2 h-1 bg-gray-400 rounded-full opacity-50 animate-pulse"></div>
-            <div className="absolute -bottom-4 right-2 w-2 h-1 bg-gray-400 rounded-full opacity-50 animate-pulse"></div>
-          </>
-        )}
-      </div>
+          <div className="absolute inset-0 bg-yellow-400/20 rounded-full animate-ping"></div>
+          <div className="absolute -top-4 -left-4 -right-4 -bottom-4 border-4 border-yellow-400 rounded-full animate-ping"></div>
+        </>
+      )}
+      
+      {/* Climbing indicator */}
+      {isClimbing && (
+        <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 pixel-font text-green-400 text-xs">
+          🧗 CLIMBING
+        </div>
+      )}
+      
+      {/* Running effects */}
+      {isRunning && !isJumping && (
+        <>
+          <div className="absolute -bottom-4 left-2 w-2 h-1 bg-gray-400 rounded-full opacity-50 animate-pulse"></div>
+          <div className="absolute -bottom-4 right-2 w-2 h-1 bg-gray-400 rounded-full opacity-50 animate-pulse"></div>
+        </>
+      )}
       
       {/* Controls hint */}
       <div className="absolute -bottom-16 left-1/2 transform -translate-x-1/2 text-white pixel-font text-xs text-center opacity-75">
         <div>WASD/Arrows: Move</div>
         <div>Space/W: Jump</div>
         <div>F: Flex Battle</div>
+        <div>Click/Tap: Jump</div>
+        <div className="text-green-400 mt-2">🎮 Game Active</div>
       </div>
     </div>
   );
