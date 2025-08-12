@@ -43,8 +43,8 @@ export function spawnPlayer(p = k.vec2(64, 0), useStickman = true) {
     head = part("head", 0, -22, [k.rect(14, 14, { radius: 7 }), k.color(230, 230, 230), k.z(2)]);
     leftArm = part("leftArm", -5, -12, [k.rect(4, 16, { radius: 2 }), k.color(40, 40, 40), k.z(1)]);
     rightArm = part("rightArm", 5, -12, [k.rect(4, 16, { radius: 2 }), k.color(40, 40, 40), k.z(1)]);
-    leftLeg = part("leftLeg", -4, 6, [k.rect(4, 18, { radius: 2 }), k.color(40, 40, 40), k.z(0)]);
-    rightLeg = part("rightLeg", 4, 6, [k.rect(4, 18, { radius: 2 }), k.color(40, 40, 40), k.z(0)]);
+    leftLeg = part("leftLeg", -4, 6, [k.rect(4, 18, { radius: 2 }), k.color(40, 40, 40), k.z(100)]);
+    rightLeg = part("rightLeg", 4, 6, [k.rect(4, 18, { radius: 2 }), k.color(40, 40, 40), k.z(100)]);
 
     (plr as any)._animT = 0;
 

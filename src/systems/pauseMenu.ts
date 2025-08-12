@@ -17,13 +17,15 @@ function showMenu(currentScene: string, restartData?: any) {
   if (uiRoot) return;
   setPaused(true);
 
-  uiRoot = k.add([k.pos(0, 0), k.fixed(), { isPauseMenu: true }]);
+  // Use a very high z value to ensure pause menu is always on top
+  uiRoot = k.add([k.pos(0, 0), k.fixed(), k.z(99999), { isPauseMenu: true }]);
 
   const overlay = uiRoot.add([
     k.rect(k.width(), k.height()),
     k.opacity(0.55),
     k.color(0, 0, 0),
     k.fixed(),
+    k.z(1),
   ]);
 
   const panel = uiRoot.add([
@@ -33,12 +35,14 @@ function showMenu(currentScene: string, restartData?: any) {
     k.color(35, 38, 55),
     k.outline(3, k.rgb(90, 100, 140)),
     k.fixed(),
+    k.z(2),
   ]);
 
   panel.add([
     k.text("PAUSED", { size: 30 }),
     k.pos(0, -70),
     k.anchor("center"),
+    k.z(3),
   ]);
 
   let y = -25;
@@ -70,11 +74,13 @@ function makeButton(parent: any, label: string, action: () => void, y: number) {
     k.color(60, 66, 95),
     k.area(),
     k.outline(2, k.rgb(110, 120, 160)),
+    k.z(4),
     { action },
   ]);
   btn.add([
     k.text(label, { size: 18 }),
     k.anchor("center"),
+    k.z(5),
   ]);
 
   btn.onHover(() => { btn.color = k.rgb(75, 82, 118); });
