@@ -4,10 +4,9 @@ import { GameState } from '../App';
 interface PlayerProps {
   gameState: GameState;
   onUpdatePosition: (x: number, y: number) => void;
-  onFlexBattle: (playerStrength: number) => void;
 }
 
-const Player: React.FC<PlayerProps> = ({ gameState, onUpdatePosition, onFlexBattle }) => {
+const Player: React.FC<PlayerProps> = ({ gameState, onUpdatePosition }) => {
   const [position, setPosition] = useState({ x: 100, y: 0 });
   const [velocity, setVelocity] = useState({ x: 0, y: 0 });
   const [isJumping, setIsJumping] = useState(false);
@@ -20,7 +19,7 @@ const Player: React.FC<PlayerProps> = ({ gameState, onUpdatePosition, onFlexBatt
 
   // Ground level calculation
   const groundLevel = 128;
-  const playerSize = getPlayerSize();
+  const playerSize = getPlayerSize(gameState.strength || 50);
   const moveSpeed = 6;
   const jumpPower = 15;
   const gravity = 0.8;
@@ -109,7 +108,6 @@ const Player: React.FC<PlayerProps> = ({ gameState, onUpdatePosition, onFlexBatt
       if (e.key === 'f' || e.key === 'F') {
         if (!isFlexing) {
           setIsFlexing(true);
-          onFlexBattle(gameState.strength);
           setTimeout(() => setIsFlexing(false), 1500);
         }
       }
@@ -126,15 +124,15 @@ const Player: React.FC<PlayerProps> = ({ gameState, onUpdatePosition, onFlexBatt
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [isFlexing, gameState.strength, onFlexBattle]);
+  }, [isFlexing]);
 
   useEffect(() => {
     onUpdatePosition(position.x, position.y);
   }, [position, onUpdatePosition]);
 
-  function getPlayerSize() {
+  function getPlayerSize(strength: number) {
     const baseSize = 60;
-    const strengthMultiplier = Math.min(gameState.strength / 50, 2);
+    const strengthMultiplier = Math.min(strength / 50, 2);
     return baseSize + (strengthMultiplier * 20);
   }
 
@@ -263,7 +261,7 @@ const Player: React.FC<PlayerProps> = ({ gameState, onUpdatePosition, onFlexBatt
         {isFlexing && (
           <>
             <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 pixel-font text-yellow-400 text-xs animate-bounce">
-              💪 {gameState.strength}
+              💪 {gameState.strength || 50}
             </div>
             <div className="absolute inset-0 bg-yellow-400/20 rounded-full animate-ping"></div>
             <div className="absolute -top-4 -left-4 -right-4 -bottom-4 border-4 border-yellow-400 rounded-full animate-pulse"></div>

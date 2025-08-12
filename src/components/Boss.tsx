@@ -101,7 +101,6 @@ const Boss: React.FC<BossProps> = ({ bossId, playerAttackPower, onDefeat, onPlay
     setBossAnimation('hurt');
     setTimeout(() => setBossAnimation('idle'), 500);
 
-    const damage = Math.floor(playerAttackPower * (0.8 + Math.random() * 0.4));
     const newBossHealth = Math.max(0, bossHealth - damage);
     setBossHealth(newBossHealth);
     
@@ -130,12 +129,12 @@ const Boss: React.FC<BossProps> = ({ bossId, playerAttackPower, onDefeat, onPlay
     const attacks = bossPhase === 1 ? currentBoss.attacks : currentBoss.phase2Attacks;
     const attackName = attacks[Math.floor(Math.random() * attacks.length)];
     const baseDamage = currentBoss.attack + (bossPhase === 2 ? 15 : 0);
-    const damage = Math.floor(baseDamage * (0.7 + Math.random() * 0.6));
+    const bossDamage = Math.floor(baseDamage * (0.7 + Math.random() * 0.6));
     
-    const newPlayerHealth = Math.max(0, playerHealth - damage);
+    const newPlayerHealth = Math.max(0, playerHealth - bossDamage);
     setPlayerHealth(newPlayerHealth);
     
-    setBattleLog(prev => [...prev, `${currentBoss.emoji} ${currentBoss.name} uses ${attackName} for ${damage} damage!`]);
+    setBattleLog(prev => [...prev, `${currentBoss.emoji} ${currentBoss.name} uses ${attackName} for ${bossDamage} damage!`]);
 
     if (newPlayerHealth <= 0) {
       setBattleLog(prev => [...prev, `💀 Defeat! You need more power to face this boss!`]);
