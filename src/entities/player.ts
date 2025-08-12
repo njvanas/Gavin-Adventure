@@ -22,9 +22,6 @@ export function spawnPlayer(p = k.vec2(64, 0), useStickman = false) {
     "player",
   ]);
 
-  // Play idle animation by default
-  try { (plr as any).play("idle"); } catch {}
-
   // Input
   const moveLeft = () => { 
     if (!ducking) {
