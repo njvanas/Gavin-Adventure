@@ -16,7 +16,6 @@ export function spawnPlayer(p = k.vec2(64, 0), useStickman = false) {
     k.sprite("player"),
     k.area({ shape: new k.Rect(k.vec2(-12, -16), 24, 32) }),
     k.body({ jumpForce: JUMP }),
-    k.rect(24, 32),
     k.color(255, 255, 255),
     k.opacity(useStickman ? 0 : 1),
     "player",
