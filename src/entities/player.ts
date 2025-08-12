@@ -6,7 +6,6 @@ export function spawnPlayer(p = k.vec2(64, 0), useStickman = false) {
   const SPEED = 220;
   const JUMP = 420;
 
-  let hearts = 3;
   let ducking = false;
 
   const plr = k.add([
@@ -19,7 +18,6 @@ export function spawnPlayer(p = k.vec2(64, 0), useStickman = false) {
     k.color(255, 255, 255),
     k.opacity(useStickman ? 0 : 1),
     "player",
-    { hearts },
   ]);
 
   // Play idle animation by default
@@ -92,23 +90,25 @@ export function spawnPlayer(p = k.vec2(64, 0), useStickman = false) {
     k.wait(duration, () => { if (plr.exists()) plr.opacity = useStickman ? 0 : 1; });
   }
 
-  function damage(n = 1) {
-    hearts = Math.max(0, hearts - n);
-    (plr as any).hearts = hearts;
-    flash();
+  // Bodybuilding power move - flex to restore some strength!
+  k.onKeyPress("f", () => {
+    // Flex animation
     try { (plr as any).play("hurt"); } catch {}
-    if (hearts <= 0) {
-      k.wait(0.05, () => {
-        plr.pos = p.clone();
-        hearts = 3;
-        (plr as any).hearts = hearts;
-        plr.vel = k.vec2(0, 0);
-        plr.opacity = useStickman ? 0 : 1;
-        plr.scale.y = 1;
-        plr.area.shape = new k.Rect(k.vec2(-12, -16), 24, 32);
-      });
-    }
-  }
+    flash(0.2, 0.5);
+    
+    // Add flex effect
+    k.add([
+      k.pos(plr.pos.x, plr.pos.y - 30),
+      k.text("💪 FLEX!", { size: 18, font: "Arial" }),
+      k.color(255, 255, 0),
+      k.move(k.vec2(0, -40), 60),
+      k.fade(0, 1),
+      k.lifespan(1.5),
+      k.z(50)
+    ]);
+    
+    k.shake(2);
+  });
 
-  return Object.assign(plr, { damage, getHearts: () => hearts });
+  return Object.assign(plr, { flash });
 }

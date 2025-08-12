@@ -17,34 +17,57 @@ export default function level1() {
     k.z(-100)
   ]);
 
-  // UI with modern styling
-  let score = 0;
-  const scoreText = k.add([
-    k.text("Score: 0", { 
-      size: 16, 
-      font: "Arial"
+  // Bodybuilding-themed UI
+  let coins = 0;
+  let strength = 100; // Gavin's strength level (starts at 100%)
+  let chickenNeeded = 50; // Coins needed to buy chicken and restore strength
+  
+  const coinsText = k.add([
+    k.text("💪 COINS: 0", { 
+      size: 18, 
+      font: "Arial",
     }), 
     k.pos(16, 16), 
     k.fixed(),
-    k.color(255, 255, 255),
+    k.color(255, 215, 0),
     k.z(100)
   ]);
   
-  const heartsText = k.add([
-    k.text("❤❤❤", { 
-      size: 20, 
+  const strengthText = k.add([
+    k.text("💪 STRENGTH: 100%", { 
+      size: 18, 
       font: "Arial"
     }), 
     k.pos(16, 40), 
     k.fixed(),
-    k.color(255, 100, 100),
+    k.color(0, 255, 0),
+    k.z(100)
+  ]);
+
+  const chickenText = k.add([
+    k.text("🍗 CHICKEN: 50 COINS", { 
+      size: 16, 
+      font: "Arial"
+    }), 
+    k.pos(16, 64), 
+    k.fixed(),
+    k.color(255, 165, 0),
     k.z(100)
   ]);
 
   k.onUpdate(() => {
-    const hearts = (plr as any).hearts ?? 3;
-    heartsText.text = "❤".repeat(hearts);
-    scoreText.text = `Score: ${score}`;
+    coinsText.text = `💪 COINS: ${coins}`;
+    strengthText.text = `💪 STRENGTH: ${strength}%`;
+    chickenText.text = `🍗 CHICKEN: ${chickenNeeded} COINS`;
+    
+    // Update strength color based on level
+    if (strength > 70) {
+      strengthText.color = k.rgb(0, 255, 0); // Green - strong
+    } else if (strength > 40) {
+      strengthText.color = k.rgb(255, 255, 0); // Yellow - weakening
+    } else {
+      strengthText.color = k.rgb(255, 0, 0); // Red - weak
+    }
   });
 
   // Camera follow with smooth movement
@@ -81,19 +104,19 @@ export default function level1() {
       "hazard",
     ]);
 
-  // Enhanced level layout with better spacing and more platforms
+  // Enhanced level layout with bodybuilding theme
   solid(120, groundY, 420, 24, k.rgb(139, 69, 19));        // left floor
-  hazard(540, groundY, 48, 24);        // gap hazard
+  hazard(540, groundY, 48, 24);        // gap hazard (cardio zone!)
   solid(588, groundY, 340, 24, k.rgb(139, 69, 19));        // right floor
-  solid(380, groundY - 80, 64, 12, k.rgb(160, 82, 45));     // floating block
+  solid(380, groundY - 80, 64, 12, k.rgb(160, 82, 45));     // weight bench platform
   
   // Add more platforms for variety
-  solid(200, groundY - 120, 48, 12, k.rgb(160, 82, 45));    // left floating platform
-  solid(600, groundY - 140, 48, 12, k.rgb(160, 82, 45));    // right floating platform
-  solid(400, groundY - 160, 64, 12, k.rgb(160, 82, 45));    // high platform
+  solid(200, groundY - 120, 48, 12, k.rgb(160, 82, 45));    // protein shake platform
+  solid(600, groundY - 140, 48, 12, k.rgb(160, 82, 45));    // dumbbell platform
+  solid(400, groundY - 160, 64, 12, k.rgb(160, 82, 45));    // high-intensity platform
 
-  // Moving platform with better visuals
-  const mplat = k.add([
+  // Moving platform (treadmill!)
+  const treadmill = k.add([
     k.pos(520, groundY - 50),
     k.rect(60, 10),
     k.area(),
@@ -101,16 +124,16 @@ export default function level1() {
     k.color(70, 130, 180),
     k.z(10),
     "solid",
-    "mplatform",
+    "treadmill",
   ]);
-  const mStart = mplat.pos.clone();
+  const tStart = treadmill.pos.clone();
   let t = 0;
   k.onUpdate(() => {
     t += k.dt();
-    mplat.pos.x = mStart.x + Math.sin(t) * 40;
+    treadmill.pos.x = tStart.x + Math.sin(t) * 40;
   });
 
-  // Enhanced coins with better positioning
+  // Enhanced coins with better positioning (protein sources!)
   const coin = (x: number, y: number) =>
     k.add([
       k.pos(x, y),
@@ -130,13 +153,13 @@ export default function level1() {
     coin(x, groundY - 130 + (i % 2 ? -10 : 0)),
   );
 
-  // Modern exit door
+  // Chicken shop (goal instead of princess!)
   k.add([
     k.pos(940, groundY - 24),
     k.sprite("door"),
     k.area(),
     k.z(15),
-    "exit",
+    "chicken_shop",
   ]);
 
   // Enhanced checkpoint with visual feedback
@@ -156,42 +179,56 @@ export default function level1() {
     checkpoint.opacity = 0.7 + Math.sin(checkpointGlow) * 0.3;
   });
 
-  // Add some enemy slimes to make the level more challenging
+  // Add some enemy slimes (lazy people who don't work out!)
   spawnPatroller({ x: 300, y: groundY - 12, speed: 40 });
   spawnPatroller({ x: 500, y: groundY - 12, speed: 35 });
   spawnPatroller({ x: 750, y: groundY - 12, speed: 45 });
 
-  // Enhanced collisions with better feedback
+  // Enhanced collisions with bodybuilding theme
   plr.onCollide("coin", (c) => {
     k.destroy(c);
-    score += 10;
+    coins += 10;
+    strength += 2; // Coins give you a little energy boost!
+    if (strength > 100) strength = 100;
+    
     // Add coin collection effect
     k.add([
       k.pos(c.pos.x, c.pos.y),
-      k.text("+10", { size: 16, font: "Arial" }),
+      k.text("+10 COINS!", { size: 16, font: "Arial" }),
       k.color(255, 215, 0),
       k.move(k.vec2(0, -50), 100),
       k.fade(0, 1),
       k.lifespan(1),
       k.z(50)
     ]);
+    
+    // Strength boost effect
+    k.add([
+      k.pos(c.pos.x, c.pos.y - 20),
+      k.text("+2 STRENGTH!", { size: 14, font: "Arial" }),
+      k.color(0, 255, 0),
+      k.move(k.vec2(0, -30), 80),
+      k.fade(0, 1),
+      k.lifespan(0.8),
+      k.z(50)
+    ]);
   });
 
   plr.onCollide("hazard", () => {
-    (plr as any).damage?.(1);
-    if ((plr as any).getHearts?.() > 0) {
-      k.shake(3);
-      // Add damage effect
-      k.add([
-        k.pos(plr.pos.x, plr.pos.y - 20),
-        k.text("OUCH!", { size: 14, font: "Arial" }),
-        k.color(255, 0, 0),
-        k.move(k.vec2(0, -30), 80),
-        k.fade(0, 1),
-        k.lifespan(0.8),
-        k.z(50)
-      ]);
-    }
+    strength -= 15; // Cardio zone drains your gains!
+    if (strength < 0) strength = 0;
+    
+    k.shake(3);
+    // Add damage effect
+    k.add([
+      k.pos(plr.pos.x, plr.pos.y - 20),
+      k.text("CARDIO DRAIN!", { size: 14, font: "Arial" }),
+      k.color(255, 0, 0),
+      k.move(k.vec2(0, -30), 80),
+      k.fade(0, 1),
+      k.lifespan(0.8),
+      k.z(50)
+    ]);
   });
 
   plr.onCollide("checkpoint", (c) => {
@@ -208,28 +245,105 @@ export default function level1() {
     ]);
   });
 
-  plr.onCollide("exit", () => k.go("level2"));
+  // Chicken shop collision - need enough coins!
+  plr.onCollide("chicken_shop", () => {
+    if (coins >= chickenNeeded) {
+      // Success! Buy chicken and restore strength
+      coins -= chickenNeeded;
+      strength = 100; // Full strength restored!
+      chickenNeeded += 25; // Next chicken costs more
+      
+      // Victory effect
+      k.add([
+        k.pos(plr.pos.x, plr.pos.y - 30),
+        k.text("🍗 CHICKEN ACQUIRED!", { size: 18, font: "Arial" }),
+        k.color(255, 165, 0),
+        k.move(k.vec2(0, -50), 60),
+        k.fade(0, 1),
+        k.lifespan(2),
+        k.z(50)
+      ]);
+      
+      k.add([
+        k.pos(plr.pos.x, plr.pos.y - 50),
+        k.text("💪 STRENGTH RESTORED!", { size: 16, font: "Arial" }),
+        k.color(0, 255, 0),
+        k.move(k.vec2(0, -40), 50),
+        k.fade(0, 1),
+        k.lifespan(1.8),
+        k.z(50)
+      ]);
+      
+      k.shake(5);
+      
+      // Go to next level
+      k.wait(2, () => k.go("level2"));
+    } else {
+      // Not enough coins
+      k.add([
+        k.pos(plr.pos.x, plr.pos.y - 20),
+        k.text("Need more coins!", { size: 16, font: "Arial" }),
+        k.color(255, 0, 0),
+        k.move(k.vec2(0, -30), 60),
+        k.fade(0, 1),
+        k.lifespan(1.5),
+        k.z(50)
+      ]);
+    }
+  });
+
+  // Enemy collision - they steal your gains!
+  plr.onCollide("enemy", () => {
+    strength -= 20; // Enemies drain your strength!
+    if (strength < 0) strength = 0;
+    
+    k.shake(4);
+    // Add strength drain effect
+    k.add([
+      k.pos(plr.pos.x, plr.pos.y - 20),
+      k.text("GAINS STOLEN!", { size: 16, font: "Arial" }),
+      k.color(255, 0, 0),
+      k.move(k.vec2(0, -40), 70),
+      k.fade(0, 1),
+      k.lifespan(1.2),
+      k.z(50)
+    ]);
+    
+    // Push player back
+    plr.move(-100, 0);
+  });
 
   // Enhanced respawn handling
   k.onUpdate(() => {
-    if ((plr as any).getHearts?.() === 0) {
+    if (strength <= 0) {
       k.wait(0.05, () => {
         plr.pos = respawn.clone().sub(k.vec2(0, SPAWN_Y_OFFSET));
-        (plr as any).hearts = 3;
+        strength = 50; // Respawn with half strength
         plr.vel = k.vec2(0, 0);
         plr.scale.y = 1;
         plr.area.shape = new k.Rect(k.vec2(-12, -16), 24, 32);
+        
+        // Respawn effect
+        k.add([
+          k.pos(plr.pos.x, plr.pos.y - 20),
+          k.text("RESPAWNED!", { size: 16, font: "Arial" }),
+          k.color(255, 255, 0),
+          k.move(k.vec2(0, -30), 60),
+          k.fade(0, 1),
+          k.lifespan(1.5),
+          k.z(50)
+        ]);
       });
     }
   });
 
   // Add some decorative elements
-  // Floating particles
+  // Floating protein particles
   for (let i = 0; i < 15; i++) {
     const particle = k.add([
       k.pos(Math.random() * 800, Math.random() * 150),
       k.circle(1),
-      k.color(255, 255, 255, 0.6),
+      k.color(255, 165, 0, 0.6), // Orange protein particles
       k.move(k.vec2(0, -20), 0),
       k.z(5),
       k.lifespan(3)
@@ -239,4 +353,25 @@ export default function level1() {
       particle.opacity = 0.6 + Math.sin(k.time() * 2 + i) * 0.4;
     });
   }
+
+  // Motivational messages
+  const messages = [
+    "💪 GAINS DON'T COME EASY!",
+    "🍗 CHICKEN = STRENGTH!",
+    "🏋️ NO PAIN, NO GAIN!",
+    "💪 LIFT HEAVY, EAT HEAVY!"
+  ];
+  
+  let messageIndex = 0;
+  k.loop(8, () => {
+    k.add([
+      k.pos(400, 100),
+      k.text(messages[messageIndex], { size: 20, font: "Arial" }),
+      k.color(255, 255, 255),
+      k.fade(0, 1),
+      k.lifespan(2),
+      k.z(200)
+    ]);
+    messageIndex = (messageIndex + 1) % messages.length;
+  });
 }
