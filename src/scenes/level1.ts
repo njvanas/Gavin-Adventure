@@ -1,5 +1,6 @@
 import { k } from "../game";
 import { spawnPlayer, SPAWN_Y_OFFSET } from "../entities/player";
+import { spawnPatroller } from "../entities/enemy";
 
 export default function level1() {
   k.setGravity(1200);
@@ -81,11 +82,16 @@ export default function level1() {
       "hazard",
     ]);
 
-  // Enhanced level layout with better spacing
+  // Enhanced level layout with better spacing and more platforms
   solid(120, groundY, 420, 24, k.rgb(139, 69, 19));        // left floor
   hazard(540, groundY, 48, 24);        // gap hazard
   solid(588, groundY, 340, 24, k.rgb(139, 69, 19));        // right floor
   solid(380, groundY - 80, 64, 12, k.rgb(160, 82, 45));     // floating block
+  
+  // Add more platforms for variety
+  solid(200, groundY - 120, 48, 12, k.rgb(160, 82, 45));    // left floating platform
+  solid(600, groundY - 140, 48, 12, k.rgb(160, 82, 45));    // right floating platform
+  solid(400, groundY - 160, 64, 12, k.rgb(160, 82, 45));    // high platform
 
   // Moving platform with better visuals
   const mplat = k.add([
@@ -115,9 +121,14 @@ export default function level1() {
       "coin",
     ]);
   
-  // Better coin placement for jump arc
+  // Better coin placement for jump arc and exploration
   [420, 455, 490, 625].forEach((x, i) =>
     coin(x, groundY - 110 + (i % 2 ? -6 : 0)),
+  );
+  
+  // Add more coins on platforms
+  [220, 620, 420].forEach((x, i) =>
+    coin(x, groundY - 130 + (i % 2 ? -10 : 0)),
   );
 
   // Modern exit door
@@ -145,6 +156,11 @@ export default function level1() {
     checkpointGlow += k.dt() * 3;
     checkpoint.opacity = 0.7 + Math.sin(checkpointGlow) * 0.3;
   });
+
+  // Add some enemy slimes to make the level more challenging
+  spawnPatroller({ x: 300, y: groundY - 12, speed: 40 });
+  spawnPatroller({ x: 500, y: groundY - 12, speed: 35 });
+  spawnPatroller({ x: 750, y: groundY - 12, speed: 45 });
 
   // Enhanced collisions with better feedback
   plr.onCollide("coin", (c) => {

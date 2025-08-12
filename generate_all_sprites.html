@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gavin Adventure - All Sprite Generator</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background: #f0f0f0;
+        }
+        .sprite-section { 
+            background: white; 
+            margin: 20px 0; 
+            padding: 20px; 
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        canvas { 
+            border: 2px solid #ccc; 
+            margin: 10px; 
+            background: white;
+        }
+        .controls { margin: 20px 0; }
+        button { 
+            padding: 12px 24px; 
+            margin: 5px; 
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover { background: #45a049; }
+        .download-all { 
+            background: #2196F3; 
+            font-size: 18px; 
+            padding: 15px 30px;
+        }
+        .download-all:hover { background: #1976D2; }
+        h1 { color: #333; text-align: center; }
+        h2 { color: #666; }
+    </style>
+</head>
+<body>
+    <h1>🎮 Gavin's Adventure - Complete Sprite Generator</h1>
+    
+    <div class="sprite-section">
+        <h2>1. Gavin the Adventurer (24x32 pixels, 8 frames)</h2>
+        <div class="controls">
+            <button onclick="generateGavinSprite()">Generate Gavin</button>
+            <button onclick="downloadSprite('gavin', 'gavin.png')">Download Gavin</button>
+        </div>
+        <canvas id="gavinCanvas" width="192" height="32"></canvas>
+        <p>8-frame animation: idle, run, jump, fall, hurt</p>
+    </div>
+
+    <div class="sprite-section">
+        <h2>2. Enemy Slime (20x16 pixels, 4 frames)</h2>
+        <div class="controls">
+            <button onclick="generateSlimeSprite()">Generate Slime</button>
+            <button onclick="downloadSprite('slime', 'enemy_slime.png')">Download Slime</button>
+        </div>
+        <canvas id="slimeCanvas" width="80" height="16"></canvas>
+        <p>4-frame walking animation with bounce effect</p>
+    </div>
+
+    <div class="sprite-section">
+        <h2>3. Golden Coin (16x16 pixels, 6 frames)</h2>
+        <div class="controls">
+            <button onclick="generateCoinSprite()">Generate Coin</button>
+            <button onclick="downloadSprite('coin', 'coin.png')">Download Coin</button>
+        </div>
+        <canvas id="coinCanvas" width="96" height="16"></canvas>
+        <p>6-frame spinning animation</p>
+    </div>
+
+    <div class="sprite-section">
+        <h2>4. Forest Background (800x600 pixels)</h2>
+        <div class="controls">
+            <button onclick="generateBackground()">Generate Background</button>
+            <button onclick="downloadSprite('background', 'forest_bg.png')">Download Background</button>
+        </div>
+        <canvas id="bgCanvas" width="400" height="300" style="max-width: 100%; height: auto;"></canvas>
+        <p>Beautiful forest scene with mountains, trees, and sky</p>
+    </div>
+
+    <div class="sprite-section">
+        <h2>5. Checkpoint & Door (16x24 & 24x32 pixels)</h2>
+        <div class="controls">
+            <button onclick="generateCheckpointAndDoor()">Generate Checkpoint & Door</button>
+            <button onclick="downloadSprite('checkpoint', 'checkpoint.png')">Download Checkpoint</button>
+            <button onclick="downloadSprite('door', 'door.png')">Download Door</button>
+        </div>
+        <canvas id="checkpointCanvas" width="32" height="24"></canvas>
+        <canvas id="doorCanvas" width="24" height="32"></canvas>
+        <p>Checkpoint flag and exit door sprites</p>
+    </div>
+
+    <div class="sprite-section">
+        <button class="download-all" onclick="generateAllSprites()">🎨 Generate ALL Sprites at Once</button>
+        <p><strong>Instructions:</strong> Click "Generate ALL Sprites" then download each sprite. Place the PNG files in the correct directories:</p>
+        <ul>
+            <li><code>gavin.png</code> → <code>public/assets/sprites/</code></li>
+            <li><code>enemy_slime.png</code> → <code>public/assets/sprites/</code></li>
+            <li><code>coin.png</code> → <code>public/assets/sprites/</code></li>
+            <li><code>forest_bg.png</code> → <code>public/assets/backgrounds/</code></li>
+            <li><code>checkpoint.png</code> → <code>public/assets/sprites/</code></li>
+            <li><code>door.png</code> → <code>public/assets/sprites/</code></li>
+        </ul>
+    </div>
+
+    <script>
+        // Gavin Sprite Generator
+        function generateGavinSprite() {
+            const canvas = document.getElementById('gavinCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, 192, 32);
+            
+            for (let frame = 0; frame < 8; frame++) {
+                const x = frame * 24;
+                drawGavinFrame(ctx, x, 0, frame);
+            }
+        }
+        
+        function drawGavinFrame(ctx, x, y, frame) {
+            const colors = {
+                skin: '#FFB366', hair: '#8B4513', shirt: '#4A90E2',
+                pants: '#2E4A6B', boots: '#1A1A1A', belt: '#8B4513', outline: '#000000'
+            };
+            
+            if (frame === 0 || frame === 1) {
+                const breath = frame === 1 ? 1 : 0;
+                ctx.fillStyle = colors.skin;
+                ctx.fillRect(x + 8, y + 2 + breath, 8, 8);
+                ctx.fillStyle = colors.hair;
+                ctx.fillRect(x + 7, y + 1 + breath, 10, 4);
+                ctx.fillStyle = colors.shirt;
+                ctx.fillRect(x + 6, y + 10 + breath, 12, 12);
+                ctx.fillStyle = colors.skin;
+                ctx.fillRect(x + 4, y + 12 + breath, 3, 8);
+                ctx.fillRect(x + 17, y + 12 + breath, 3, 8);
+                ctx.fillStyle = colors.pants;
+                ctx.fillRect(x + 7, y + 22 + breath, 10, 8);
+                ctx.fillStyle = colors.boots;
+                ctx.fillRect(x + 6, y + 30 + breath, 12, 2);
+                ctx.fillStyle = colors.belt;
+                ctx.fillRect(x + 6, y + 20 + breath, 12, 2);
+            } else if (frame >= 2 && frame <= 5) {
+                const runPhase = (frame - 2) % 4;
+                const legOffset = Math.sin(runPhase * Math.PI / 2) * 2;
+                const armOffset = Math.cos(runPhase * Math.PI / 2) * 2;
+                
+                ctx.fillStyle = colors.skin;
+                ctx.fillRect(x + 8, y + 2, 8, 8);
+                ctx.fillStyle = colors.hair;
+                ctx.fillRect(x + 7, y + 1, 10, 4);
+                ctx.fillStyle = colors.shirt;
+                ctx.fillRect(x + 6, y + 10, 12, 12);
+                ctx.fillStyle = colors.skin;
+                ctx.fillRect(x + 4, y + 12 + armOffset, 3, 8);
+                ctx.fillRect(x + 17, y + 12 - armOffset, 3, 8);
+                ctx.fillStyle = colors.pants;
+                ctx.fillRect(x + 7, y + 22, 10, 8);
+                ctx.fillStyle = colors.boots;
+                ctx.fillRect(x + 6, y + 30 + legOffset, 12, 2);
+                ctx.fillStyle = colors.belt;
+                ctx.fillRect(x + 6, y + 20, 12, 2);
+            } else if (frame === 6) {
+                ctx.fillStyle = colors.skin;
+                ctx.fillRect(x + 8, y + 2, 8, 8);
+                ctx.fillStyle = colors.hair;
+                ctx.fillRect(x + 7, y + 1, 10, 4);
+                ctx.fillStyle = colors.shirt;
+                ctx.fillRect(x + 6, y + 10, 12, 12);
+                ctx.fillStyle = colors.skin;
+                ctx.fillRect(x + 4, y + 8, 3, 8);
+                ctx.fillRect(x + 17, y + 8, 3, 8);
+                ctx.fillStyle = colors.pants;
+                ctx.fillRect(x + 7, y + 22, 10, 8);
+                ctx.fillStyle = colors.boots;
+                ctx.fillRect(x + 6, y + 30, 12, 2);
+                ctx.fillStyle = colors.belt;
+                ctx.fillRect(x + 6, y + 20, 12, 2);
+            } else if (frame === 7) {
+                ctx.fillStyle = colors.skin;
+                ctx.fillRect(x + 8, y + 2, 8, 8);
+                ctx.fillStyle = colors.hair;
+                ctx.fillRect(x + 7, y + 1, 10, 4);
+                ctx.fillStyle = colors.shirt;
+                ctx.fillRect(x + 6, y + 10, 12, 12);
+                ctx.fillStyle = colors.skin;
+                ctx.fillRect(x + 4, y + 16, 3, 8);
+                ctx.fillRect(x + 17, y + 16, 3, 8);
+                ctx.fillStyle = colors.pants;
+                ctx.fillRect(x + 7, y + 22, 10, 8);
+                ctx.fillStyle = colors.boots;
+                ctx.fillRect(x + 6, y + 30, 12, 2);
+                ctx.fillStyle = colors.belt;
+                ctx.fillRect(x + 6, y + 20, 12, 2);
+            }
+            
+            ctx.strokeStyle = colors.outline;
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x + 0.5, y + 0.5, 23, 31);
+        }
+
+        // Slime Sprite Generator
+        function generateSlimeSprite() {
+            const canvas = document.getElementById('slimeCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, 80, 16);
+            
+            for (let frame = 0; frame < 4; frame++) {
+                const x = frame * 20;
+                drawSlimeFrame(ctx, x, 0, frame);
+            }
+        }
+        
+        function drawSlimeFrame(ctx, x, y, frame) {
+            const colors = {
+                slime: '#4CAF50', highlight: '#8BC34A', shadow: '#2E7D32',
+                outline: '#1B5E20', eye: '#FFFFFF', pupil: '#000000'
+            };
+            
+            const bounce = Math.sin(frame * Math.PI / 2) * 2;
+            const squish = 1 + Math.cos(frame * Math.PI / 2) * 0.2;
+            
+            ctx.fillStyle = colors.slime;
+            ctx.beginPath();
+            ctx.ellipse(x + 10, y + 8 + bounce, 8 * squish, 6, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = colors.highlight;
+            ctx.beginPath();
+            ctx.ellipse(x + 8, y + 6 + bounce, 4 * squish, 3, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = colors.shadow;
+            ctx.beginPath();
+            ctx.ellipse(x + 12, y + 10 + bounce, 6 * squish, 4, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = colors.eye;
+            ctx.fillRect(x + 6, y + 4 + bounce, 3, 3);
+            ctx.fillRect(x + 11, y + 4 + bounce, 3, 3);
+            
+            ctx.fillStyle = colors.pupil;
+            ctx.fillRect(x + 7, y + 5 + bounce, 1, 1);
+            ctx.fillRect(x + 12, y + 5 + bounce, 1, 1);
+            
+            ctx.strokeStyle = colors.outline;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.ellipse(x + 10, y + 8 + bounce, 8 * squish, 6, 0, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        // Coin Sprite Generator
+        function generateCoinSprite() {
+            const canvas = document.getElementById('coinCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, 96, 16);
+            
+            for (let frame = 0; frame < 6; frame++) {
+                const x = frame * 16;
+                drawCoinFrame(ctx, x, 0, frame);
+            }
+        }
+        
+        function drawCoinFrame(ctx, x, y, frame) {
+            const colors = {
+                gold: '#FFD700', highlight: '#FFF8DC', shadow: '#B8860B',
+                outline: '#8B6914', shine: '#FFFFFF'
+            };
+            
+            const rotation = (frame * Math.PI) / 3;
+            const scale = Math.abs(Math.cos(rotation));
+            
+            ctx.fillStyle = colors.gold;
+            ctx.beginPath();
+            ctx.ellipse(x + 8, y + 8, 6 * scale, 6, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = colors.highlight;
+            ctx.beginPath();
+            ctx.ellipse(x + 6, y + 6, 3 * scale, 3, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = colors.shadow;
+            ctx.beginPath();
+            ctx.ellipse(x + 10, y + 10, 4 * scale, 4, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = colors.shine;
+            ctx.fillRect(x + 5, y + 4, 2 * scale, 1);
+            ctx.fillRect(x + 6, y + 5, 1 * scale, 1);
+            
+            ctx.fillStyle = colors.shadow;
+            ctx.fillRect(x + 7, y + 7, 2 * scale, 2);
+            
+            ctx.strokeStyle = colors.outline;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.ellipse(x + 8, y + 8, 6 * scale, 6, 0, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        // Background Generator
+        function generateBackground() {
+            const canvas = document.getElementById('bgCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, 400, 300);
+            
+            // Sky gradient
+            const skyGradient = ctx.createLinearGradient(0, 0, 0, 150);
+            skyGradient.addColorStop(0, '#87CEEB');
+            skyGradient.addColorStop(1, '#B0E0E6');
+            ctx.fillStyle = skyGradient;
+            ctx.fillRect(0, 0, 400, 150);
+            
+            // Sun
+            ctx.fillStyle = '#FFD700';
+            ctx.beginPath();
+            ctx.arc(350, 40, 20, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Mountains
+            ctx.fillStyle = '#8B7355';
+            ctx.beginPath();
+            ctx.moveTo(0, 150);
+            ctx.lineTo(100, 100);
+            ctx.lineTo(200, 125);
+            ctx.lineTo(300, 90);
+            ctx.lineTo(400, 110);
+            ctx.lineTo(400, 150);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Forest layers
+            for (let i = 0; i < 15; i++) {
+                const x = i * 28 + Math.random() * 10;
+                const height = 50 + Math.random() * 30;
+                drawTree(ctx, x, 150, height, '#228B22', 0.8);
+            }
+            
+            // Ground
+            const groundGradient = ctx.createLinearGradient(0, 200, 0, 300);
+            groundGradient.addColorStop(0, '#8FBC8F');
+            groundGradient.addColorStop(1, '#556B2F');
+            ctx.fillStyle = groundGradient;
+            ctx.fillRect(0, 200, 400, 100);
+            
+            // Grass details
+            ctx.fillStyle = '#90EE90';
+            for (let i = 0; i < 50; i++) {
+                const x = Math.random() * 400;
+                const y = 200 + Math.random() * 25;
+                ctx.fillRect(x, y, 1, 4 + Math.random() * 5);
+            }
+        }
+        
+        function drawTree(ctx, x, y, height, color, opacity) {
+            ctx.globalAlpha = opacity;
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(x - 2, y, 4, height);
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(x, y - height/2, height/2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1.0;
+        }
+
+        // Checkpoint and Door Generator
+        function generateCheckpointAndDoor() {
+            // Checkpoint
+            const checkpointCanvas = document.getElementById('checkpointCanvas');
+            const checkpointCtx = checkpointCanvas.getContext('2d');
+            checkpointCtx.clearRect(0, 0, 32, 24);
+            
+            // Flag pole
+            checkpointCtx.fillStyle = '#8B4513';
+            checkpointCtx.fillRect(14, 0, 4, 24);
+            
+            // Flag
+            checkpointCtx.fillStyle = '#FF0000';
+            checkpointCtx.fillRect(18, 2, 12, 8);
+            checkpointCtx.fillStyle = '#FFFFFF';
+            checkpointCtx.fillRect(18, 2, 12, 2);
+            
+            // Door
+            const doorCanvas = document.getElementById('doorCanvas');
+            const doorCtx = doorCanvas.getContext('2d');
+            doorCtx.clearRect(0, 0, 24, 32);
+            
+            // Door frame
+            doorCtx.fillStyle = '#8B4513';
+            doorCtx.fillRect(0, 0, 24, 32);
+            
+            // Door panels
+            doorCtx.fillStyle = '#A0522D';
+            doorCtx.fillRect(2, 2, 20, 28);
+            
+            // Door handle
+            doorCtx.fillStyle = '#FFD700';
+            doorCtx.fillRect(18, 14, 2, 4);
+        }
+
+        // Download function
+        function downloadSprite(type, filename) {
+            let canvas;
+            switch(type) {
+                case 'gavin': canvas = document.getElementById('gavinCanvas'); break;
+                case 'slime': canvas = document.getElementById('slimeCanvas'); break;
+                case 'coin': canvas = document.getElementById('coinCanvas'); break;
+                case 'background': canvas = document.getElementById('bgCanvas'); break;
+                case 'checkpoint': canvas = document.getElementById('checkpointCanvas'); break;
+                case 'door': canvas = document.getElementById('doorCanvas'); break;
+            }
+            
+            if (canvas) {
+                const link = document.createElement('a');
+                link.download = filename;
+                link.href = canvas.toDataURL();
+                link.click();
+            }
+        }
+
+        // Generate all sprites at once
+        function generateAllSprites() {
+            generateGavinSprite();
+            generateSlimeSprite();
+            generateCoinSprite();
+            generateBackground();
+            generateCheckpointAndDoor();
+            alert('All sprites generated! Now download each one and place them in the correct directories.');
+        }
+
+        // Generate all on load
+        window.onload = function() {
+            generateAllSprites();
+        };
+    </script>
+</body>
+</html>
