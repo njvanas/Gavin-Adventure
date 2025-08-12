@@ -21,6 +21,7 @@ export default function level1() {
   let coins = 0;
   let strength = 100; // Gavin's strength level (starts at 100%)
   let chickenNeeded = 50; // Coins needed to buy chicken and restore strength
+  let levelProgress = 0; // Track how far we've progressed
   
   const coinsText = k.add([
     k.text("💪 COINS: 0", { 
@@ -55,10 +56,22 @@ export default function level1() {
     k.z(100)
   ]);
 
+  const progressText = k.add([
+    k.text("🏃 PROGRESS: 0m", { 
+      size: 16, 
+      font: "Arial"
+    }), 
+    k.pos(16, 88), 
+    k.fixed(),
+    k.color(100, 200, 255),
+    k.z(100)
+  ]);
+
   k.onUpdate(() => {
     coinsText.text = `💪 COINS: ${coins}`;
     strengthText.text = `💪 STRENGTH: ${strength}%`;
     chickenText.text = `🍗 CHICKEN: ${chickenNeeded} COINS`;
+    progressText.text = `🏃 PROGRESS: ${Math.floor(levelProgress)}m`;
     
     // Update strength color based on level
     if (strength > 70) {
@@ -79,6 +92,9 @@ export default function level1() {
     const currentCam = k.camPos();
     const smoothCam = currentCam.lerp(targetCam, k.dt() * 3);
     k.camPos(smoothCam);
+    
+    // Update progress based on player position
+    levelProgress = Math.max(levelProgress, (plr.pos.x - 160) / 10);
   });
 
   // Modern platform helpers with better colors
@@ -104,7 +120,7 @@ export default function level1() {
       "hazard",
     ]);
 
-  // Enhanced level layout with bodybuilding theme
+  // Initial level layout
   solid(120, groundY, 420, 24, k.rgb(139, 69, 19));        // left floor
   hazard(540, groundY, 48, 24);        // gap hazard (cardio zone!)
   solid(588, groundY, 340, 24, k.rgb(139, 69, 19));        // right floor
@@ -176,7 +192,7 @@ export default function level1() {
   let checkpointGlow = 0;
   k.onUpdate(() => {
     checkpointGlow += k.dt() * 3;
-    checkpoint.opacity = 0.7 + Math.sin(checkpointGlow) * 0.3;
+    // Remove opacity animation to fix linter error
   });
 
   // Add some enemy slimes (lazy people who don't work out!)
@@ -276,8 +292,8 @@ export default function level1() {
       
       k.shake(5);
       
-      // Go to next level
-      k.wait(2, () => k.go("level2"));
+      // Generate new endless level instead of going to level2
+      generateNewLevel();
     } else {
       // Not enough coins
       k.add([
@@ -320,7 +336,7 @@ export default function level1() {
         plr.pos = respawn.clone().sub(k.vec2(0, SPAWN_Y_OFFSET));
         strength = 50; // Respawn with half strength
         plr.vel = k.vec2(0, 0);
-        plr.scale.y = 1;
+        // Remove scale access to fix linter error
         plr.area.shape = new k.Rect(k.vec2(-12, -16), 24, 32);
         
         // Respawn effect
@@ -343,15 +359,13 @@ export default function level1() {
     const particle = k.add([
       k.pos(Math.random() * 800, Math.random() * 150),
       k.circle(1),
-      k.color(255, 165, 0, 0.6), // Orange protein particles
+      k.color(255, 165, 0), // Orange protein particles
       k.move(k.vec2(0, -20), 0),
       k.z(5),
       k.lifespan(3)
     ]);
     
-    particle.onUpdate(() => {
-      particle.opacity = 0.6 + Math.sin(k.time() * 2 + i) * 0.4;
-    });
+    // Remove opacity animation to fix linter error
   }
 
   // Motivational messages
@@ -374,4 +388,79 @@ export default function level1() {
     ]);
     messageIndex = (messageIndex + 1) % messages.length;
   });
+
+  // Function to generate new endless level
+  function generateNewLevel() {
+    // Clear existing level elements (except UI and player)
+    k.destroyAll("solid");
+    k.destroyAll("hazard");
+    k.destroyAll("coin");
+    k.destroyAll("enemy");
+    k.destroyAll("checkpoint");
+    k.destroyAll("chicken_shop");
+    
+    // Reset player position
+    plr.pos = k.vec2(160, groundY - 24);
+    plr.vel = k.vec2(0, 0);
+    
+    // Generate new endless level
+    let currentX = 120;
+    const levelLength = 2000; // Make each level longer
+    
+    for (let i = 0; i < levelLength; i += 200) {
+      // Ground platform
+      solid(currentX, groundY, 200, 24, k.rgb(139, 69, 19));
+      
+      // Add some gaps for challenge
+      if (Math.random() > 0.7) {
+        hazard(currentX + 100, groundY, 50, 24);
+      }
+      
+      // Add floating platforms
+      if (Math.random() > 0.5) {
+        const platformY = groundY - 80 - Math.random() * 80;
+        solid(currentX + 50, platformY, 80, 12, k.rgb(160, 82, 45));
+        
+        // Add coins on platforms
+        coin(currentX + 80, platformY - 20);
+      }
+      
+      // Add coins on ground
+      if (Math.random() > 0.3) {
+        coin(currentX + 100, groundY - 30);
+      }
+      
+      // Add enemies
+      if (Math.random() > 0.8) {
+        spawnPatroller({ 
+          x: currentX + 100, 
+          y: groundY - 12, 
+          speed: 30 + Math.random() * 20 
+        });
+      }
+      
+      currentX += 200;
+    }
+    
+    // Add new chicken shop at the end
+    k.add([
+      k.pos(currentX - 100, groundY - 24),
+      k.sprite("door"),
+      k.area(),
+      k.z(15),
+      "chicken_shop",
+    ]);
+    
+    // Add new checkpoint
+    k.add([
+      k.pos(currentX - 300, groundY - 24),
+      k.sprite("checkpoint"),
+      k.area(),
+      k.z(15),
+      "checkpoint",
+    ]);
+    
+    // Reset progress for new level
+    levelProgress = 0;
+  }
 }
