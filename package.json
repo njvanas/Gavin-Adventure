@@ -23,9 +23,9 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/gavin-adventure.git"
+    "url": "https://github.com/Dolfie/Gavin-Adventure.git"
   },
-  "homepage": "https://yourusername.github.io/gavin-adventure",
+  "homepage": "https://dolfie.github.io/Gavin-Adventure",
   "devDependencies": {
     "http-server": "^14.1.1"
   },
