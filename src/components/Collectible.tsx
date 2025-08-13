@@ -64,17 +64,20 @@ const Collectible: React.FC<CollectibleProps> = ({
     if (isCollected) return;
 
     const playerSize = 64;
-    const collectibleSize = (asset.width || 32);
+    const collectibleSize = (asset.sprite?.width || 32);
     
-    const distance = Math.sqrt(
-      Math.pow(x - playerPosition.x, 2) + 
-      Math.pow(y - playerPosition.y, 2)
-    );
-
-    if (distance < (playerSize + collectibleSize) / 2) {
+    // Improved collision detection with proper ground level
+    const playerGroundY = 128; // Ground level
+    const collectibleGroundY = 128; // Ground level
+    
+    const horizontalDistance = Math.abs(x - playerPosition.x);
+    const verticalDistance = Math.abs((playerGroundY + playerPosition.y) - (collectibleGroundY + y));
+    
+    // Check if player is close enough to collect
+    if (horizontalDistance < (playerSize + collectibleSize) / 2 && verticalDistance < 50) {
       collectItem();
     }
-  }, [x, y, playerPosition, isCollected, asset.width]);
+  }, [x, y, playerPosition, isCollected, asset.sprite?.width]);
 
   const collectItem = () => {
     if (isCollected) return;
@@ -115,7 +118,7 @@ const Collectible: React.FC<CollectibleProps> = ({
       className={`absolute z-30 ${rarityGlow[rarity]}`}
       style={{
         left: x,
-        bottom: 128 + y + Math.sin(floatOffset) * 5, // Ground level + offset + floating effect
+        bottom: 128 + Math.sin(floatOffset) * 5, // Ground level + floating effect (ignore negative y values)
         transform: `scale(${isFloating ? 1.5 : 1})`,
         transition: 'transform 0.3s ease-out'
       }}
@@ -125,7 +128,7 @@ const Collectible: React.FC<CollectibleProps> = ({
       
       {/* Main sprite */}
       <SpriteRenderer
-        asset={asset}
+        asset={asset.sprite || asset}
         x={0}
         y={0}
         scale={1}

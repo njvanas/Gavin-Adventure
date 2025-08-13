@@ -21,6 +21,8 @@ const Player: React.FC<PlayerProps> = ({ gameState, onUpdatePosition }) => {
   const [currentSprite, setCurrentSprite] = useState(GAVIN_SPRITES[0]); // Start with idle
   const keysPressed = useRef<Set<string>>(new Set());
   const animationFrameRef = useRef<number>();
+  const velocityRef = useRef({ x: 0, y: 0 }); // Use ref to avoid infinite loop
+  const lastPositionRef = useRef({ x: 100, y: 0 }); // Track last position for updates
 
   // Ground level calculation
   const groundLevel = 128;
@@ -28,6 +30,26 @@ const Player: React.FC<PlayerProps> = ({ gameState, onUpdatePosition }) => {
   const moveSpeed = 6;
   const jumpPower = 15;
   const gravity = 0.8;
+
+  // Simple platform collision detection
+  const checkPlatformCollision = (x: number, y: number) => {
+    // This would be improved with actual platform data from the game state
+    // For now, just check if we're near any platforms
+    const platforms = [
+      { x: 400, y: -80, width: 200, height: 20 },
+      { x: 800, y: -60, width: 150, height: 20 },
+      { x: 1200, y: -100, width: 180, height: 20 }
+    ];
+    
+    for (const platform of platforms) {
+      if (x + playerSize > platform.x && 
+          x < platform.x + platform.width &&
+          Math.abs((groundLevel + y) - (groundLevel + platform.y + platform.height)) < 10) {
+        return platform;
+      }
+    }
+    return null;
+  };
 
   // Update sprite based on player state
   useEffect(() => {
@@ -44,31 +66,53 @@ const Player: React.FC<PlayerProps> = ({ gameState, onUpdatePosition }) => {
     setCurrentSprite(newSprite);
   }, [isJumping, isRunning, isFlexing]);
 
+  // Sync velocity ref with state for UI updates
+  useEffect(() => {
+    setVelocity(velocityRef.current);
+  }, [velocityRef.current.x, velocityRef.current.y]);
+
   // Smooth movement system
   useEffect(() => {
-    const gameLoop = () => {
+    // Only run the game loop when the game has started
+    if (!gameState.gameStarted) {
+      return;
+    }
+
+    let lastTime = 0;
+    const gameLoop = (currentTime: number) => {
+      // Only update at 60 FPS to prevent excessive updates
+      if (currentTime - lastTime < 16) {
+        animationFrameRef.current = requestAnimationFrame(gameLoop);
+        return;
+      }
+      lastTime = currentTime;
+
       setPosition(prev => {
         let newX = prev.x;
         let newY = prev.y;
         let newVelX = 0;
-        let newVelY = velocity.y;
+        let newVelY = velocityRef.current.y;
         let running = false;
+        let onGround = false;
+        let positionChanged = false;
 
-        // Horizontal movement
+        // Horizontal movement - only if keys are pressed
         if (keysPressed.current.has('ArrowLeft') || keysPressed.current.has('a') || keysPressed.current.has('q')) {
           newVelX = -moveSpeed;
           setFacingRight(false);
           running = true;
+          positionChanged = true;
         }
         if (keysPressed.current.has('ArrowRight') || keysPressed.current.has('d')) {
           newVelX = moveSpeed;
           setFacingRight(true);
           running = true;
+          positionChanged = true;
         }
 
         setIsRunning(running);
 
-        // Climbing and jumping
+        // Climbing and jumping - only if keys are pressed
         if (keysPressed.current.has('ArrowUp') || keysPressed.current.has('w') || keysPressed.current.has(' ') || keysPressed.current.has('z')) {
           if (!isJumping && !isClimbing) {
             // Check if near climbable obstacle
@@ -81,45 +125,85 @@ const Player: React.FC<PlayerProps> = ({ gameState, onUpdatePosition }) => {
               setIsJumping(true);
               newVelY = -jumpPower;
             }
+            positionChanged = true;
           } else if (isClimbing) {
             newVelY = -moveSpeed * 0.8; // Continue climbing
+            positionChanged = true;
           }
         }
 
-        // Apply horizontal movement
-        newX += newVelX;
-        newX = Math.max(0, Math.min(window.innerWidth - playerSize, newX));
+        // Apply horizontal movement only if there's input
+        if (positionChanged) {
+          newX += newVelX;
+          newX = Math.max(0, Math.min(window.innerWidth - playerSize, newX));
+        }
 
-        // Apply gravity and vertical movement
-        if (isJumping || isClimbing) {
+        // Apply gravity and vertical movement only if needed
+        if (isJumping || isClimbing || newVelY !== 0) {
           newY += newVelY;
           newVelY += gravity;
+          positionChanged = true;
+
+          // Check platform collision while falling
+          const platform = checkPlatformCollision(newX, newY);
+          if (platform && newVelY > 0) {
+            newY = platform.y + platform.height;
+            newVelY = 0;
+            setIsJumping(false);
+            setIsClimbing(false);
+            onGround = true;
+          }
 
           // Land on ground
-          if (newY <= 0) {
+          if (newY >= 0) {
             newY = 0;
             newVelY = 0;
             setIsJumping(false);
             setIsClimbing(false);
+            onGround = true;
+          }
+        } else {
+          // Check if player is on ground or platform
+          const platform = checkPlatformCollision(newX, newY);
+          if (platform) {
+            newY = platform.y + platform.height;
+            onGround = true;
+          } else if (newY >= 0) {
+            newY = 0;
+            onGround = true;
+          } else {
+            // Player is falling
+            newVelY += gravity;
+            newY += newVelY;
+            onGround = false;
+            positionChanged = true;
           }
         }
 
-        setVelocity({ x: newVelX, y: newVelY });
-        return { x: newX, y: newY };
+        velocityRef.current = { x: newVelX, y: newVelY };
+        
+        // Only return new position if something actually changed
+        if (positionChanged || newX !== prev.x || newY !== prev.y) {
+          return { x: newX, y: newY };
+        }
+        return prev; // No change
       });
 
-      animationFrameRef.current = requestAnimationFrame(gameLoop);
+      // Only continue the loop if the game is still active
+      if (gameState.gameStarted) {
+        animationFrameRef.current = requestAnimationFrame(gameLoop);
+      }
     };
 
-    // Start the game loop immediately
-    gameLoop();
+    // Start the game loop only when game is active
+    animationFrameRef.current = requestAnimationFrame(gameLoop);
     
     return () => {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [velocity, isJumping, isClimbing, playerSize, moveSpeed, jumpPower, gravity]);
+  }, [gameState.gameStarted, playerSize, moveSpeed, jumpPower, gravity]);
 
   // Key event handlers
   useEffect(() => {
@@ -152,7 +236,7 @@ const Player: React.FC<PlayerProps> = ({ gameState, onUpdatePosition }) => {
       // Simple click to jump for mobile
       if (!isJumping && !isClimbing) {
         setIsJumping(true);
-        setVelocity(prev => ({ ...prev, y: -jumpPower }));
+        velocityRef.current = { ...velocityRef.current, y: -jumpPower };
       }
     };
 
@@ -161,7 +245,7 @@ const Player: React.FC<PlayerProps> = ({ gameState, onUpdatePosition }) => {
       // Touch to jump for mobile
       if (!isJumping && !isClimbing) {
         setIsJumping(true);
-        setVelocity(prev => ({ ...prev, y: -jumpPower }));
+        velocityRef.current = { ...velocityRef.current, y: -jumpPower };
       }
     };
 
@@ -176,11 +260,18 @@ const Player: React.FC<PlayerProps> = ({ gameState, onUpdatePosition }) => {
       window.removeEventListener('click', handleClick);
       window.removeEventListener('touchstart', handleTouchStart);
     };
-  }, [isJumping, isClimbing]);
+  }, [isJumping, isClimbing, jumpPower]);
 
   useEffect(() => {
-    onUpdatePosition(position.x, position.y);
-  }, [position, onUpdatePosition]);
+    // Only call onUpdatePosition when the game is active and position has changed significantly
+    if (gameState.gameStarted) {
+      // Only update if position has changed by more than 1 pixel to prevent excessive updates
+      if (Math.abs(position.x - lastPositionRef.current.x) > 1 || Math.abs(position.y - lastPositionRef.current.y) > 1) {
+        lastPositionRef.current = { x: position.x, y: position.y };
+        onUpdatePosition(position.x, position.y);
+      }
+    }
+  }, [position.x, position.y, onUpdatePosition, gameState.gameStarted]);
 
   function getPlayerSize(strength: number) {
     const baseSize = 60;
@@ -213,7 +304,7 @@ const Player: React.FC<PlayerProps> = ({ gameState, onUpdatePosition }) => {
         // Click to jump
         if (!isJumping && !isClimbing) {
           setIsJumping(true);
-          setVelocity(prev => ({ ...prev, y: -jumpPower }));
+          velocityRef.current = { ...velocityRef.current, y: -jumpPower };
         }
         e.stopPropagation();
       }}
