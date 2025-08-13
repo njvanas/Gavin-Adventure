@@ -25,15 +25,25 @@ This guide explains how to set up automatic deployment for Gavin Adventure, whet
 
 ## ⚙️ Automatic Deployment Workflows
 
-This repository includes three deployment workflows:
+This repository includes four deployment workflows:
 
-### Simple Workflow: `deploy-simple.yml` (Recommended)
-- **Purpose**: Fastest deployment for static file projects
+### Legacy Workflow: `deploy-legacy.yml` (Most Reliable - Recommended)
+- **Purpose**: Most reliable deployment using proven technology
 - **Triggers**: Push to main/master branch, pull requests
 - **Features**: 
+  - Uses battle-tested `peaceiris/actions-gh-pages@v3`
   - No npm dependencies required
-  - Fastest deployment time
-  - Perfect for static HTML/JS projects
+  - Works reliably for both forks and main repos
+  - Creates `gh-pages` branch automatically
+  - Comprehensive file validation
+
+### Simple Workflow: `deploy-simple.yml`
+- **Purpose**: Modern deployment using GitHub's official actions
+- **Triggers**: Push to main/master branch, pull requests
+- **Features**: 
+  - Uses official GitHub Pages actions
+  - No npm dependencies required
+  - Modern artifact-based deployment
   - Comprehensive file validation
 
 ### Primary Workflow: `deploy.yml`
@@ -72,9 +82,10 @@ This repository includes three deployment workflows:
 ## 🚀 Quick Setup (Recommended)
 
 1. **Enable GitHub Pages**: Settings → Pages → Source → GitHub Actions
-2. **Use Simple Workflow**: The `deploy-simple.yml` workflow is fastest and most reliable
+2. **Use Legacy Workflow**: The `deploy-legacy.yml` workflow is most reliable and proven
 3. **Push Changes**: Any commit to `main` branch triggers automatic deployment
 4. **No npm Issues**: This workflow doesn't require npm dependencies
+5. **Fork Compatible**: Works reliably for both forks and main repositories
 
 ## 📁 Required Files for Deployment
 
