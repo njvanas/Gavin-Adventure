@@ -43,20 +43,13 @@ class GameEngine {
     }
     
     setupCanvas() {
-        // High-DPI canvas setup
-        const rect = this.canvas.getBoundingClientRect();
-        const dpr = this.pixelRatio;
+        // Set canvas size to match config
+        this.canvas.width = GAME_CONFIG.CANVAS_WIDTH;
+        this.canvas.height = GAME_CONFIG.CANVAS_HEIGHT;
         
-        // Set actual canvas size in memory
-        this.canvas.width = GAME_CONFIG.CANVAS_WIDTH * dpr;
-        this.canvas.height = GAME_CONFIG.CANVAS_HEIGHT * dpr;
-        
-        // Scale canvas back down using CSS
-        this.canvas.style.width = GAME_CONFIG.CANVAS_WIDTH + 'px';
-        this.canvas.style.height = GAME_CONFIG.CANVAS_HEIGHT + 'px';
-        
-        // Scale context to match device pixel ratio
-        this.ctx.scale(dpr, dpr);
+        // Scale canvas for better visibility (2x scale)
+        this.canvas.style.width = (GAME_CONFIG.CANVAS_WIDTH * 2) + 'px';
+        this.canvas.style.height = (GAME_CONFIG.CANVAS_HEIGHT * 2) + 'px';
         
         // Disable image smoothing for pixel perfect rendering
         this.ctx.imageSmoothingEnabled = false;
@@ -102,11 +95,10 @@ class GameEngine {
     gameLoop(timestamp) {
         if (!this.running) return;
         
-        // Enhanced frame timing with fixed timestep
+        // Simple variable timestep for smooth movement
         const newTime = timestamp;
-        const frameTime = Math.min(newTime - this.currentTime, 250); // Cap at 250ms
+        const deltaTime = Math.min(newTime - this.currentTime, 33.33); // Cap at 30fps minimum
         this.currentTime = newTime;
-        this.accumulator += frameTime;
         
         this.performanceProfiler.startFrame();
         
@@ -120,18 +112,14 @@ class GameEngine {
             this.nextScene = null;
         }
         
-        // Fixed timestep updates
-        while (this.accumulator >= this.frameTime) {
-            if (this.currentScene && this.scenes.has(this.currentScene)) {
-                this.scenes.get(this.currentScene).update(this.frameTime);
-            }
-            this.accumulator -= this.frameTime;
+        // Variable timestep update for smooth movement
+        if (this.currentScene && this.scenes.has(this.currentScene)) {
+            this.scenes.get(this.currentScene).update(deltaTime);
         }
         
-        // Variable timestep rendering with interpolation
-        const interpolation = this.accumulator / this.frameTime;
+        // Rendering
         if (this.currentScene && this.scenes.has(this.currentScene)) {
-            this.scenes.get(this.currentScene).preRender(interpolation);
+            this.scenes.get(this.currentScene).preRender(1.0);
         }
         
         // Clear canvas
@@ -149,7 +137,7 @@ class GameEngine {
         }
         
         // FPS counter
-        this.updateFPS(frameTime);
+        this.updateFPS(deltaTime);
         
         this.performanceProfiler.endFrame();
         
@@ -184,27 +172,27 @@ class GameEngine {
         this.ctx.font = '12px monospace';
         this.ctx.fillText(`FPS: ${this.fpsDisplay}`, 20, 30);
         this.ctx.fillText(`Frame Time: ${this.frameStats.frameTime.toFixed(2)}ms`, 20, 50);
-        this.ctx.fillText(`Scene: ${this.currentScene || 'None'}`, 20, 50);
-        this.ctx.fillText(`Pixel Ratio: ${this.pixelRatio}x`, 20, 70);
-        this.ctx.fillText(`Draw Calls: ${this.frameStats.drawCalls}`, 20, 90);
-        this.ctx.fillText(`Entities: ${this.frameStats.entityCount}`, 20, 110);
+        this.ctx.fillText(`Scene: ${this.currentScene || 'None'}`, 20, 70);
+        this.ctx.fillText(`Canvas: ${this.canvas.width}x${this.canvas.height}`, 20, 90);
+        this.ctx.fillText(`Draw Calls: ${this.frameStats.drawCalls}`, 20, 110);
+        this.ctx.fillText(`Entities: ${this.frameStats.entityCount}`, 20, 130);
         
         // Performance warnings
         if (this.frameStats.fps < 50) {
             this.ctx.fillStyle = 'red';
-            this.ctx.fillText('⚠ LOW FPS WARNING', 20, 130);
+            this.ctx.fillText('⚠ LOW FPS WARNING', 20, 150);
         }
         
         if (this.frameStats.frameTime > 20) {
             this.ctx.fillStyle = 'orange';
-            this.ctx.fillText('⚠ HIGH FRAME TIME', 20, 150);
+            this.ctx.fillText('⚠ HIGH FRAME TIME', 20, 170);
         }
         
         if (this.currentScene && this.scenes.has(this.currentScene)) {
             const scene = this.scenes.get(this.currentScene);
             if (scene.getDebugInfo) {
                 const info = scene.getDebugInfo();
-                let y = 170;
+                let y = 190;
                 for (const [key, value] of Object.entries(info)) {
                     this.ctx.fillStyle = 'white';
                     this.ctx.fillText(`${key}: ${value}`, 20, y);
@@ -343,10 +331,6 @@ class Entity {
     update(deltaTime, level) {
         if (!this.active) return;
         
-        // Store previous position for interpolation
-        this.prevX = this.x;
-        this.prevY = this.y;
-        
         // Apply physics
         Physics.applyGravity(this, deltaTime);
         Physics.updatePosition(this, deltaTime);
@@ -355,13 +339,6 @@ class Entity {
         if (level) {
             Collision.resolveEntityTiles(this, level);
         }
-    }
-    
-    getInterpolatedPosition(alpha) {
-        return {
-            x: this.prevX + (this.x - this.prevX) * alpha,
-            y: this.prevY + (this.y - this.prevY) * alpha
-        };
     }
     
     render(ctx, camera) {
