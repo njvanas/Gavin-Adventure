@@ -32,28 +32,28 @@ class SpriteManager {
     }
     
     createGavinSprites() {
-        // Small Gavin - doubled size
-        const smallGavin = this.createCanvas(32, 32);
-        this.drawGavin(smallGavin.ctx, 32, 32, COLORS.ACCENT, false);
+        // Small Gavin
+        const smallGavin = this.createCanvas(16, 16);
+        this.drawGavin(smallGavin.ctx, 16, 16, COLORS.ACCENT, false);
         this.sprites.set('gavin_small_idle', {
             image: smallGavin.canvas,
-            x: 0, y: 0, width: 32, height: 32
+            x: 0, y: 0, width: 16, height: 16
         });
         
-        // Pump Gavin - doubled size
-        const pumpGavin = this.createCanvas(32, 48);
-        this.drawGavin(pumpGavin.ctx, 32, 48, COLORS.PRIMARY, true);
+        // Pump Gavin
+        const pumpGavin = this.createCanvas(16, 24);
+        this.drawGavin(pumpGavin.ctx, 16, 24, COLORS.PRIMARY, true);
         this.sprites.set('gavin_pump_idle', {
             image: pumpGavin.canvas,
-            x: 0, y: 0, width: 32, height: 48
+            x: 0, y: 0, width: 16, height: 24
         });
         
-        // Beast Gavin - doubled size
-        const beastGavin = this.createCanvas(48, 48);
-        this.drawGavin(beastGavin.ctx, 48, 48, COLORS.ERROR, true, true);
+        // Beast Gavin
+        const beastGavin = this.createCanvas(24, 24);
+        this.drawGavin(beastGavin.ctx, 24, 24, COLORS.ERROR, true, true);
         this.sprites.set('gavin_beast_idle', {
             image: beastGavin.canvas,
-            x: 0, y: 0, width: 48, height: 48
+            x: 0, y: 0, width: 24, height: 24
         });
     }
     
@@ -91,51 +91,51 @@ class SpriteManager {
     
     createEnemySprites() {
         // Sloucher
-        const sloucher = this.createCanvas(32, 32);
+        const sloucher = this.createCanvas(16, 16);
         this.drawSloucher(sloucher.ctx);
         this.sprites.set('sloucher', {
             image: sloucher.canvas,
-            x: 0, y: 0, width: 32, height: 32
+            x: 0, y: 0, width: 16, height: 16
         });
         
         // Form Police
-        const formPolice = this.createCanvas(32, 32);
+        const formPolice = this.createCanvas(16, 16);
         this.drawFormPolice(formPolice.ctx);
         this.sprites.set('form_police', {
             image: formPolice.canvas,
-            x: 0, y: 0, width: 32, height: 32
+            x: 0, y: 0, width: 16, height: 16
         });
         
         // Snapper
-        const snapper = this.createCanvas(32, 32);
+        const snapper = this.createCanvas(16, 16);
         this.drawSnapper(snapper.ctx);
         this.sprites.set('snapper', {
             image: snapper.canvas,
-            x: 0, y: 0, width: 32, height: 32
+            x: 0, y: 0, width: 16, height: 16
         });
         
         // Kettle Bell
-        const kettleBell = this.createCanvas(32, 32);
+        const kettleBell = this.createCanvas(16, 16);
         this.drawKettleBell(kettleBell.ctx);
         this.sprites.set('kettle_bell', {
             image: kettleBell.canvas,
-            x: 0, y: 0, width: 32, height: 32
+            x: 0, y: 0, width: 16, height: 16
         });
         
         // Protein Drone
-        const proteinDrone = this.createCanvas(32, 32);
+        const proteinDrone = this.createCanvas(16, 16);
         this.drawProteinDrone(proteinDrone.ctx);
         this.sprites.set('protein_drone', {
             image: proteinDrone.canvas,
-            x: 0, y: 0, width: 32, height: 32
+            x: 0, y: 0, width: 16, height: 16
         });
         
         // Boss Shredder
-        const bossShredder = this.createCanvas(64, 64);
+        const bossShredder = this.createCanvas(32, 32);
         this.drawBossShredder(bossShredder.ctx);
         this.sprites.set('boss_shredder', {
             image: bossShredder.canvas,
-            x: 0, y: 0, width: 64, height: 64
+            x: 0, y: 0, width: 32, height: 32
         });
     }
     
@@ -210,35 +210,35 @@ class SpriteManager {
     
     createCollectibleSprites() {
         // Golden Dumbbell
-        const dumbbell = this.createCanvas(32, 32);
+        const dumbbell = this.createCanvas(16, 16);
         this.drawDumbbell(dumbbell.ctx);
         this.sprites.set('golden_dumbbell', {
             image: dumbbell.canvas,
-            x: 0, y: 0, width: 32, height: 32
+            x: 0, y: 0, width: 16, height: 16
         });
         
         // Gym Card
-        const gymCard = this.createCanvas(32, 32);
+        const gymCard = this.createCanvas(16, 16);
         this.drawGymCard(gymCard.ctx);
         this.sprites.set('gym_card', {
             image: gymCard.canvas,
-            x: 0, y: 0, width: 32, height: 32
+            x: 0, y: 0, width: 16, height: 16
         });
         
         // Protein Shake
-        const proteinShake = this.createCanvas(32, 32);
+        const proteinShake = this.createCanvas(16, 16);
         this.drawProteinShake(proteinShake.ctx);
         this.sprites.set('protein_shake', {
             image: proteinShake.canvas,
-            x: 0, y: 0, width: 32, height: 32
+            x: 0, y: 0, width: 16, height: 16
         });
         
         // Pre-Workout
-        const preWorkout = this.createCanvas(32, 32);
+        const preWorkout = this.createCanvas(16, 16);
         this.drawPreWorkout(preWorkout.ctx);
         this.sprites.set('pre_workout', {
             image: preWorkout.canvas,
-            x: 0, y: 0, width: 32, height: 32
+            x: 0, y: 0, width: 16, height: 16
         });
     }
     
@@ -283,58 +283,58 @@ class SpriteManager {
     
     createTileSprites() {
         // Solid Ground
-        const ground = this.createCanvas(32, 32);
+        const ground = this.createCanvas(16, 16);
         this.drawGround(ground.ctx);
         this.sprites.set('ground', {
             image: ground.canvas,
-            x: 0, y: 0, width: 32, height: 32
+            x: 0, y: 0, width: 16, height: 16
         });
         
         // Platform
-        const platform = this.createCanvas(32, 32);
+        const platform = this.createCanvas(16, 16);
         this.drawPlatform(platform.ctx);
         this.sprites.set('platform', {
             image: platform.canvas,
-            x: 0, y: 0, width: 32, height: 32
+            x: 0, y: 0, width: 16, height: 16
         });
         
         // Breakable Block
-        const breakable = this.createCanvas(32, 32);
+        const breakable = this.createCanvas(16, 16);
         this.drawBreakable(breakable.ctx);
         this.sprites.set('breakable', {
             image: breakable.canvas,
-            x: 0, y: 0, width: 32, height: 32
+            x: 0, y: 0, width: 16, height: 16
         });
     }
     
     drawGround(ctx) {
         ctx.fillStyle = COLORS.GROUND_BROWN;
-        ctx.fillRect(0, 0, 32, 32);
+        ctx.fillRect(0, 0, 16, 16);
         ctx.fillStyle = '#A0522D'; // Lighter brown for texture
-        ctx.fillRect(4, 4, 4, 4);
-        ctx.fillRect(16, 12, 4, 4);
-        ctx.fillRect(8, 24, 4, 4);
-        ctx.fillRect(24, 20, 4, 4);
+        ctx.fillRect(2, 2, 2, 2);
+        ctx.fillRect(8, 6, 2, 2);
+        ctx.fillRect(4, 12, 2, 2);
+        ctx.fillRect(12, 10, 2, 2);
     }
     
     drawPlatform(ctx) {
         ctx.fillStyle = COLORS.GRAY;
-        ctx.fillRect(0, 0, 32, 8);
+        ctx.fillRect(0, 0, 16, 4);
         ctx.fillStyle = COLORS.GRAY_LIGHT;
-        ctx.fillRect(0, 0, 32, 4);
+        ctx.fillRect(0, 0, 16, 2);
         ctx.strokeStyle = COLORS.GRAY_DARK;
-        ctx.strokeRect(0, 0, 32, 8);
+        ctx.strokeRect(0, 0, 16, 4);
     }
     
     drawBreakable(ctx) {
         ctx.fillStyle = '#DEB887'; // Burlywood
-        ctx.fillRect(0, 0, 32, 32);
+        ctx.fillRect(0, 0, 16, 16);
         ctx.strokeStyle = '#8B7355';
-        ctx.strokeRect(0, 0, 32, 32);
-        ctx.strokeRect(8, 8, 16, 16);
+        ctx.strokeRect(0, 0, 16, 16);
+        ctx.strokeRect(4, 4, 8, 8);
         ctx.fillStyle = '#F5DEB3'; // Wheat highlights
-        ctx.fillRect(4, 4, 4, 4);
-        ctx.fillRect(24, 24, 4, 4);
+        ctx.fillRect(2, 2, 2, 2);
+        ctx.fillRect(12, 12, 2, 2);
     }
     
     createUISprites() {

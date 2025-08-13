@@ -27,8 +27,8 @@ body {
     image-rendering: pixelated;
     image-rendering: -moz-crisp-edges;
     image-rendering: crisp-edges;
-    width: 1024px;
-    height: 576px;
+    width: 2048px;
+    height: 1152px;
     max-width: 95vw;
     max-height: 95vh;
     object-fit: contain;
