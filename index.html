@@ -3,74 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gavin Adventure - Make GAINS!</title>
-    <meta name="description" content="A bodybuilding-themed platformer inspired by classic Nintendo games. Help Gavin collect protein shakes and defeat lazy gym-goers!">
+    <title>Gavin Adventure - Make GAINS. Beat The Shredder.</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="gameContainer">
-        <div id="titleScreen" class="screen active">
-            <h1>GAVIN ADVENTURE</h1>
-            <h2>MAKE GAINS!</h2>
-            <div class="menu">
-                <button id="startGame">START GAME</button>
-                <button id="freePlay">FREE PLAY</button>
-                <button id="timeAttack">TIME ATTACK</button>
-                <button id="loadGame">LOAD GAME</button>
+        <canvas id="gameCanvas"></canvas>
+        <div id="mobileControls" class="mobile-controls">
+            <div class="dpad">
+                <button id="leftBtn" class="control-btn dpad-left">←</button>
+                <button id="rightBtn" class="control-btn dpad-right">→</button>
+                <button id="downBtn" class="control-btn dpad-down">↓</button>
             </div>
-            <div class="controls">
-                <h3>Controls:</h3>
-                <p>Arrow Keys: Move | Space: Jump | Shift: Run | C: Crouch</p>
-                <p>Collect protein shakes to grow stronger!</p>
+            <div class="action-buttons">
+                <button id="jumpBtn" class="control-btn jump-btn">JUMP</button>
+                <button id="runBtn" class="control-btn run-btn">RUN</button>
+                <button id="throwBtn" class="control-btn throw-btn">THROW</button>
             </div>
         </div>
-        
-        <div id="gameScreen" class="screen">
-            <canvas id="gameCanvas" width="800" height="600"></canvas>
-            <div id="hud">
-                <div id="score">SCORE: 0</div>
-                <div id="lives">LIVES: 3</div>
-                <div id="world">WORLD 1-1</div>
-                <div id="gainsMeter">
-                    <div id="gainsBar"></div>
-                    <span>GAINS</span>
+        <div id="loadingScreen" class="loading-screen">
+            <div class="loading-content">
+                <h1>GAVIN ADVENTURE</h1>
+                <p>Make GAINS. Beat The Shredder.</p>
+                <div class="loading-bar">
+                    <div id="loadingProgress" class="loading-progress"></div>
                 </div>
+                <p id="loadingText">Loading assets...</p>
             </div>
-            <div id="pauseMenu" class="hidden">
-                <h2>PAUSED</h2>
-                <button id="resume">RESUME</button>
-                <button id="quitToMenu">QUIT TO MENU</button>
-            </div>
-        </div>
-        
-        <div id="levelSelect" class="screen">
-            <h2>SELECT LEVEL</h2>
-            <div id="worlds"></div>
-            <button id="backToMenu">BACK TO MENU</button>
-        </div>
-        
-        <div id="gameOver" class="screen">
-            <h2>GAME OVER</h2>
-            <div id="finalScore">FINAL SCORE: 0</div>
-            <button id="restart">RESTART</button>
-            <button id="backToMenu2">BACK TO MENU</button>
-        </div>
-        
-        <div id="victory" class="screen">
-            <h2>YOU WIN!</h2>
-            <h3>GAINS ACHIEVED!</h3>
-            <div id="victoryScore">FINAL SCORE: 0</div>
-            <button id="playAgain">PLAY AGAIN</button>
-            <button id="backToMenu3">BACK TO MENU</button>
         </div>
     </div>
     
-    <script src="js/sprites.js"></script>
-    <script src="js/audio.js"></script>
-    <script src="js/physics.js"></script>
-    <script src="js/levels.js"></script>
-    <script src="js/entities.js"></script>
-    <script src="js/game.js"></script>
-    <script src="js/main.js"></script>
+    <!-- Game Scripts -->
+    <script src="engine/core.js"></script>
+    <script src="engine/input.js"></script>
+    <script src="engine/physics.js"></script>
+    <script src="engine/collision.js"></script>
+    <script src="engine/renderer.js"></script>
+    <script src="engine/audio.js"></script>
+    <script src="engine/particles.js"></script>
+    
+    <script src="game/constants.js"></script>
+    <script src="game/sprites.js"></script>
+    <script src="game/player.js"></script>
+    <script src="game/enemies.js"></script>
+    <script src="game/collectibles.js"></script>
+    <script src="game/level.js"></script>
+    <script src="game/hud.js"></script>
+    <script src="game/scenes.js"></script>
+    <script src="game/save.js"></script>
+    
+    <script src="main.js"></script>
 </body>
 </html>

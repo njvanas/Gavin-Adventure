@@ -5,14 +5,15 @@
 }
 
 body {
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
     font-family: 'Courier New', monospace;
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-    color: #fff;
     overflow: hidden;
     user-select: none;
+    touch-action: none;
 }
 
 #gameContainer {
+    position: relative;
     width: 100vw;
     height: 100vh;
     display: flex;
@@ -20,281 +21,183 @@ body {
     align-items: center;
 }
 
-.screen {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    width: 100%;
-    height: 100%;
-}
-
-.screen.active {
-    display: flex;
-}
-
-#titleScreen h1 {
-    font-size: 4rem;
-    color: #ff6b35;
-    text-shadow: 4px 4px 0px #000, 8px 8px 0px #333;
-    margin-bottom: 1rem;
-    animation: pump 2s ease-in-out infinite;
-}
-
-#titleScreen h2 {
-    font-size: 2rem;
-    color: #f7b731;
-    text-shadow: 2px 2px 0px #000;
-    margin-bottom: 3rem;
-}
-
-@keyframes pump {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-}
-
-.menu {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    margin-bottom: 3rem;
-}
-
-.menu button, .controls button {
-    background: linear-gradient(45deg, #ff6b35, #f7b731);
-    border: 3px solid #000;
-    color: #fff;
-    padding: 1rem 2rem;
-    font-size: 1.2rem;
-    font-family: 'Courier New', monospace;
-    font-weight: bold;
-    cursor: pointer;
-    text-shadow: 2px 2px 0px #000;
-    transition: all 0.2s ease;
-    box-shadow: 4px 4px 0px #000;
-}
-
-.menu button:hover, .controls button:hover {
-    transform: translateY(-2px);
-    box-shadow: 6px 6px 0px #000;
-    background: linear-gradient(45deg, #f7b731, #ff6b35);
-}
-
-.controls {
-    background: rgba(0, 0, 0, 0.7);
-    padding: 2rem;
-    border-radius: 10px;
-    border: 2px solid #ff6b35;
-}
-
-.controls h3 {
-    color: #f7b731;
-    margin-bottom: 1rem;
-}
-
-.controls p {
-    margin-bottom: 0.5rem;
-    color: #ddd;
-}
-
-#gameScreen {
-    position: relative;
-    background: #000;
-}
-
 #gameCanvas {
-    border: 3px solid #ff6b35;
-    background: #87ceeb;
+    border: 2px solid #333;
+    background: #000;
     image-rendering: pixelated;
     image-rendering: -moz-crisp-edges;
     image-rendering: crisp-edges;
+    max-width: 100vw;
+    max-height: 100vh;
+    object-fit: contain;
 }
 
-#hud {
+/* Mobile Controls */
+.mobile-controls {
     position: absolute;
-    top: 10px;
-    left: 10px;
-    right: 10px;
-    display: flex;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    display: none;
     justify-content: space-between;
-    align-items: center;
-    background: rgba(0, 0, 0, 0.8);
-    padding: 10px;
-    border: 2px solid #ff6b35;
-    border-radius: 5px;
-    font-family: 'Courier New', monospace;
-    font-weight: bold;
-    color: #fff;
+    align-items: flex-end;
+    z-index: 100;
+    pointer-events: none;
 }
 
-#gainsMeter {
+.dpad, .action-buttons {
     display: flex;
+    flex-direction: column;
     align-items: center;
     gap: 10px;
+    pointer-events: all;
 }
 
-#gainsBar {
-    width: 100px;
-    height: 20px;
-    background: #333;
-    border: 2px solid #fff;
-    border-radius: 10px;
-    overflow: hidden;
+.dpad {
+    position: relative;
+    width: 120px;
+    height: 120px;
 }
 
-#gainsBar::before {
-    content: '';
-    display: block;
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, #ff6b35, #f7b731, #4ecdc4);
-    transition: width 0.3s ease;
+.control-btn {
+    background: rgba(255, 255, 255, 0.8);
+    border: 2px solid #333;
+    border-radius: 8px;
+    color: #333;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    font-size: 14px;
+    cursor: pointer;
+    touch-action: manipulation;
+    user-select: none;
+    transition: all 0.1s ease;
 }
 
-#pauseMenu {
+.control-btn:active {
+    background: rgba(255, 255, 255, 1);
+    transform: scale(0.95);
+}
+
+.dpad-left, .dpad-right {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(0, 0, 0, 0.9);
-    padding: 2rem;
-    border: 3px solid #ff6b35;
-    border-radius: 10px;
-    text-align: center;
+    top: 40px;
+    width: 40px;
+    height: 40px;
 }
 
-#pauseMenu h2 {
-    color: #ff6b35;
-    margin-bottom: 2rem;
-    font-size: 2rem;
+.dpad-left {
+    left: 0;
 }
 
-#pauseMenu button {
-    display: block;
-    width: 100%;
-    margin-bottom: 1rem;
-    background: linear-gradient(45deg, #ff6b35, #f7b731);
-    border: 2px solid #000;
-    color: #fff;
-    padding: 1rem;
-    font-size: 1.1rem;
-    font-family: 'Courier New', monospace;
-    font-weight: bold;
-    cursor: pointer;
-    text-shadow: 1px 1px 0px #000;
+.dpad-right {
+    right: 0;
 }
 
-#pauseMenu button:hover {
-    background: linear-gradient(45deg, #f7b731, #ff6b35);
+.dpad-down {
+    position: absolute;
+    bottom: 0;
+    left: 40px;
+    width: 40px;
+    height: 40px;
 }
 
-.hidden {
-    display: none !important;
+.action-buttons {
+    flex-direction: row;
+    gap: 15px;
 }
 
-#levelSelect h2 {
-    color: #ff6b35;
-    font-size: 3rem;
-    margin-bottom: 2rem;
-    text-shadow: 3px 3px 0px #000;
+.jump-btn, .run-btn, .throw-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
 }
 
-#worlds {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
-    margin-bottom: 2rem;
-    max-width: 800px;
-}
-
-.world-button {
-    background: linear-gradient(45deg, #4ecdc4, #44a08d);
-    border: 3px solid #000;
-    color: #fff;
-    padding: 1rem;
-    font-size: 1rem;
-    font-family: 'Courier New', monospace;
-    font-weight: bold;
-    cursor: pointer;
-    text-shadow: 1px 1px 0px #000;
-    box-shadow: 3px 3px 0px #000;
-    transition: all 0.2s ease;
-}
-
-.world-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 5px 5px 0px #000;
-}
-
-.world-button.locked {
-    background: #666;
-    cursor: not-allowed;
+.throw-btn {
     opacity: 0.5;
 }
 
-#gameOver h2, #victory h2 {
-    color: #ff6b35;
-    font-size: 3rem;
-    margin-bottom: 1rem;
-    text-shadow: 3px 3px 0px #000;
+/* Loading Screen */
+.loading-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
 }
 
-#victory h3 {
-    color: #f7b731;
-    font-size: 2rem;
-    margin-bottom: 2rem;
-    text-shadow: 2px 2px 0px #000;
-}
-
-#finalScore, #victoryScore {
-    font-size: 1.5rem;
-    color: #4ecdc4;
-    margin-bottom: 2rem;
-    text-shadow: 1px 1px 0px #000;
-}
-
-#backToMenu, #backToMenu2, #backToMenu3, #restart, #playAgain {
-    background: linear-gradient(45deg, #ff6b35, #f7b731);
-    border: 3px solid #000;
+.loading-content {
+    text-align: center;
     color: #fff;
-    padding: 1rem 2rem;
-    font-size: 1.2rem;
-    font-family: 'Courier New', monospace;
-    font-weight: bold;
-    cursor: pointer;
-    text-shadow: 2px 2px 0px #000;
-    margin: 0.5rem;
-    transition: all 0.2s ease;
-    box-shadow: 4px 4px 0px #000;
+    max-width: 400px;
+    padding: 20px;
 }
 
-#backToMenu:hover, #backToMenu2:hover, #backToMenu3:hover, #restart:hover, #playAgain:hover {
-    transform: translateY(-2px);
-    box-shadow: 6px 6px 0px #000;
-    background: linear-gradient(45deg, #f7b731, #ff6b35);
+.loading-content h1 {
+    font-size: 2.5em;
+    margin-bottom: 10px;
+    color: #f39c12;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
 }
 
+.loading-content p {
+    font-size: 1.2em;
+    margin-bottom: 30px;
+    color: #ecf0f1;
+}
+
+.loading-bar {
+    width: 100%;
+    height: 20px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.loading-progress {
+    height: 100%;
+    background: linear-gradient(90deg, #f39c12, #e74c3c);
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+/* Responsive Design */
 @media (max-width: 768px) {
-    #titleScreen h1 {
-        font-size: 2.5rem;
-    }
-    
-    #titleScreen h2 {
-        font-size: 1.5rem;
-    }
-    
-    .menu button, .controls button {
-        padding: 0.8rem 1.5rem;
-        font-size: 1rem;
+    .mobile-controls {
+        display: flex;
     }
     
     #gameCanvas {
-        width: 100%;
-        height: auto;
+        border: none;
+    }
+}
+
+@media (max-height: 600px) {
+    .loading-content h1 {
+        font-size: 2em;
     }
     
-    #worlds {
-        grid-template-columns: repeat(2, 1fr);
+    .loading-content p {
+        font-size: 1em;
+    }
+}
+
+/* Desktop specific */
+@media (min-width: 769px) {
+    #gameCanvas {
+        width: 1024px;
+        height: 576px;
+    }
+}
+
+/* High DPI Support */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    #gameCanvas {
+        image-rendering: pixelated;
     }
 }
