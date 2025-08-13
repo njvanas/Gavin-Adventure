@@ -1,0 +1,115 @@
+name: Deploy to GitHub Pages (Fork Compatible)
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch: # Allow manual deployment
+
+# Add permissions for the workflow
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Ensure only one deployment runs at a time
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 # Important for forks
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Validate project structure
+      run: |
+        echo "🔍 Validating project structure..."
+        
+        # Check essential files
+        required_files=("index.html" "main.js" "style.css")
+        for file in "${required_files[@]}"; do
+          if [ -f "$file" ]; then
+            echo "✅ $file found"
+          else
+            echo "❌ $file missing"
+            exit 1
+          fi
+        done
+        
+        # Check engine directory
+        if [ -d "engine" ]; then
+          echo "✅ engine/ directory found"
+          engine_files=$(ls engine/*.js 2>/dev/null | wc -l)
+          echo "📁 Found $engine_files engine files"
+        else
+          echo "❌ engine/ directory missing"
+          exit 1
+        fi
+        
+        # Check game directory
+        if [ -d "game" ]; then
+          echo "✅ game/ directory found"
+          game_files=$(ls game/*.js 2>/dev/null | wc -l)
+          echo "🎮 Found $game_files game files"
+        else
+          echo "❌ game/ directory missing"
+          exit 1
+        fi
+        
+        echo "✅ Project structure validation passed!"
+        
+    - name: Create deployment package
+      run: |
+        echo "📦 Creating deployment package..."
+        
+        # Create a clean deployment directory
+        mkdir -p deploy
+        
+        # Copy all necessary files
+        cp -r index.html main.js style.css deploy/
+        cp -r engine/ deploy/
+        cp -r game/ deploy/
+        cp -r tools/ deploy/ 2>/dev/null || echo "⚠️  tools/ directory not found (optional)"
+        
+        # List what we're deploying
+        echo "📋 Files to be deployed:"
+        find deploy -type f | sort
+        
+        echo "📦 Deployment package created successfully!"
+        
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
+      
+    - name: Verify deployment
+      run: |
+        echo "🚀 Deployment completed successfully!"
+        echo "📱 Your site should be available at: ${{ steps.deployment.outputs.page_url }}"
+        echo "⏱️  It may take a few minutes for changes to appear"
+        echo "🔗 GitHub Pages URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
+        
+    - name: Post-deployment cleanup
+      if: always()
+      run: |
+        echo "🧹 Cleaning up deployment artifacts..."
+        rm -rf deploy/
+        echo "✅ Cleanup completed"
