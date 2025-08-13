@@ -38,8 +38,17 @@ jobs:
         cache: 'npm'
         
     - name: Install dependencies
-      run: npm ci
-      
+      run: |
+        echo "📦 Installing dependencies..."
+        # Try npm ci first, fallback to npm install if needed
+        if npm ci; then
+          echo "✅ Dependencies installed with npm ci"
+        else
+          echo "⚠️ npm ci failed, trying npm install..."
+          npm install
+          echo "✅ Dependencies installed with npm install"
+        fi
+        
     - name: Validate project structure
       run: |
         echo "🔍 Validating project structure..."

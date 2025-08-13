@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Deploy to GitHub Pages (Simple)
 
 on:
   push:
@@ -29,37 +29,11 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
-        
-    - name: Install dependencies
+    - name: Validate project structure
       run: |
-        echo "📦 Installing dependencies..."
-        # Try npm ci first, fallback to npm install if needed
-        if npm ci; then
-          echo "✅ Dependencies installed with npm ci"
-        else
-          echo "⚠️ npm ci failed, trying npm install..."
-          npm install
-          echo "✅ Dependencies installed with npm install"
-        fi
+        echo "🔍 Validating project structure..."
         
-    - name: Validate HTML
-      run: |
-        # Basic HTML validation
-        if [ -f "index.html" ]; then
-          echo "✅ index.html found and valid"
-        else
-          echo "❌ index.html not found"
-          exit 1
-        fi
-        
-    - name: Check file structure
-      run: |
-        echo "📁 Checking essential files..."
+        # Check essential files
         required_files=("index.html" "main.js" "style.css")
         for file in "${required_files[@]}"; do
           if [ -f "$file" ]; then
@@ -70,6 +44,28 @@ jobs:
           fi
         done
         
+        # Check engine directory
+        if [ -d "engine" ]; then
+          echo "✅ engine/ directory found"
+          engine_files=$(ls engine/*.js 2>/dev/null | wc -l)
+          echo "📁 Found $engine_files engine files"
+        else
+          echo "❌ engine/ directory missing"
+          exit 1
+        fi
+        
+        # Check game directory
+        if [ -d "game" ]; then
+          echo "✅ game/ directory found"
+          game_files=$(ls game/*.js 2>/dev/null | wc -l)
+          echo "🎮 Found $game_files game files"
+        else
+          echo "❌ game/ directory missing"
+          exit 1
+        fi
+        
+        echo "✅ Project structure validation passed!"
+        
     - name: Deploy to GitHub Pages
       id: deployment
       uses: actions/deploy-pages@v4
@@ -79,3 +75,4 @@ jobs:
         echo "🚀 Deployment completed successfully!"
         echo "📱 Your site should be available at: ${{ steps.deployment.outputs.page_url }}"
         echo "⏱️  It may take a few minutes for changes to appear"
+        echo "🔗 GitHub Pages URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"

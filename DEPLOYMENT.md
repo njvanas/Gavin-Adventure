@@ -25,12 +25,25 @@ This guide explains how to set up automatic deployment for Gavin Adventure, whet
 
 ## ⚙️ Automatic Deployment Workflows
 
-This repository includes two deployment workflows:
+This repository includes three deployment workflows:
+
+### Simple Workflow: `deploy-simple.yml` (Recommended)
+- **Purpose**: Fastest deployment for static file projects
+- **Triggers**: Push to main/master branch, pull requests
+- **Features**: 
+  - No npm dependencies required
+  - Fastest deployment time
+  - Perfect for static HTML/JS projects
+  - Comprehensive file validation
 
 ### Primary Workflow: `deploy.yml`
-- **Purpose**: Standard deployment for main repository
+- **Purpose**: Standard deployment with npm dependency handling
 - **Triggers**: Push to main/master branch, pull requests
-- **Features**: Basic validation, direct deployment
+- **Features**: 
+  - Basic validation
+  - npm dependency management
+  - Fallback npm installation
+  - Direct deployment
 
 ### Fork-Compatible Workflow: `deploy-fork.yml`
 - **Purpose**: Enhanced deployment for forks and complex scenarios
@@ -40,18 +53,28 @@ This repository includes two deployment workflows:
   - Deployment package creation
   - Better fork compatibility
   - Comprehensive file checking
+  - npm dependency management
 
 ## 🎯 For Main Repository Users
 
-1. **Default Setup**: The primary workflow (`deploy.yml`) will run automatically
-2. **Manual Deployment**: Use the "workflow_dispatch" trigger in GitHub Actions
-3. **Branch Protection**: Ensure `main` branch is protected if needed
+1. **Recommended**: Use the simple workflow (`deploy-simple.yml`) for fastest deployment
+2. **Alternative**: The primary workflow (`deploy.yml`) handles npm dependencies
+3. **Manual Deployment**: Use the "workflow_dispatch" trigger in GitHub Actions
+4. **Branch Protection**: Ensure `main` branch is protected if needed
 
 ## 🔄 For Fork Users
 
 1. **Enable Actions**: Go to Actions tab and enable workflows
-2. **Use Fork Workflow**: The `deploy-fork.yml` workflow is optimized for forks
-3. **Repository Settings**: Update repository name in package.json if needed
+2. **Recommended**: Use `deploy-simple.yml` for fastest, most reliable deployment
+3. **Alternative**: Use `deploy-fork.yml` for enhanced validation and npm handling
+4. **Repository Settings**: Update repository name in package.json if needed
+
+## 🚀 Quick Setup (Recommended)
+
+1. **Enable GitHub Pages**: Settings → Pages → Source → GitHub Actions
+2. **Use Simple Workflow**: The `deploy-simple.yml` workflow is fastest and most reliable
+3. **Push Changes**: Any commit to `main` branch triggers automatic deployment
+4. **No npm Issues**: This workflow doesn't require npm dependencies
 
 ## 📁 Required Files for Deployment
 
@@ -126,6 +149,12 @@ https://[username].github.io/[repository-name]
    - Wait 5-10 minutes for changes to propagate
    - Clear browser cache
    - Check GitHub Pages deployment status
+
+4. **npm ci Errors (Package Lock Sync Issues)**
+   - **Problem**: `npm ci` fails with "package.json and package-lock.json are out of sync"
+   - **Solution**: Use the `deploy-simple.yml` workflow (recommended)
+   - **Alternative**: Run `npm install` locally and commit the updated package-lock.json
+   - **Why**: Your project is static files and doesn't actually need npm dependencies for deployment
 
 ### Debug Steps
 
