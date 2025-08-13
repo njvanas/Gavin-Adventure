@@ -104,6 +104,11 @@ const Enemy: React.FC<EnemyProps> = ({
           newX = prev.x;
         }
         
+        // Add some randomness to movement
+        if (Math.random() < 0.01) { // 1% chance to change direction
+          setDirection(prev => -prev);
+        }
+        
         return { ...prev, x: newX };
       });
       

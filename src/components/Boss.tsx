@@ -101,6 +101,9 @@ const Boss: React.FC<BossProps> = ({ bossId, playerAttackPower, onDefeat, onPlay
     setBossAnimation('hurt');
     setTimeout(() => setBossAnimation('idle'), 500);
 
+    // Calculate damage based on player attack power
+    const damage = Math.floor(playerAttackPower * (0.8 + Math.random() * 0.4)); // 80-120% of attack power
+
     const newBossHealth = Math.max(0, bossHealth - damage);
     setBossHealth(newBossHealth);
     

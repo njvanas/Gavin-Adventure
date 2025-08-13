@@ -35,14 +35,36 @@ const SpriteRenderer: React.FC<SpriteRendererProps> = ({
       try {
         const img = new Image();
         img.onload = () => setImage(img);
+        img.onerror = () => {
+          console.warn(`Failed to load sprite: ${asset.path}, using fallback`);
+          // Create a fallback colored rectangle
+          const canvas = document.createElement('canvas');
+          canvas.width = asset.width || 32;
+          canvas.height = asset.height || 32;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            // Create a fallback sprite with the asset ID
+            ctx.fillStyle = '#ff6b6b';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '8px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(asset.id.substring(0, 4), canvas.width / 2, canvas.height / 2);
+          }
+          const fallbackImg = new Image();
+          fallbackImg.onload = () => setImage(fallbackImg);
+          fallbackImg.src = canvas.toDataURL();
+        };
         img.src = asset.path;
       } catch (error) {
         console.error(`Failed to load sprite: ${asset.path}`, error);
+        // Set a simple fallback
+        setImage(null);
       }
     };
 
     loadSprite();
-  }, [asset.path]);
+  }, [asset.path, asset.width, asset.height, asset.id]);
 
   // Handle sprite animation
   useEffect(() => {
