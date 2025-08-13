@@ -6,8 +6,16 @@ on:
   pull_request:
     branches: [ main, master ]
 
+# Add permissions for the workflow
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   deploy:
+    # For forked repositories, remove this condition to allow deployment
+    # if: github.repository == 'Barend183/Gavin-Adventure'
     runs-on: ubuntu-latest
     
     steps:
@@ -23,7 +31,9 @@ jobs:
       uses: peaceiris/actions-gh-pages@v3
       if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
+        # Use personal access token for forked repositories
+        # github_token: ${{ secrets.GITHUB_TOKEN }}
+        personal_token: ${{ secrets.GH_PAT }}
         publish_dir: .
         publish_branch: gh-pages
         force_orphan: true
