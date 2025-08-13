@@ -2,7 +2,7 @@
 class Physics {
     static applyGravity(entity, deltaTime) {
         if (!entity.onGround) {
-            entity.vy += GAME_CONFIG.PHYSICS.GRAVITY * (deltaTime / 16.67); // Smooth gravity
+            entity.vy += GAME_CONFIG.PHYSICS.GRAVITY * deltaTime / 16.67; // Normalize to 60 FPS
         }
         
         // Terminal velocity
@@ -12,7 +12,7 @@ class Physics {
     }
     
     static updatePosition(entity, deltaTime) {
-        const timeScale = deltaTime / 16.67; // Smooth time scaling
+        const timeScale = deltaTime / 16.67; // Normalize to 60 FPS
         
         entity.x += entity.vx * timeScale;
         entity.y += entity.vy * timeScale;

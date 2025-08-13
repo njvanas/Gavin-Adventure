@@ -92,7 +92,7 @@ class Player extends Entity {
     }
     
     handleInput(input, deltaTime, particleSystem) {
-        const timeScale = Math.min(deltaTime / 16.67, 2.0); // Cap time scale for stability
+        const timeScale = deltaTime / 16.67;
         
         // Horizontal movement
         this.running = input.isDown('run');
@@ -134,12 +134,8 @@ class Player extends Entity {
         }
         
         // Variable jump height
-        if (this.jumpHeld && this.jumpTimer > 0) {
-            this.jumpTimer = Math.max(0, this.jumpTimer - deltaTime / 16.67);
-            // Add upward force while jump is held
-            if (this.vy < 0) {
-                this.vy -= 0.3 * timeScale;
-            }
+        if (this.jumpHeld && this.jumpTimer > 0 && this.vy < 0) {
+            this.jumpTimer = Math.max(0, this.jumpTimer - timeScale);
         } else {
             this.jumpTimer = 0;
         }

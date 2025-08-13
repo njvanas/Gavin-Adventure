@@ -196,7 +196,7 @@ class GameScene extends Scene {
         }
         
         // Update camera
-        this.updateCamera(deltaTime);
+        this.updateCamera();
         
         // Update HUD
         this.hud.update(deltaTime, this.player);
@@ -208,20 +208,23 @@ class GameScene extends Scene {
         }
     }
     
-    updateCamera(deltaTime) {
+    updateCamera() {
         if (!this.player) return;
         
         const targetX = this.player.x - GAME_CONFIG.CANVAS_WIDTH / 2;
         const targetY = this.player.y - GAME_CONFIG.CANVAS_HEIGHT / 2;
         
-        // Smooth camera following
+        // Apply dead zone
         const deltaX = targetX - this.camera.x;
         const deltaY = targetY - this.camera.y;
         
-        // Smooth camera movement
-        const cameraSpeed = 0.05 * (deltaTime / 16.67);
-        this.camera.x += deltaX * cameraSpeed;
-        this.camera.y += deltaY * cameraSpeed;
+        if (Math.abs(deltaX) > this.cameraDeadZone.x) {
+            this.camera.x += (deltaX - Math.sign(deltaX) * this.cameraDeadZone.x) * this.cameraSpeed;
+        }
+        
+        if (Math.abs(deltaY) > this.cameraDeadZone.y) {
+            this.camera.y += (deltaY - Math.sign(deltaY) * this.cameraDeadZone.y) * this.cameraSpeed;
+        }
         
         // Clamp camera to level bounds
         if (this.level) {
