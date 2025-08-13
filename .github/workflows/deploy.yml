@@ -14,8 +14,6 @@ permissions:
 
 jobs:
   deploy:
-    # For forked repositories, remove this condition to allow deployment
-    # if: github.repository == 'Barend183/Gavin-Adventure'
     runs-on: ubuntu-latest
     
     steps:
@@ -31,9 +29,7 @@ jobs:
       uses: peaceiris/actions-gh-pages@v3
       if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
       with:
-        # Use personal access token for forked repositories
-        # github_token: ${{ secrets.GITHUB_TOKEN }}
-        personal_token: ${{ secrets.GH_PAT }}
+        github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: .
         publish_branch: gh-pages
         force_orphan: true
