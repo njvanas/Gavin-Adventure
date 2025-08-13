@@ -25,7 +25,7 @@ This guide explains how to set up automatic deployment for Gavin Adventure, whet
 
 ## ⚙️ Automatic Deployment Workflows
 
-This repository includes four deployment workflows:
+This repository includes five deployment workflows:
 
 ### Legacy Workflow: `deploy-legacy.yml` (Most Reliable - Recommended)
 - **Purpose**: Most reliable deployment using proven technology
@@ -35,6 +35,17 @@ This repository includes four deployment workflows:
   - No npm dependencies required
   - Works reliably for both forks and main repos
   - Creates `gh-pages` branch automatically
+  - Comprehensive file validation
+  - **Fixed permissions** for fork compatibility
+
+### Fork-Specific Workflow: `deploy-fork-simple.yml` (Best for Forks)
+- **Purpose**: Optimized deployment specifically for forked repositories
+- **Triggers**: Push to main/master branch, pull requests
+- **Features**: 
+  - Uses official GitHub Pages actions (no permission issues)
+  - No npm dependencies required
+  - Designed specifically for fork scenarios
+  - Handles repository permissions correctly
   - Comprehensive file validation
 
 ### Simple Workflow: `deploy-simple.yml`
@@ -75,9 +86,10 @@ This repository includes four deployment workflows:
 ## 🔄 For Fork Users
 
 1. **Enable Actions**: Go to Actions tab and enable workflows
-2. **Recommended**: Use `deploy-simple.yml` for fastest, most reliable deployment
-3. **Alternative**: Use `deploy-fork.yml` for enhanced validation and npm handling
-4. **Repository Settings**: Update repository name in package.json if needed
+2. **Recommended**: Use `deploy-fork-simple.yml` for best fork compatibility
+3. **Alternative**: Use `deploy-legacy.yml` (updated with fork permissions)
+4. **Avoid**: The other workflows may have permission issues in forks
+5. **Repository Settings**: Update repository name in package.json if needed
 
 ## 🚀 Quick Setup (Recommended)
 
@@ -166,6 +178,12 @@ https://[username].github.io/[repository-name]
    - **Solution**: Use the `deploy-simple.yml` workflow (recommended)
    - **Alternative**: Run `npm install` locally and commit the updated package-lock.json
    - **Why**: Your project is static files and doesn't actually need npm dependencies for deployment
+
+5. **Fork Permission Errors (403 Forbidden)**
+   - **Problem**: `peaceiris/actions-gh-pages@v3` fails with "Permission denied" in forks
+   - **Solution**: Use the `deploy-fork-simple.yml` workflow (designed for forks)
+   - **Alternative**: Use the updated `deploy-legacy.yml` with fixed permissions
+   - **Why**: Forks have different permission structures than main repositories
 
 ### Debug Steps
 
