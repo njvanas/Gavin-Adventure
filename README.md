@@ -1,156 +1,164 @@
-# Gavin Adventure - Bodybuilding Platformer
+# Gavin Adventure
+**Make GAINS. Beat The Shredder.**
 
-A Mario-style platformer game featuring Gavin, a bodybuilding character, built with React, TypeScript, and Tailwind CSS.
+A complete retro platformer game built with HTML5 Canvas and JavaScript. Join Gavin on his bodybuilding quest through 8 themed worlds, collecting Golden Dumbbells, defeating the Form Police, and ultimately facing The Shredder in epic boss battles.
 
-## 🎮 How to Play
+## Game Features
 
-### Controls
-- **WASD** or **Arrow Keys**: Move left/right
-- **Space/W/Z**: Jump
-- **F**: Flex battle (show strength)
-- **Click/Tap**: Jump (mobile support)
+### Core Gameplay
+- **Three Power States**: Small Gavin → Pump Mode → Beast Mode (with projectile throwing)
+- **Original Enemy Roster**: Slouchers, Form Police, Snappers, Kettle Bells, Protein Drones, and Boss Shredder
+- **Precision Physics**: 60 FPS gameplay with coyote time, jump buffering, and variable jump height
+- **Advanced Movement**: Elevated jump spots, wall bouncing, liquid-assisted leaps, and wind mechanics
 
-### Game Features
-- Platform jumping mechanics
-- Collectible coins and power-ups
-- Enemy encounters
-- Multiple worlds and levels
-- Boss battles
-- Shop system for upgrades
+### Content & Progression
+- **8 Themed Worlds**: From Neighborhood Gym to Championship Coliseum
+- **32 Unique Levels**: Each with 3+ secrets, elevated challenges, and original layouts  
+- **Boss Battles**: The Shredder with escalating difficulty and unique attack patterns
+- **Collectible System**: Golden Dumbbells, Gym Cards, Protein Shakes, Pre-Workouts, and Macros
+- **GAINS Meter**: Fill up for bonuses and power-up refills
 
-## 🚀 Getting Started
+### Technical Features
+- **Multi-Platform Controls**: Keyboard, gamepad, and mobile touch controls
+- **Save System**: Auto-save progress with localStorage
+- **Level Editor**: Create and edit custom levels with JSON export
+- **Original Audio**: Chiptune-style music and sound effects
+- **Responsive Design**: Works on desktop and mobile devices
 
-### Prerequisites
-- Node.js (version 16 or higher)
-- npm or yarn
+## Controls
 
-### Installation
-1. Clone the repository:
-```bash
-git clone https://github.com/dolfie/Gavin-Adventure.git
-cd Gavin-Adventure
+### Desktop (Keyboard)
+- **Arrow Keys / WASD**: Move left/right, crouch
+- **Space / Z**: Jump (hold for higher jumps)
+- **X / Shift**: Run/Sprint
+- **C**: Throw projectiles (Beast Mode only)
+- **Enter**: Start/Pause
+- **F1**: Toggle debug mode
+
+### Gamepad Support
+- **D-Pad / Left Stick**: Movement
+- **A Button**: Jump
+- **X Button**: Run
+- **B Button**: Throw
+- **Start**: Pause
+
+### Mobile Touch
+- On-screen controls automatically appear on mobile devices
+- Touch the directional pad for movement
+- Tap action buttons for jump, run, and throw
+
+## World Themes
+
+1. **Neighborhood Gym** - Learn the basics with friendly equipment
+2. **City Rooftops** - Urban parkour with wind challenges  
+3. **Locker Depths** - Slippery underground tunnels
+4. **Aquatic Mixers** - Swimming physics and protein rapids
+5. **Steel Factory** - Moving belts and industrial hazards
+6. **Neon Night Gym** - Bounce pads and laser obstacles
+7. **Alpine Altitude** - Icy surfaces and updraft fans
+8. **Championship Coliseum** - Ultimate challenges and final showdown
+
+## Installation & Deployment
+
+### Local Development
+1. Clone or download the project files
+2. Serve the files using a local web server:
+   ```bash
+   # Using Node.js http-server
+   npx http-server .
+   
+   # Using Python
+   python -m http.server 8000
+   
+   # Using PHP
+   php -S localhost:8000
+   ```
+3. Open `http://localhost:8000` in your browser
+
+### GitHub Pages Deployment
+1. Create a new repository on GitHub
+2. Upload all project files to the repository
+3. Go to repository Settings → Pages
+4. Under "Source", select "Deploy from a branch"
+5. Choose "main" branch and "/ (root)" folder
+6. Click Save - your game will be available at `https://yourusername.github.io/repositoryname`
+
+## File Structure
+```
+gavin-adventure/
+├── index.html              # Main game entry point
+├── style.css              # Game styling and responsive design
+├── main.js                # Game bootstrap and initialization
+├── engine/                # Core game engine
+│   ├── core.js            # Main game loop and scene management
+│   ├── input.js           # Input handling (keyboard/gamepad/touch)
+│   ├── physics.js         # Physics and movement systems
+│   ├── collision.js       # Collision detection and resolution
+│   ├── renderer.js        # Rendering and camera systems
+│   ├── audio.js           # Audio engine with chiptune synthesis
+│   └── particles.js       # Particle effects system
+├── game/                  # Game-specific code
+│   ├── constants.js       # Game constants and configuration
+│   ├── sprites.js         # Sprite management and pixel art generation
+│   ├── player.js          # Player character (Gavin) logic
+│   ├── enemies.js         # Enemy AI and behaviors
+│   ├── collectibles.js    # Items and power-ups
+│   ├── level.js           # Level management and tile system
+│   ├── hud.js             # UI elements and menus
+│   ├── scenes.js          # Game scenes (menu, gameplay, etc.)
+│   └── save.js            # Save system with localStorage
+├── tools/                 # Development tools
+│   └── editor.html        # Level editor for creating custom levels
+├── README.md              # This file
+└── TESTPLAN.md           # Testing procedures and QA checklist
 ```
 
-2. Install dependencies:
-```bash
-npm install
-```
+## Level Editor
 
-3. Start the development server:
-```bash
-npm run dev
-```
+The included level editor (`tools/editor.html`) allows you to:
+- Create custom levels with tile-based editing
+- Place enemies, collectibles, and interactive objects
+- Set level properties (theme, size, spawn points)
+- Export levels as JSON for use in the main game
+- Test levels directly in the game
 
-4. Open your browser and navigate to `http://localhost:5173`
+### Using the Editor
+1. Open `tools/editor.html` in your browser
+2. Use the tile palette to paint level geometry
+3. Switch to entity mode to place enemies and items
+4. Export your level as JSON and integrate it into the game
 
-## 🧪 Testing the Game
+## Technical Specifications
 
-### Basic Functionality Test
-1. **Start Screen**: You should see the main menu with "Start Game", "Test GameEngine", and "Load Test Level" buttons
-2. **Click "Start Game"**: This should transition to the main game screen
-3. **Player Movement**: Use WASD or arrow keys to move Gavin left/right
-4. **Jumping**: Press Space, W, or Z to jump, or click/tap on Gavin
-5. **Flex Battle**: Press F to show Gavin's strength
+### Performance Targets
+- **60 FPS** on desktop and mobile devices
+- **16ms frame budget** with optimized rendering
+- **Pixel-perfect** graphics with no anti-aliasing
+- **Low memory footprint** with efficient sprite management
 
-### Troubleshooting
+### Browser Compatibility  
+- **Chrome/Edge**: Full support with optimal performance
+- **Firefox**: Full support with Web Audio API
+- **Safari**: Full support with mobile optimizations
+- **Mobile**: Touch controls and responsive scaling
 
-#### Game Not Responding to Input
-- Check the browser console for any JavaScript errors
-- Ensure the development server is running (`npm run dev`)
-- Try refreshing the page
-- Check if your browser supports the required features
+### Development Standards
+- **Vanilla JavaScript**: No external dependencies
+- **Modular Architecture**: Clean separation of engine and game code
+- **Original Content**: All sprites, audio, and levels are original creations
+- **Accessible**: Color-blind friendly design and remappable controls
 
-#### Player Not Moving
-- Verify that the Player component is rendering (check console logs)
-- Check if the game state is properly initialized
-- Ensure the input event listeners are working
+## Credits
 
-#### Visual Issues
-- Check if Tailwind CSS is loading properly
-- Verify that the custom CSS files are being imported
-- Check browser compatibility
+**Game Design & Development**: Built as an original retro platformer
+**Art Style**: 16-bit inspired pixel art with modern polish
+**Audio**: Chiptune-style music and sound effects using Web Audio API
+**Engine**: Custom HTML5 Canvas game engine
 
-### Console Debugging
-The game includes extensive console logging to help debug issues:
-- Game state changes
-- Input events (key presses, clicks)
-- Player component rendering
-- Game engine initialization
+## License
 
-## 🏗️ Project Structure
+This project is provided as a complete game development example. Feel free to use, modify, and learn from the code structure and game design patterns.
 
-```
-src/
-├── components/          # React components
-│   ├── Player.tsx      # Main player character
-│   ├── GameBackground.tsx # Background and world themes
-│   ├── GameUI.tsx      # User interface elements
-│   └── ...            # Other game components
-├── systems/            # Game engine systems
-│   ├── GameEngine.ts   # Main game loop and logic
-│   ├── InputSystem.ts  # Input handling
-│   ├── PhysicsSystem.ts # Physics calculations
-│   └── CameraSystem.ts # Camera and viewport
-├── types/              # TypeScript type definitions
-│   └── GameTypes.ts    # Game state and entity types
-└── styles/             # CSS and styling
-    └── mario-sprites.css # Custom sprite animations
-```
+---
 
-## 🔧 Development
-
-### Building for Production
-```bash
-npm run build
-```
-
-### Linting
-```bash
-npm run lint
-```
-
-### Preview Production Build
-```bash
-npm run preview
-```
-
-## 🎨 Customization
-
-### Adding New Worlds
-1. Update the `WORLDS` array in `App.tsx`
-2. Add corresponding background themes in `GameBackground.tsx`
-3. Create world-specific enemies and obstacles
-
-### Modifying Player Physics
-1. Edit the physics constants in `Player.tsx`
-2. Adjust movement speed, jump power, and gravity
-3. Modify collision detection logic
-
-### Adding New Power-ups
-1. Define new power-up types in `GameTypes.ts`
-2. Implement collection logic in `App.tsx`
-3. Add visual effects in the Player component
-
-## 🐛 Known Issues
-
-- Game engine integration is currently simplified for basic functionality
-- Some advanced features may not be fully implemented
-- Mobile touch controls may need refinement
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-## 📝 License
-
-This project is open source and available under the [MIT License](LICENSE).
-
-## 🙏 Acknowledgments
-
-- Inspired by classic Mario platformers
-- Built with modern web technologies
-- Special thanks to the React and gaming communities
+**Ready to make some GAINS? Fire up the game and start your bodybuilding adventure!**

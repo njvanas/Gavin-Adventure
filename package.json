@@ -1,36 +1,41 @@
 {
-  "name": "super-platformer-adventure",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "homepage": "https://dolfie.github.io/Gavin-Adventure",
+  "name": "gavin-adventure",
+  "version": "1.0.0",
+  "description": "A retro bodybuilding-themed platformer game - Make GAINS. Beat The Shredder.",
+  "main": "index.html",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build --base=/Gavin-Adventure/",
-    "lint": "eslint .",
-    "preview": "vite preview",
-    "deploy": "npm run build && gh-pages -d dist"
+    "start": "npx http-server . -p 8000 -c-1",
+    "build": "echo 'No build process required - ready for deployment'",
+    "dev": "npx http-server . -p 8000 -c-1 -o",
+    "test": "echo 'Open TESTPLAN.md for testing procedures'"
   },
-  "dependencies": {
-    "lucide-react": "^0.344.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+  "keywords": [
+    "game",
+    "platformer",
+    "retro",
+    "html5",
+    "canvas",
+    "javascript",
+    "bodybuilding",
+    "pixel-art"
+  ],
+  "author": "Gavin Adventure Development Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/gavin-adventure.git"
   },
+  "homepage": "https://yourusername.github.io/gavin-adventure",
   "devDependencies": {
-    "@eslint/js": "^9.9.1",
-    "@types/react": "^18.3.5",
-    "@types/react-dom": "^18.3.0",
-    "@vitejs/plugin-react": "^4.3.1",
-    "autoprefixer": "^10.4.18",
-    "eslint": "^9.9.1",
-    "eslint-plugin-react-hooks": "^5.1.0-rc.0",
-    "eslint-plugin-react-refresh": "^0.4.11",
-    "gh-pages": "^6.3.0",
-    "globals": "^15.9.0",
-    "postcss": "^8.4.35",
-    "tailwindcss": "^3.4.1",
-    "typescript": "^5.5.3",
-    "typescript-eslint": "^8.3.0",
-    "vite": "^5.4.2"
-  }
+    "http-server": "^14.1.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "browserslist": [
+    "last 2 Chrome versions",
+    "last 2 Firefox versions",
+    "last 2 Safari versions",
+    "last 2 Edge versions"
+  ]
 }
