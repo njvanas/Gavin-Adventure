@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages (Fork Compatible)
+name: Deploy to GitHub Pages (Legacy - Most Reliable)
 
 on:
   push:
@@ -19,36 +19,13 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      with:
-        fetch-depth: 0 # Important for forks
       
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
-        
-    - name: Install dependencies
-      run: |
-        echo "📦 Installing dependencies..."
-        # Try npm ci first, fallback to npm install if needed
-        if npm ci; then
-          echo "✅ Dependencies installed with npm ci"
-        else
-          echo "⚠️ npm ci failed, trying npm install..."
-          npm install
-          echo "✅ Dependencies installed with npm install"
-        fi
-        
     - name: Validate project structure
       run: |
         echo "🔍 Validating project structure..."
@@ -86,28 +63,17 @@ jobs:
         
         echo "✅ Project structure validation passed!"
         
-    - name: Setup Pages
-      uses: actions/configure-pages@v4
-      
-    - name: Upload artifact
-      uses: actions/upload-pages-artifact@v3
-      with:
-        path: .
-        
     - name: Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v4
-      
+      uses: peaceiris/actions-gh-pages@v3
+      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: .
+        publish_branch: gh-pages
+        force_orphan: true
+        
     - name: Verify deployment
       run: |
         echo "🚀 Deployment completed successfully!"
-        echo "📱 Your site should be available at: ${{ steps.deployment.outputs.page_url }}"
+        echo "📱 Your site should be available at: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
         echo "⏱️  It may take a few minutes for changes to appear"
-        echo "🔗 GitHub Pages URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
-        
-    - name: Post-deployment cleanup
-      if: always()
-      run: |
-        echo "🧹 Cleaning up deployment artifacts..."
-        rm -rf deploy/
-        echo "✅ Cleanup completed"
