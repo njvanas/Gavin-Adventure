@@ -76,12 +76,20 @@ A complete retro platformer game built with HTML5 Canvas and JavaScript. Join Ga
 3. Open `http://localhost:8000` in your browser
 
 ### GitHub Pages Deployment
-1. Create a new repository on GitHub
-2. Upload all project files to the repository
-3. Go to repository Settings → Pages
-4. Under "Source", select "Deploy from a branch"
-5. Choose "main" branch and "/ (root)" folder
-6. Click Save - your game will be available at `https://yourusername.github.io/repositoryname`
+The repository is configured for automatic deployment to GitHub Pages:
+
+1. **Fork or Clone**: Fork this repository or clone it to your own
+2. **Enable GitHub Pages**: Go to Settings → Pages → Source → GitHub Actions
+3. **Automatic Deployment**: Every push to the `main` branch automatically deploys
+4. **Access Your Site**: Available at `https://yourusername.github.io/repositoryname`
+
+**For detailed deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md)**
+
+#### Quick Setup for Forks
+1. Fork this repository
+2. Go to Actions tab and enable workflows
+3. Push any change to trigger automatic deployment
+4. Your forked version will deploy automatically
 
 ## File Structure
 ```

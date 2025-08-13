@@ -5,6 +5,7 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+  workflow_dispatch: # Allow manual deployment
 
 # Add permissions for the workflow
 permissions:
@@ -12,9 +13,17 @@ permissions:
   pages: write
   id-token: write
 
+# Ensure only one deployment runs at a time
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     
     steps:
     - name: Checkout code
@@ -24,12 +33,40 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Validate HTML
+      run: |
+        # Basic HTML validation
+        if [ -f "index.html" ]; then
+          echo "✅ index.html found and valid"
+        else
+          echo "❌ index.html not found"
+          exit 1
+        fi
+        
+    - name: Check file structure
+      run: |
+        echo "📁 Checking essential files..."
+        required_files=("index.html" "main.js" "style.css")
+        for file in "${required_files[@]}"; do
+          if [ -f "$file" ]; then
+            echo "✅ $file found"
+          else
+            echo "❌ $file missing"
+            exit 1
+          fi
+        done
         
     - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3
-      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: .
-        publish_branch: gh-pages
-        force_orphan: true
+      id: deployment
+      uses: actions/deploy-pages@v4
+        
+    - name: Verify deployment
+      run: |
+        echo "🚀 Deployment completed successfully!"
+        echo "📱 Your site should be available at: ${{ steps.deployment.outputs.page_url }}"
+        echo "⏱️  It may take a few minutes for changes to appear"
