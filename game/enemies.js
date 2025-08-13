@@ -18,37 +18,37 @@ class Enemy extends Entity {
         switch (this.enemyType) {
             case ENEMY_TYPES.SLOUCHER:
                 this.speed = 0.3;
-                this.width = 16;
-                this.height = 16;
+                this.width = 32;
+                this.height = 32;
                 break;
             case ENEMY_TYPES.FORM_POLICE:
                 this.speed = 0.5;
-                this.width = 16;
-                this.height = 16;
+                this.width = 32;
+                this.height = 32;
                 this.health = 2; // Takes 2 hits
                 break;
             case ENEMY_TYPES.SNAPPER:
                 this.speed = 0;
-                this.width = 16;
-                this.height = 16;
+                this.width = 32;
+                this.height = 32;
                 this.solid = false; // Can be passed through when retracted
                 break;
             case ENEMY_TYPES.KETTLE_BELL:
                 this.speed = 1;
-                this.width = 16;
-                this.height = 16;
+                this.width = 32;
+                this.height = 32;
                 this.vy = -2; // Start with upward velocity
                 break;
             case ENEMY_TYPES.PROTEIN_DRONE:
                 this.speed = 1;
-                this.width = 16;
-                this.height = 16;
+                this.width = 32;
+                this.height = 32;
                 this.solid = false; // Flies, doesn't collide with tiles
                 break;
             case ENEMY_TYPES.BOSS_SHREDDER:
                 this.speed = 0.8;
-                this.width = 32;
-                this.height = 32;
+                this.width = 64;
+                this.height = 64;
                 this.health = 6;
                 break;
         }

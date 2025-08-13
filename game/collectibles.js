@@ -3,8 +3,8 @@ class Collectible extends Entity {
     constructor(x, y, type) {
         super(x, y);
         this.collectibleType = type;
-        this.width = 16;
-        this.height = 16;
+        this.width = 32;
+        this.height = 32;
         this.solid = false;
         this.collected = false;
         this.animationTimer = 0;

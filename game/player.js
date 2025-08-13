@@ -44,18 +44,18 @@ class Player extends Entity {
     updateSizeForPowerState() {
         switch (this.powerState) {
             case POWER_STATES.SMALL:
-                this.width = 16;
-                this.height = 16;
+                this.width = 32;
+                this.height = 32;
                 this.canThrow = false;
                 break;
             case POWER_STATES.PUMP:
-                this.width = 16;
-                this.height = 24;
+                this.width = 32;
+                this.height = 48;
                 this.canThrow = false;
                 break;
             case POWER_STATES.BEAST:
-                this.width = 24;
-                this.height = 24;
+                this.width = 48;
+                this.height = 48;
                 this.canThrow = true;
                 break;
         }

@@ -2,7 +2,7 @@
 const GAME_CONFIG = {
     CANVAS_WIDTH: 1024,
     CANVAS_HEIGHT: 576,
-    TILE_SIZE: 16,
+    TILE_SIZE: 32,
     TARGET_FPS: 60,
     
     PHYSICS: {
