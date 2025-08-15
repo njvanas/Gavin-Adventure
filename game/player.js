@@ -47,16 +47,22 @@ class Player extends Entity {
                 this.width = 16;
                 this.height = 16;
                 this.canThrow = false;
+                // Small hitbox centered on sprite
+                this.setHitbox(0, 0, 14, 14);
                 break;
             case POWER_STATES.PUMP:
                 this.width = 16;
                 this.height = 24;
                 this.canThrow = false;
+                // Pump hitbox - wider and taller, slightly offset
+                this.setHitbox(-1, 0, 18, 22);
                 break;
             case POWER_STATES.BEAST:
                 this.width = 24;
                 this.height = 24;
                 this.canThrow = true;
+                // Beast hitbox - larger and more precise
+                this.setHitbox(-2, 0, 20, 22);
                 break;
         }
     }

@@ -20,36 +20,48 @@ class Enemy extends Entity {
                 this.speed = 0.3;
                 this.width = 16;
                 this.height = 16;
+                // Sloucher has a smaller, more precise hitbox
+                this.setHitbox(2, 2, 12, 12);
                 break;
             case ENEMY_TYPES.FORM_POLICE:
                 this.speed = 0.5;
                 this.width = 16;
                 this.height = 16;
                 this.health = 2; // Takes 2 hits
+                // Form Police has a medium hitbox
+                this.setHitbox(1, 1, 14, 14);
                 break;
             case ENEMY_TYPES.SNAPPER:
                 this.speed = 0;
                 this.width = 16;
                 this.height = 16;
                 this.solid = false; // Can be passed through when retracted
+                // Snapper has a small hitbox when extended
+                this.setHitbox(3, 3, 10, 10);
                 break;
             case ENEMY_TYPES.KETTLE_BELL:
                 this.speed = 1;
                 this.width = 16;
                 this.height = 16;
                 this.vy = -2; // Start with upward velocity
+                // Kettle Bell has a circular hitbox for more natural collision
+                this.setHitbox(8, 8, 16, 16, 'circle', 6);
                 break;
             case ENEMY_TYPES.PROTEIN_DRONE:
                 this.speed = 1;
                 this.width = 16;
                 this.height = 16;
                 this.solid = false; // Flies, doesn't collide with tiles
+                // Protein Drone has a precise hitbox
+                this.setHitbox(2, 2, 12, 12);
                 break;
             case ENEMY_TYPES.BOSS_SHREDDER:
                 this.speed = 0.8;
                 this.width = 32;
                 this.height = 32;
                 this.health = 6;
+                // Boss has a large but precise hitbox
+                this.setHitbox(2, 2, 28, 28);
                 break;
         }
     }

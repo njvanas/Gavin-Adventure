@@ -19,21 +19,33 @@ class Collectible extends Entity {
         switch (this.collectibleType) {
             case COLLECTIBLE_TYPES.GOLDEN_DUMBBELL:
                 this.value = 100;
+                // Golden dumbbell has a precise hitbox
+                this.setHitbox(2, 2, 12, 12);
                 break;
             case COLLECTIBLE_TYPES.GYM_CARD:
                 this.value = 1000;
+                // Gym card has a rectangular hitbox
+                this.setHitbox(1, 1, 14, 14);
                 break;
             case COLLECTIBLE_TYPES.PROTEIN_SHAKE:
                 this.value = 200;
+                // Protein shake has a circular hitbox for natural feel
+                this.setHitbox(8, 8, 16, 16, 'circle', 6);
                 break;
             case COLLECTIBLE_TYPES.PRE_WORKOUT:
                 this.value = 500;
+                // Pre-workout has a medium hitbox
+                this.setHitbox(2, 2, 12, 12);
                 break;
             case COLLECTIBLE_TYPES.MACRO:
                 this.value = 300;
+                // Macro has a small, precise hitbox
+                this.setHitbox(3, 3, 10, 10);
                 break;
             case COLLECTIBLE_TYPES.TROPHY:
                 this.value = 5000;
+                // Trophy has a larger hitbox for easier collection
+                this.setHitbox(0, 0, 16, 16);
                 break;
         }
     }

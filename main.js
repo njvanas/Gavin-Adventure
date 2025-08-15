@@ -90,6 +90,13 @@ class Game {
         this.engine.setScene('loading');
         this.engine.start();
         
+        // Force scale update after everything is initialized
+        setTimeout(() => {
+            if (this.engine.forceScaleUpdate) {
+                this.engine.forceScaleUpdate();
+            }
+        }, 200);
+        
         // Set up game loop
         this.gameLoop();
     }

@@ -31,7 +31,7 @@ class Collision {
         const originalX = entity.x;
         const originalY = entity.y;
         
-        // Check horizontal collision
+        // Check horizontal collision using hitbox bounds
         const bounds = entity.getBounds();
         const leftTile = Math.floor(bounds.left / tileSize);
         const rightTile = Math.floor(bounds.right / tileSize);
@@ -45,19 +45,23 @@ class Collision {
         for (let y = topTile; y <= bottomTile; y++) {
             // Check left side
             if (entity.vx < 0 && level.getTile(leftTile, y) === TILES.SOLID) {
-                entity.x = (leftTile + 1) * tileSize;
+                // Calculate exact position to prevent overlap
+                const newX = (leftTile + 1) * tileSize - entity.hitboxOffsetX;
+                entity.x = newX;
                 entity.vx = 0;
                 hitWall = true;
             }
             // Check right side
             else if (entity.vx > 0 && level.getTile(rightTile, y) === TILES.SOLID) {
-                entity.x = rightTile * tileSize - entity.width;
+                // Calculate exact position to prevent overlap
+                const newX = rightTile * tileSize - entity.hitboxOffsetX - entity.hitboxWidth;
+                entity.x = newX;
                 entity.vx = 0;
                 hitWall = true;
             }
         }
         
-        // Vertical collision
+        // Vertical collision - use updated bounds after horizontal resolution
         const newBounds = entity.getBounds();
         const newLeftTile = Math.floor(newBounds.left / tileSize);
         const newRightTile = Math.floor(newBounds.right / tileSize);
@@ -67,12 +71,14 @@ class Collision {
         for (let x = newLeftTile; x <= newRightTile; x++) {
             // Check ceiling
             if (entity.vy < 0 && level.getTile(x, newTopTile) === TILES.SOLID) {
-                entity.y = (newTopTile + 1) * tileSize;
+                const newY = (newTopTile + 1) * tileSize - entity.hitboxOffsetY;
+                entity.y = newY;
                 entity.vy = 0;
             }
             // Check ground
             else if (entity.vy >= 0 && level.getTile(x, newBottomTile) === TILES.SOLID) {
-                entity.y = newBottomTile * tileSize - entity.height;
+                const newY = newBottomTile * tileSize - entity.hitboxOffsetY - entity.hitboxHeight;
+                entity.y = newY;
                 entity.vy = 0;
                 entity.onGround = true;
                 hitGround = true;
@@ -81,8 +87,8 @@ class Collision {
         
         // Check if entity fell off ground
         if (!hitGround && entity.onGround) {
-            // Quick check below entity
-            const belowY = Math.floor((entity.y + entity.height + 1) / tileSize);
+            // Quick check below entity using hitbox bounds
+            const belowY = Math.floor((newBounds.bottom + 1) / tileSize);
             let foundGround = false;
             
             for (let x = newLeftTile; x <= newRightTile; x++) {
@@ -97,14 +103,19 @@ class Collision {
             }
         }
         
-        // Keep entity within level bounds
-        entity.x = Math.max(0, Math.min(entity.x, level.width * tileSize - entity.width));
-        
-        // Check for death pits
-        if (entity.y > level.height * tileSize + 100) {
-            if (entity.onDeath) {
-                entity.onDeath();
-            }
+        // Keep entity within level bounds using hitbox bounds
+        const finalBounds = entity.getBounds();
+        if (finalBounds.left < 0) {
+            entity.x = -entity.hitboxOffsetX;
+        }
+        if (finalBounds.right > level.width * tileSize) {
+            entity.x = level.width * tileSize - entity.hitboxOffsetX - entity.hitboxWidth;
+        }
+        if (finalBounds.top < 0) {
+            entity.y = -entity.hitboxOffsetY;
+        }
+        if (finalBounds.bottom > level.height * tileSize) {
+            entity.y = level.height * tileSize - entity.hitboxOffsetY - entity.hitboxHeight;
         }
     }
     
