@@ -14,6 +14,13 @@ class GameEngine {
         this.currentScene = null;
         this.nextScene = null;
         
+        // Responsive scaling
+        this.internalWidth = GAME_CONFIG.CANVAS_WIDTH;
+        this.internalHeight = GAME_CONFIG.CANVAS_HEIGHT;
+        this.scale = 1;
+        this.offsetX = 0;
+        this.offsetY = 0;
+        
         // Debug
         this.debug = false;
         this.fpsCounter = 0;
@@ -22,12 +29,13 @@ class GameEngine {
         
         this.setupCanvas();
         this.bindDebugKeys();
+        this.setupResponsiveScaling();
     }
     
     setupCanvas() {
         // Set internal resolution
-        this.canvas.width = GAME_CONFIG.CANVAS_WIDTH;
-        this.canvas.height = GAME_CONFIG.CANVAS_HEIGHT;
+        this.canvas.width = this.internalWidth;
+        this.canvas.height = this.internalHeight;
         
         // Disable image smoothing for pixel perfect rendering
         this.ctx.imageSmoothingEnabled = false;
@@ -36,13 +44,102 @@ class GameEngine {
         this.ctx.msImageSmoothingEnabled = false;
     }
     
+    setupResponsiveScaling() {
+        // Calculate optimal scale for current window size
+        this.updateScale();
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            this.updateScale();
+        });
+        
+        // Handle orientation change on mobile
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => this.updateScale(), 100);
+        });
+        
+        // Force update after a short delay to ensure DOM is ready
+        setTimeout(() => this.updateScale(), 100);
+    }
+    
+    updateScale() {
+        const container = this.canvas.parentElement;
+        if (!container) return;
+        
+        const containerWidth = container.clientWidth;
+        const containerHeight = container.clientHeight;
+        
+        // Calculate scale to fit within container while maintaining aspect ratio
+        const scaleX = containerWidth / this.internalWidth;
+        const scaleY = containerHeight / this.internalHeight;
+        this.scale = Math.min(scaleX, scaleY, 4); // Max 4x scale for very large screens
+        
+        // Calculate centering offsets
+        this.offsetX = (containerWidth - this.internalWidth * this.scale) / 2;
+        this.offsetY = (containerHeight - this.internalHeight * this.scale) / 2;
+        
+        // Apply scaling by setting canvas size to match the scaled dimensions
+        this.canvas.style.width = `${this.internalWidth * this.scale}px`;
+        this.canvas.style.height = `${this.internalHeight * this.scale}px`;
+        this.canvas.style.marginLeft = `${this.offsetX}px`;
+        this.canvas.style.marginTop = `${this.offsetY}px`;
+        
+        // Keep internal resolution for rendering
+        this.canvas.width = this.internalWidth;
+        this.canvas.height = this.internalHeight;
+        
+        console.log(`Scale updated: ${this.scale.toFixed(2)}x, Container: ${containerWidth}x${containerHeight}, Game: ${this.internalWidth}x${this.internalHeight}`);
+    }
+    
+    // Force scale update (useful for debugging)
+    forceScaleUpdate() {
+        this.updateScale();
+    }
+    
+    // Convert screen coordinates to game coordinates
+    screenToGame(screenX, screenY) {
+        return {
+            x: (screenX - this.offsetX) / this.scale,
+            y: (screenY - this.offsetY) / this.scale
+        };
+    }
+    
+    // Convert game coordinates to screen coordinates
+    gameToScreen(gameX, gameY) {
+        return {
+            x: gameX * this.scale + this.offsetX,
+            y: gameY * this.scale + this.offsetY
+        };
+    }
+    
     bindDebugKeys() {
         window.addEventListener('keydown', (e) => {
             if (e.key === 'F1') {
                 e.preventDefault();
                 this.debug = !this.debug;
+                console.log('Debug mode:', this.debug ? 'ON' : 'OFF');
+            }
+            if (e.key === 'F2') {
+                e.preventDefault();
+                // Toggle hitbox visibility for all entities
+                this.toggleHitboxes();
             }
         });
+    }
+    
+    toggleHitboxes() {
+        // Toggle hitbox visibility for all entities in current scene
+        if (this.currentScene && this.scenes.has(this.currentScene)) {
+            const scene = this.scenes.get(this.currentScene);
+            if (scene.entities) {
+                scene.entities.forEach(entity => {
+                    if (entity.showHitbox !== undefined) {
+                        entity.showHitbox = !entity.showHitbox;
+                    }
+                });
+            }
+        }
+        console.log('Hitboxes toggled');
     }
     
     addScene(name, scene) {
@@ -182,6 +279,17 @@ class Entity {
         this.solid = true;
         this.onGround = false;
         this.type = 'entity';
+        
+        // Enhanced hitbox system
+        this.hitboxOffsetX = 0;
+        this.hitboxOffsetY = 0;
+        this.hitboxWidth = this.width;
+        this.hitboxHeight = this.height;
+        this.hitboxType = 'rectangle'; // 'rectangle', 'circle', 'custom'
+        this.hitboxRadius = 0; // For circular hitboxes
+        
+        // Visual debug
+        this.showHitbox = false;
     }
     
     update(deltaTime, level) {
@@ -208,9 +316,31 @@ class Entity {
         ctx.fillRect(screenX, screenY, this.width, this.height);
         
         // Debug hitbox
-        if (window.game && window.game.debug) {
-            ctx.strokeStyle = 'red';
-            ctx.strokeRect(screenX, screenY, this.width, this.height);
+        if (this.showHitbox || (window.game && window.game.debug)) {
+            this.renderHitbox(ctx, camera);
+        }
+    }
+    
+    renderHitbox(ctx, camera) {
+        const screenX = this.x - camera.x;
+        const screenY = this.y - camera.y;
+        
+        ctx.strokeStyle = 'red';
+        ctx.lineWidth = 1;
+        
+        if (this.hitboxType === 'circle') {
+            const centerX = screenX + this.hitboxOffsetX + this.hitboxWidth / 2;
+            const centerY = screenY + this.hitboxOffsetY + this.hitboxHeight / 2;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, this.hitboxRadius, 0, Math.PI * 2);
+            ctx.stroke();
+        } else {
+            ctx.strokeRect(
+                screenX + this.hitboxOffsetX, 
+                screenY + this.hitboxOffsetY, 
+                this.hitboxWidth, 
+                this.hitboxHeight
+            );
         }
     }
     
@@ -218,23 +348,113 @@ class Entity {
         return '#ffffff';
     }
     
-    getBounds() {
-        return {
-            left: this.x,
-            right: this.x + this.width,
-            top: this.y,
-            bottom: this.y + this.height
-        };
+    // Set hitbox properties
+    setHitbox(offsetX = 0, offsetY = 0, width = null, height = null, type = 'rectangle', radius = 0) {
+        this.hitboxOffsetX = offsetX;
+        this.hitboxOffsetY = offsetY;
+        this.hitboxWidth = width !== null ? width : this.width;
+        this.hitboxHeight = height !== null ? height : this.height;
+        this.hitboxType = type;
+        this.hitboxRadius = radius;
     }
     
+    // Get hitbox bounds with offset
+    getBounds() {
+        if (this.hitboxType === 'circle') {
+            const centerX = this.x + this.hitboxOffsetX + this.hitboxWidth / 2;
+            const centerY = this.y + this.hitboxOffsetY + this.hitboxHeight / 2;
+            return {
+                left: centerX - this.hitboxRadius,
+                right: centerX + this.hitboxRadius,
+                top: centerY - this.hitboxRadius,
+                bottom: centerY + this.hitboxRadius,
+                centerX: centerX,
+                centerY: centerY,
+                radius: this.hitboxRadius
+            };
+        } else {
+            return {
+                left: this.x + this.hitboxOffsetX,
+                right: this.x + this.hitboxOffsetX + this.hitboxWidth,
+                top: this.y + this.hitboxOffsetY,
+                bottom: this.y + this.hitboxOffsetY + this.hitboxHeight
+            };
+        }
+    }
+    
+    // Enhanced collision detection
     overlaps(other) {
         const a = this.getBounds();
         const b = other.getBounds();
         
-        return !(a.right <= b.left || 
-                 a.left >= b.right || 
-                 a.bottom <= b.top || 
-                 a.top >= b.bottom);
+        if (this.hitboxType === 'circle' && other.hitboxType === 'circle') {
+            // Circle vs Circle collision
+            const dx = a.centerX - b.centerX;
+            const dy = a.centerY - b.centerY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            return distance < (a.radius + b.radius);
+        } else if (this.hitboxType === 'circle') {
+            // Circle vs Rectangle collision
+            return this.circleRectOverlap(a, b);
+        } else if (other.hitboxType === 'circle') {
+            // Rectangle vs Circle collision
+            return this.circleRectOverlap(b, a);
+        } else {
+            // Rectangle vs Rectangle collision
+            return !(a.right <= b.left || 
+                     a.left >= b.right || 
+                     a.bottom <= b.top || 
+                     a.top >= b.bottom);
+        }
+    }
+    
+    // Circle vs Rectangle collision detection
+    circleRectOverlap(circle, rect) {
+        const closestX = Math.max(rect.left, Math.min(circle.centerX, rect.right));
+        const closestY = Math.max(rect.top, Math.min(circle.centerY, rect.bottom));
+        
+        const distanceX = circle.centerX - closestX;
+        const distanceY = circle.centerY - closestY;
+        
+        return (distanceX * distanceX + distanceY * distanceY) < (circle.radius * circle.radius);
+    }
+    
+    // Get precise collision response
+    getCollisionResponse(other) {
+        const a = this.getBounds();
+        const b = other.getBounds();
+        
+        if (!this.overlaps(other)) {
+            return { overlap: false };
+        }
+        
+        // Calculate overlap amounts
+        const overlapX = Math.min(
+            Math.abs(a.right - b.left),
+            Math.abs(a.left - b.right)
+        );
+        const overlapY = Math.min(
+            Math.abs(a.bottom - b.top),
+            Math.abs(a.top - b.bottom)
+        );
+        
+        // Determine push direction (smaller overlap wins)
+        let pushX = 0;
+        let pushY = 0;
+        
+        if (overlapX < overlapY) {
+            pushX = a.centerX < b.centerX ? -overlapX : overlapX;
+        } else {
+            pushY = a.centerY < b.centerY ? -overlapY : overlapY;
+        }
+        
+        return {
+            overlap: true,
+            pushX: pushX,
+            pushY: pushY,
+            overlapX: overlapX,
+            overlapY: overlapY
+        };
     }
     
     destroy() {
