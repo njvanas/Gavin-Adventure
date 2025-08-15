@@ -11,20 +11,25 @@ class Enemy extends Entity {
         this.animationTimer = 0;
         this.stateTimer = 0;
         
+        // Movement smoothing
+        this.targetVx = 0;
+        this.acceleration = 0.001; // Drastically reduced from 0.005 for very gradual movement
+        this.deceleration = 0.99; // Increased from 0.98 for even smoother deceleration
+        
         this.setupEnemyType();
     }
     
     setupEnemyType() {
         switch (this.enemyType) {
             case ENEMY_TYPES.SLOUCHER:
-                this.speed = 0.3;
+                this.speed = 0.03; // Drastically reduced from 0.08 for very slow movement
                 this.width = 16;
                 this.height = 16;
                 // Sloucher has a smaller, more precise hitbox
                 this.setHitbox(2, 2, 12, 12);
                 break;
             case ENEMY_TYPES.FORM_POLICE:
-                this.speed = 0.5;
+                this.speed = 0.05; // Drastically reduced from 0.12 for very slow movement
                 this.width = 16;
                 this.height = 16;
                 this.health = 2; // Takes 2 hits
@@ -40,15 +45,15 @@ class Enemy extends Entity {
                 this.setHitbox(3, 3, 10, 10);
                 break;
             case ENEMY_TYPES.KETTLE_BELL:
-                this.speed = 1;
+                this.speed = 0.06; // Drastically reduced from 0.15 for very slow movement
                 this.width = 16;
                 this.height = 16;
-                this.vy = -2; // Start with upward velocity
+                this.vy = -0.5; // Drastically reduced from -1.0 for very gentle jumping
                 // Kettle Bell has a circular hitbox for more natural collision
                 this.setHitbox(8, 8, 16, 16, 'circle', 6);
                 break;
             case ENEMY_TYPES.PROTEIN_DRONE:
-                this.speed = 1;
+                this.speed = 0.08; // Drastically reduced from 0.2 for very slow movement
                 this.width = 16;
                 this.height = 16;
                 this.solid = false; // Flies, doesn't collide with tiles
@@ -56,7 +61,7 @@ class Enemy extends Entity {
                 this.setHitbox(2, 2, 12, 12);
                 break;
             case ENEMY_TYPES.BOSS_SHREDDER:
-                this.speed = 0.8;
+                this.speed = 0.06; // Drastically reduced from 0.15 for very slow movement
                 this.width = 32;
                 this.height = 32;
                 this.health = 6;
@@ -68,6 +73,11 @@ class Enemy extends Entity {
     
     update(deltaTime, level, player, particleSystem) {
         if (!this.active) return;
+        
+        // Clamp maximum velocity to prevent super fast movement
+        const maxSpeed = this.speed * 1.5; // Reduced from 2.0 for more controlled movement
+        this.vx = Math.max(-maxSpeed, Math.min(maxSpeed, this.vx));
+        this.vy = Math.max(-maxSpeed * 1.5, Math.min(maxSpeed * 1.5, this.vy));
         
         this.updateAnimation(deltaTime);
         
@@ -112,8 +122,20 @@ class Enemy extends Entity {
     }
     
     updateSloucher(deltaTime, level) {
-        // Simple walking enemy
-        this.vx = this.direction * this.speed;
+        // Simple walking enemy with proper time scaling and smoothing
+        const timeScale = deltaTime / 16.67;
+        
+        // Set target velocity
+        this.targetVx = this.direction * this.speed;
+        
+        // Smoothly accelerate/decelerate towards target velocity
+        if (Math.abs(this.vx - this.targetVx) > 0.01) {
+            if (this.vx < this.targetVx) {
+                this.vx = Math.min(this.vx + this.acceleration * timeScale, this.targetVx);
+            } else {
+                this.vx = Math.max(this.vx - this.acceleration * timeScale, this.targetVx);
+            }
+        }
         
         // Apply physics
         Physics.applyGravity(this, deltaTime);
@@ -122,25 +144,38 @@ class Enemy extends Entity {
         
         // Turn around at edges or walls
         if (this.vx === 0 || !this.onGround) {
-            this.direction *= -1;
+            this.handleEdgeFall();
         }
     }
     
     updateFormPolice(deltaTime, level) {
-        // Similar to Sloucher but faster
-        this.vx = this.direction * this.speed;
+        // Similar to Sloucher but faster with smoothing
+        const timeScale = deltaTime / 16.67;
+        
+        // Set target velocity
+        this.targetVx = this.direction * this.speed;
+        
+        // Smoothly accelerate/decelerate towards target velocity
+        if (Math.abs(this.vx - this.targetVx) > 0.01) {
+            if (this.vx < this.targetVx) {
+                this.vx = Math.min(this.vx + this.acceleration * timeScale, this.targetVx);
+            } else {
+                this.vx = Math.max(this.vx - this.acceleration * timeScale, this.targetVx);
+            }
+        }
         
         Physics.applyGravity(this, deltaTime);
         Physics.updatePosition(this, deltaTime);
         Collision.resolveEntityTiles(this, level);
         
         if (this.vx === 0 || !this.onGround) {
-            this.direction *= -1;
+            this.handleEdgeFall();
         }
     }
     
     updateSnapper(deltaTime, level) {
-        // Rises and falls on a timer
+        // Rises and falls on a timer with proper time scaling
+        const timeScale = deltaTime / 16.67;
         this.stateTimer += deltaTime;
         
         if (this.stateTimer > 2000) { // 2 second cycle
@@ -149,15 +184,15 @@ class Enemy extends Entity {
             
             if (this.solid) {
                 // Rising - check if player is standing on top
-                // In a full implementation, we'd check for player overlap
-                this.vy = -1;
+                this.vy = -0.8; // Reduced from -1.0
             } else {
                 // Falling
-                this.vy = 1;
+                this.vy = 0.8; // Reduced from 1.0
             }
         }
         
-        this.y += this.vy * deltaTime / 16.67;
+        // Use proper time scaling for movement
+        this.y += this.vy * timeScale;
         
         // Clamp to vertical range
         const baseY = this.y; // This would be set from level data
@@ -165,7 +200,8 @@ class Enemy extends Entity {
     }
     
     updateKettleBell(deltaTime, level) {
-        // Hopping enemy
+        // Hopping enemy with proper time scaling
+        const timeScale = deltaTime / 16.67;
         this.vx = this.direction * this.speed;
         
         Physics.applyGravity(this, deltaTime);
@@ -174,33 +210,36 @@ class Enemy extends Entity {
         
         // Bounce off walls
         if (this.vx === 0) {
-            this.direction *= -1;
+            this.handleWallCollision();
         }
         
         // Jump when hitting ground
         if (this.onGround && this.vy >= 0) {
-            this.vy = -3;
+            this.vy = -2.0; // Reduced from -3.0
         }
     }
     
     updateProteinDrone(deltaTime, level) {
-        // Flying enemy with sine wave movement
+        // Flying enemy with sine wave movement and proper time scaling
+        const timeScale = deltaTime / 16.67;
         this.stateTimer += deltaTime;
         
         this.vx = this.direction * this.speed;
-        this.vy = Math.sin(this.stateTimer * 0.003) * 0.5; // Gentle up/down movement
+        this.vy = Math.sin(this.stateTimer * 0.003) * 0.3; // Reduced from 0.5
         
-        this.x += this.vx * deltaTime / 16.67;
-        this.y += this.vy * deltaTime / 16.67;
+        // Use proper time scaling for movement
+        this.x += this.vx * timeScale;
+        this.y += this.vy * timeScale;
         
         // Turn around at screen edges (simplified)
         if (this.x < 0 || this.x > 800) {
-            this.direction *= -1;
+            this.handleWallCollision();
         }
     }
     
     updateBossShredder(deltaTime, level, player) {
-        // Complex boss behavior
+        // Complex boss behavior with proper time scaling
+        const timeScale = deltaTime / 16.67;
         this.stateTimer += deltaTime;
         
         if (this.stateTimer > 3000) { // Change pattern every 3 seconds
@@ -209,7 +248,7 @@ class Enemy extends Entity {
             // Simple charging attack
             if (player) {
                 this.direction = player.x > this.x ? 1 : -1;
-                this.vx = this.direction * this.speed * 2;
+                this.vx = this.direction * this.speed * 1.5; // Reduced multiplier from 2.0
             }
         }
         
@@ -218,7 +257,7 @@ class Enemy extends Entity {
         Collision.resolveEntityTiles(this, level);
         
         // Gradually slow down
-        this.vx *= 0.95;
+        this.vx *= 0.98; // Increased from 0.95 for smoother deceleration
     }
     
     updateAnimation(deltaTime) {
@@ -268,14 +307,16 @@ class Enemy extends Entity {
         const screenX = this.x - camera.x;
         const screenY = this.y - camera.y;
         
-        // Get sprite based on enemy type
+        // Get sprite based on enemy type - try Mario sprites first
         let spriteName = '';
         switch (this.enemyType) {
             case ENEMY_TYPES.SLOUCHER:
-                spriteName = 'sloucher';
+                // Use Goomba sprites for sloucher
+                spriteName = this.animationFrame % 2 === 0 ? 'goomba_walk1' : 'goomba_walk2';
                 break;
             case ENEMY_TYPES.FORM_POLICE:
-                spriteName = 'form_police';
+                // Use Koopa sprites for form police
+                spriteName = this.animationFrame % 2 === 0 ? 'koopa_walk1' : 'koopa_walk2';
                 break;
             case ENEMY_TYPES.SNAPPER:
                 spriteName = 'snapper';
@@ -291,7 +332,34 @@ class Enemy extends Entity {
                 break;
         }
         
-        const sprite = window.sprites.getSprite(spriteName);
+        // Try to get Mario sprite first
+        let sprite = window.sprites.getSprite(spriteName);
+        
+        // Fallback to original enemy sprites if Mario sprites aren't available
+        if (!sprite) {
+            switch (this.enemyType) {
+                case ENEMY_TYPES.SLOUCHER:
+                    spriteName = 'sloucher';
+                    break;
+                case ENEMY_TYPES.FORM_POLICE:
+                    spriteName = 'form_police';
+                    break;
+                case ENEMY_TYPES.SNAPPER:
+                    spriteName = 'snapper';
+                    break;
+                case ENEMY_TYPES.KETTLE_BELL:
+                    spriteName = 'kettle_bell';
+                    break;
+                case ENEMY_TYPES.PROTEIN_DRONE:
+                    spriteName = 'protein_drone';
+                    break;
+                case ENEMY_TYPES.BOSS_SHREDDER:
+                    spriteName = 'boss_shredder';
+                    break;
+            }
+            sprite = window.sprites.getSprite(spriteName);
+        }
+        
         if (sprite) {
             ctx.save();
             
@@ -300,12 +368,14 @@ class Enemy extends Entity {
                 ctx.scale(-1, 1);
                 ctx.drawImage(
                     sprite.image,
+                    sprite.x, sprite.y, sprite.width, sprite.height,
                     -screenX - this.width, screenY,
                     this.width, this.height
                 );
             } else {
                 ctx.drawImage(
                     sprite.image,
+                    sprite.x, sprite.y, sprite.width, sprite.height,
                     screenX, screenY,
                     this.width, this.height
                 );
@@ -367,7 +437,70 @@ class Enemy extends Entity {
         ctx.strokeStyle = COLORS.WHITE;
         ctx.strokeRect(x - 8, y, barWidth, barHeight);
     }
+
+    // Handle direction change smoothly
+    changeDirection() {
+        this.direction *= -1;
+        // Reset velocity to prevent jerky movement
+        this.vx = 0;
+        this.targetVx = 0;
+    }
+    
+    // Handle wall collision smoothly
+    handleWallCollision() {
+        if (this.vx !== 0) {
+            this.changeDirection();
+        }
+    }
+    
+    // Handle falling off edge smoothly
+    handleEdgeFall() {
+        if (this.onGround) {
+            this.changeDirection();
+        }
+    }
 }
 
 // Export to global scope
 window.Enemy = Enemy;
+
+// Global enemy debugging functions
+window.resetAllEnemyMovement = () => {
+    if (window.game && window.game.engine && window.game.engine.currentScene) {
+        const scene = window.game.engine.engine.scenes.get(window.game.engine.currentScene);
+        if (scene && scene.entities) {
+            const enemies = scene.entities.filter(e => e.type === 'enemy' || e.enemyType !== undefined);
+            enemies.forEach(enemy => {
+                enemy.vx = 0;
+                enemy.vy = 0;
+                enemy.targetVx = 0;
+            });
+            console.log(`✅ Reset movement for ${enemies.length} enemies`);
+        }
+    } else {
+        console.log('❌ Game scene not available');
+    }
+};
+
+window.debugEnemyMovement = () => {
+    if (window.game && window.game.engine && window.game.engine.currentScene) {
+        const scene = window.game.engine.engine.scenes.get(window.game.engine.currentScene);
+        if (scene && scene.entities) {
+            const enemies = scene.entities.filter(e => e.type === 'enemy' || e.enemyType !== undefined);
+            console.log(`Found ${enemies.length} enemies`);
+            
+            enemies.forEach((enemy, index) => {
+                console.log(`Enemy ${index + 1}:`, {
+                    type: enemy.enemyType,
+                    speed: enemy.speed,
+                    vx: enemy.vx?.toFixed(3),
+                    vy: enemy.vy?.toFixed(3),
+                    direction: enemy.direction,
+                    onGround: enemy.onGround
+                });
+            });
+        }
+    } else {
+        console.log('❌ Game scene not available');
+    }
+};

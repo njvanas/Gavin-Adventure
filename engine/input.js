@@ -42,23 +42,39 @@ class InputManager {
     
     setupKeyboardEvents() {
         window.addEventListener('keydown', (e) => {
-            e.preventDefault();
+            // Don't prevent default for all keys - only game-specific ones
             const action = this.keyMap[e.code];
             if (action) {
+                e.preventDefault();
+                console.log(`🔽 Key pressed: ${e.code} -> ${action} (was: ${this.keys[action]})`); // Enhanced debug log
                 if (!this.keys[action]) {
                     this.keysPressed[action] = true;
                 }
                 this.keys[action] = true;
+                console.log(`✅ Key state after press: ${action} = ${this.keys[action]}, all keys:`, this.keys); // Enhanced state confirmation
             }
         });
         
         window.addEventListener('keyup', (e) => {
-            e.preventDefault();
             const action = this.keyMap[e.code];
             if (action) {
+                e.preventDefault();
+                console.log(`🔼 Key released: ${e.code} -> ${action} (was: ${this.keys[action]})`); // Enhanced debug log
                 this.keys[action] = false;
                 this.keysReleased[action] = true;
+                console.log(`✅ Key state after release: ${action} = ${this.keys[action]}, all keys:`, this.keys); // Enhanced state confirmation
             }
+        });
+        
+        // Handle window focus/blur to prevent stuck keys
+        window.addEventListener('blur', () => {
+            console.log('🔄 Window blur - clearing inputs');
+            this.clearAllInputs();
+        });
+        
+        window.addEventListener('focus', () => {
+            console.log('🔄 Window focus - clearing inputs');
+            this.clearAllInputs();
         });
         
         // Prevent context menu
@@ -119,6 +135,29 @@ class InputManager {
             this.touchControls[action] = false;
             this.keys[action] = false;
         });
+        
+        // Mouse events for desktop testing
+        element.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            this.touchControls[action] = true;
+            if (!this.keys[action]) {
+                this.keysPressed[action] = true;
+            }
+            this.keys[action] = true;
+        });
+        
+        element.addEventListener('mouseup', (e) => {
+            e.preventDefault();
+            this.touchControls[action] = false;
+            this.keys[action] = false;
+            this.keysReleased[action] = true;
+        });
+        
+        element.addEventListener('mouseleave', (e) => {
+            e.preventDefault();
+            this.touchControls[action] = false;
+            this.keys[action] = false;
+        });
     }
     
     updateGamepad() {
@@ -171,13 +210,74 @@ class InputManager {
     update() {
         this.updateGamepad();
         
-        // Clear frame-specific states
-        this.keysPressed = {};
-        this.keysReleased = {};
+        // Clear frame-specific states at the END of the frame
+        // This ensures all systems have processed the input
+        // REMOVED: requestAnimationFrame clearing that was causing keys to be cleared immediately
+        
+        // Only clear the frame-specific states, not the main keys state
+        // The main keys state should persist until keys are actually released
     }
     
+    // Clear frame-specific states (called after all systems have processed input)
+    clearFrameStates() {
+        console.log(`🧹 Clearing frame states, keys before:`, this.keys); // Debug: show keys before clearing
+        this.keysPressed = {};
+        this.keysReleased = {};
+        console.log(`🧹 Frame states cleared, keys after:`, this.keys); // Debug: show keys after clearing
+    }
+    
+    // Force clear all input states (useful for debugging)
+    clearAllInputs() {
+        this.keys = {};
+        this.keysPressed = {};
+        this.keysReleased = {};
+        this.touchControls = {
+            left: false,
+            right: false,
+            down: false,
+            jump: false,
+            run: false,
+            throw: false
+        };
+    }
+    
+    // Check if any input is currently active
+    hasActiveInput() {
+        return Object.values(this.keys).some(key => key === true) ||
+               Object.values(this.touchControls).some(control => control === true);
+    }
+    
+    // Validate input states and fix any inconsistencies
+    validateInputs() {
+        // Check for stuck keys and fix them
+        for (const [key, value] of Object.entries(this.keys)) {
+            if (value === true) {
+                // If a key is "down" but we haven't seen it in a while, it might be stuck
+                if (!this.keysPressed[key] && !this.keysReleased[key]) {
+                    // This key might be stuck - reset it
+                    this.resetKey(key);
+                }
+            }
+        }
+        
+        // Ensure touch controls are consistent with key states
+        for (const [control, value] of Object.entries(this.touchControls)) {
+            if (value === true && !this.keys[control]) {
+                // Touch control is active but key state is not - sync them
+                this.keys[control] = true;
+            }
+        }
+    }
+    
+    // Enhanced input checking with validation
     isDown(action) {
-        return this.keys[action] || false;
+        // Simple, direct input checking without validation
+        const result = this.keys[action] || false;
+        // Debug: Log when isDown is called (but limit frequency to avoid spam)
+        if (Math.random() < 0.05) { // 5% chance to log
+            console.log(`🔍 isDown(${action}) called, returning: ${result}, current keys:`, this.keys);
+        }
+        return result;
     }
     
     isPressed(action) {
@@ -187,7 +287,111 @@ class InputManager {
     isReleased(action) {
         return this.keysReleased[action] || false;
     }
+    
+    // Debug methods
+    getInputState() {
+        return {
+            keys: { ...this.keys },
+            keysPressed: { ...this.keysPressed },
+            keysReleased: { ...this.keysReleased },
+            touchControls: { ...this.touchControls },
+            gamepadIndex: this.gamepadIndex,
+            hasActiveInput: this.hasActiveInput()
+        };
+    }
+    
+    logInputState() {
+        console.log('Input State:', this.getInputState());
+    }
+    
+    // Force reset a specific key
+    resetKey(action) {
+        this.keys[action] = false;
+        this.keysPressed[action] = false;
+        this.keysReleased[action] = false;
+        if (this.touchControls.hasOwnProperty(action)) {
+            this.touchControls[action] = false;
+        }
+    }
+    
+    // Check if a key is stuck
+    isKeyStuck(action) {
+        return this.keys[action] && !this.hasActiveInput();
+    }
 }
 
 // Export to global scope
 window.InputManager = InputManager;
+
+// Global input debugging functions
+window.resetAllInputs = () => {
+    if (window.input) {
+        window.input.clearAllInputs();
+        console.log('✅ All inputs reset');
+    } else {
+        console.log('❌ Input system not available');
+    }
+};
+
+window.debugInputs = () => {
+    if (window.input) {
+        window.input.logInputState();
+    } else {
+        console.log('❌ Input system not available');
+    }
+};
+
+window.fixStuckKeys = () => {
+    if (window.input) {
+        const stuckKeys = [];
+        for (const [key, value] of Object.entries(window.input.keys)) {
+            if (window.input.isKeyStuck(key)) {
+                stuckKeys.push(key);
+                window.input.resetKey(key);
+            }
+        }
+        
+        if (stuckKeys.length > 0) {
+            console.log(`✅ Fixed ${stuckKeys.length} stuck keys:`, stuckKeys);
+        } else {
+            console.log('✅ No stuck keys found');
+        }
+    } else {
+        console.log('❌ Input system not available');
+    }
+};
+
+// Test input system
+window.testInputs = () => {
+    if (window.input) {
+        console.log('🧪 Testing Input System...');
+        
+        // Test key states
+        console.log('Current key states:', window.input.keys);
+        console.log('Left key:', window.input.isDown('left'));
+        console.log('Right key:', window.input.isDown('right'));
+        console.log('Jump key:', window.input.isDown('jump'));
+        
+        // Test if input system is responsive
+        console.log('Input system ready:', !!window.input);
+        console.log('Key map:', window.input.keyMap);
+    } else {
+        console.log('❌ Input system not available');
+    }
+};
+
+// Manually set a key state for testing
+window.setKeyState = (action, state) => {
+    if (window.input) {
+        console.log(`🔧 Manually setting ${action} to ${state}`);
+        window.input.keys[action] = state;
+        if (state) {
+            window.input.keysPressed[action] = true;
+        } else {
+            window.input.keysReleased[action] = true;
+        }
+        console.log(`✅ Key state set: ${action} = ${window.input.keys[action]}`);
+    } else {
+        console.log('❌ Input system not available');
+    }
+};

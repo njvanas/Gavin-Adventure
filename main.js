@@ -170,6 +170,9 @@ class Game {
         // End frame for renderer
         this.renderer.endFrame();
         
+        // Clear input frame states AFTER all systems have processed input
+        this.input.clearFrameStates();
+        
         // Performance monitoring (every second)
         const now = Date.now();
         if (now - this.lastPerformanceCheck > 1000) {

@@ -32,6 +32,7 @@ class Player extends Entity {
         this.canThrow = false;
         this.throwCooldown = 0;
         this.projectiles = [];
+        this.canBreakBlocks = true; // Player can break blocks by hitting them from below
         
         // Stats
         this.lives = 3;
@@ -70,6 +71,9 @@ class Player extends Entity {
     update(deltaTime, level, input, particleSystem) {
         if (!this.active) return;
         
+        // Auto-fix stuck states
+        this.forceUnstuck();
+        
         // Update invulnerability
         if (this.invulnerabilityTime > 0) {
             this.invulnerabilityTime -= deltaTime;
@@ -100,6 +104,16 @@ class Player extends Entity {
     handleInput(input, deltaTime, particleSystem) {
         const timeScale = deltaTime / 16.67;
         
+        // Debug: Log input state occasionally
+        if (Math.random() < 0.1) { // 10% chance to log
+            console.log('Input state:', {
+                left: input.isDown('left'),
+                right: input.isDown('right'),
+                jump: input.isDown('jump'),
+                run: input.isDown('run')
+            });
+        }
+        
         // Horizontal movement
         this.running = input.isDown('run');
         const speed = this.running ? GAME_CONFIG.PHYSICS.RUN_SPEED : GAME_CONFIG.PHYSICS.WALK_SPEED;
@@ -123,14 +137,16 @@ class Player extends Entity {
             this.vx *= 0.5; // Slow down when crouching
         }
         
-        // Jumping
+        // Jumping - improved handling
         if (input.isPressed('jump')) {
             this.jumpBuffer = GAME_CONFIG.PHYSICS.JUMP_BUFFER;
+            // Reset jump held state to prevent stuck jumps
+            this.jumpHeld = false;
         }
         
         this.jumpHeld = input.isDown('jump');
         
-        // Execute jump
+        // Execute jump with better conditions
         if (this.jumpBuffer > 0 && (this.onGround || this.coyoteTime > 0)) {
             this.jump();
             this.jumpBuffer = 0;
@@ -139,7 +155,7 @@ class Player extends Entity {
             window.audio.playSound('jump');
         }
         
-        // Variable jump height
+        // Variable jump height - improved logic
         if (this.jumpHeld && this.jumpTimer > 0 && this.vy < 0) {
             this.jumpTimer = Math.max(0, this.jumpTimer - timeScale);
         } else {
@@ -307,21 +323,67 @@ class Player extends Entity {
             return; // Skip rendering for blink effect
         }
         
-        // Get sprite based on power state
+        // Get Mario sprite based on power state and animation state
         let spriteName = '';
         switch (this.powerState) {
             case POWER_STATES.SMALL:
-                spriteName = 'gavin_small_idle';
+                switch (this.animationState) {
+                    case 'idle':
+                        spriteName = 'mario_small_idle';
+                        break;
+                    case 'walk':
+                    case 'run':
+                        // Cycle through run animations
+                        const runFrame = (this.animationFrame % 3) + 1;
+                        spriteName = `mario_small_run${runFrame}`;
+                        break;
+                    case 'jump':
+                        spriteName = 'mario_small_jump';
+                        break;
+                    default:
+                        spriteName = 'mario_small_idle';
+                }
                 break;
             case POWER_STATES.PUMP:
-                spriteName = 'gavin_pump_idle';
-                break;
             case POWER_STATES.BEAST:
-                spriteName = 'gavin_beast_idle';
+                switch (this.animationState) {
+                    case 'idle':
+                        spriteName = 'mario_big_idle';
+                        break;
+                    case 'walk':
+                    case 'run':
+                        // Cycle through run animations
+                        const runFrame = (this.animationFrame % 3) + 1;
+                        spriteName = `mario_big_run${runFrame}`;
+                        break;
+                    case 'jump':
+                        spriteName = 'mario_big_jump';
+                        break;
+                    default:
+                        spriteName = 'mario_big_idle';
+                }
                 break;
         }
         
-        const sprite = window.sprites.getSprite(spriteName);
+        // Try to get Mario sprite first
+        let sprite = window.sprites.getSprite(spriteName);
+        
+        // Fallback to original Gavin sprites if Mario sprites aren't available
+        if (!sprite) {
+            switch (this.powerState) {
+                case POWER_STATES.SMALL:
+                    spriteName = 'gavin_small_idle';
+                    break;
+                case POWER_STATES.PUMP:
+                    spriteName = 'gavin_pump_idle';
+                    break;
+                case POWER_STATES.BEAST:
+                    spriteName = 'gavin_beast_idle';
+                    break;
+            }
+            sprite = window.sprites.getSprite(spriteName);
+        }
+        
         if (sprite) {
             ctx.save();
             
@@ -330,12 +392,14 @@ class Player extends Entity {
                 ctx.scale(-1, 1);
                 ctx.drawImage(
                     sprite.image,
+                    sprite.x, sprite.y, sprite.width, sprite.height,
                     -screenX - this.width, screenY,
                     this.width, this.height
                 );
             } else {
                 ctx.drawImage(
                     sprite.image,
+                    sprite.x, sprite.y, sprite.width, sprite.height,
                     screenX, screenY,
                     this.width, this.height
                 );
@@ -391,6 +455,35 @@ class Player extends Entity {
             'Lives': this.lives,
             'Score': this.score
         };
+    }
+    
+    // Reset input states to prevent stuck controls
+    resetInputStates() {
+        this.jumpHeld = false;
+        this.jumpBuffer = 0;
+        this.running = false;
+        this.crouching = false;
+    }
+    
+    // Force reset jump state
+    resetJumpState() {
+        this.jumpHeld = false;
+        this.jumpBuffer = 0;
+        this.jumpTimer = 0;
+        this.coyoteTime = 0;
+    }
+    
+    // Check if player is in a stuck state
+    isStuck() {
+        return this.jumpHeld && !this.onGround && this.vy === 0;
+    }
+    
+    // Force unstuck player
+    forceUnstuck() {
+        if (this.isStuck()) {
+            this.resetJumpState();
+            this.vy = 0.1; // Small downward velocity to get unstuck
+        }
     }
 }
 

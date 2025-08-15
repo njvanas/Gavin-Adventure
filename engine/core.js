@@ -91,6 +91,18 @@ class GameEngine {
         console.log(`Scale updated: ${this.scale.toFixed(2)}x, Container: ${containerWidth}x${containerHeight}, Game: ${this.internalWidth}x${this.internalHeight}`);
     }
     
+    // Get performance statistics
+    getPerformanceStats() {
+        return {
+            fps: this.fpsDisplay,
+            frameTime: this.deltaTime,
+            drawCalls: 0, // Will be updated by renderer
+            entityCount: 0, // Will be updated by scenes
+            scale: this.scale,
+            memoryUsage: performance.memory ? performance.memory.usedJSHeapSize / 1024 / 1024 : 0
+        };
+    }
+    
     // Force scale update (useful for debugging)
     forceScaleUpdate() {
         this.updateScale();
@@ -124,7 +136,83 @@ class GameEngine {
                 // Toggle hitbox visibility for all entities
                 this.toggleHitboxes();
             }
+            if (e.key === 'F3') {
+                e.preventDefault();
+                // Debug input system
+                this.debugInputSystem();
+            }
+            if (e.key === 'F4') {
+                e.preventDefault();
+                // Debug enemy movement
+                this.debugEnemyMovement();
+            }
         });
+    }
+    
+    debugInputSystem() {
+        if (window.input) {
+            console.log('🔍 Input System Debug:');
+            window.input.logInputState();
+            
+            // Check for stuck keys
+            const stuckKeys = [];
+            for (const [key, value] of Object.entries(window.input.keys)) {
+                if (window.input.isKeyStuck(key)) {
+                    stuckKeys.push(key);
+                }
+            }
+            
+            if (stuckKeys.length > 0) {
+                console.warn('⚠️ Stuck keys detected:', stuckKeys);
+                // Auto-fix stuck keys
+                stuckKeys.forEach(key => window.input.resetKey(key));
+                console.log('✅ Stuck keys auto-fixed');
+            } else {
+                console.log('✅ No stuck keys detected');
+            }
+        }
+        
+        // Debug player state if available
+        if (window.game && window.game.engine && window.game.engine.currentScene) {
+            const scene = window.game.engine.scenes.get(window.game.engine.currentScene);
+            if (scene && scene.player) {
+                console.log('🎮 Player State:', {
+                    onGround: scene.player.onGround,
+                    jumpHeld: scene.player.jumpHeld,
+                    jumpBuffer: scene.player.jumpBuffer,
+                    isStuck: scene.player.isStuck()
+                });
+            }
+        }
+    }
+    
+    debugEnemyMovement() {
+        console.log('🎯 Enemy Movement Debug:');
+        
+        if (window.game && window.game.engine && window.game.engine.currentScene) {
+            const scene = window.game.engine.scenes.get(window.game.engine.currentScene);
+            if (scene && scene.entities) {
+                const enemies = scene.entities.filter(e => e.type === 'enemy' || e.enemyType !== undefined);
+                console.log(`Found ${enemies.length} enemies`);
+                
+                enemies.forEach((enemy, index) => {
+                    console.log(`Enemy ${index + 1}:`, {
+                        type: enemy.enemyType,
+                        speed: enemy.speed,
+                        vx: enemy.vx?.toFixed(3),
+                        vy: enemy.vy?.toFixed(3),
+                        direction: enemy.direction,
+                        onGround: enemy.onGround,
+                        position: `${enemy.x.toFixed(1)}, ${enemy.y.toFixed(1)}`
+                    });
+                });
+            }
+        }
+        
+        // Show current input state
+        if (window.input) {
+            console.log('Current Input State:', window.input.getInputState());
+        }
     }
     
     toggleHitboxes() {

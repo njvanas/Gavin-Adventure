@@ -66,9 +66,19 @@ class Level {
             this.setTile(x, this.height - 12, TILES.PLATFORM);
         }
         
-        // Add some breakable blocks
+        // Add some breakable blocks (question mark blocks)
         for (let x = 30; x < 35; x++) {
             this.setTile(x, this.height - 6, TILES.BREAKABLE);
+        }
+        
+        // Add more question mark blocks for the player to discover
+        for (let x = 40; x < 45; x++) {
+            this.setTile(x, this.height - 10, TILES.BREAKABLE);
+        }
+        
+        // Add some floating question mark blocks
+        for (let x = 50; x < 55; x++) {
+            this.setTile(x, this.height - 14, TILES.BREAKABLE);
         }
         
         // Add obstacles and gaps
@@ -197,17 +207,87 @@ class Level {
         const parallax = 0.3;
         const offsetX = camera.x * parallax;
         
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-        for (let i = 0; i < 5; i++) {
-            const x = (i * 200) - offsetX;
-            const y = 50 + Math.sin(i) * 30;
+        // Try to use Mario cloud sprites first
+        const cloud1Sprite = window.sprites.getSprite('cloud1');
+        const cloud2Sprite = window.sprites.getSprite('cloud2');
+        const cloud3Sprite = window.sprites.getSprite('cloud3');
+        const hill1Sprite = window.sprites.getSprite('hill1');
+        const hill2Sprite = window.sprites.getSprite('hill2');
+        const bush1Sprite = window.sprites.getSprite('bush1');
+        const bush2Sprite = window.sprites.getSprite('bush2');
+        const bush3Sprite = window.sprites.getSprite('bush3');
+        
+        if (cloud1Sprite && cloud2Sprite && cloud3Sprite) {
+            // Draw Mario-style clouds
+            for (let i = 0; i < 3; i++) {
+                const x = (i * 300) - offsetX;
+                const y = 60 + Math.sin(i * 0.5) * 20;
+                
+                let cloudSprite;
+                switch (i % 3) {
+                    case 0: cloudSprite = cloud1Sprite; break;
+                    case 1: cloudSprite = cloud2Sprite; break;
+                    case 2: cloudSprite = cloud3Sprite; break;
+                }
+                
+                ctx.drawImage(
+                    cloudSprite.image,
+                    cloudSprite.x, cloudSprite.y, cloudSprite.width, cloudSprite.height,
+                    x, y, cloudSprite.width, cloudSprite.height
+                );
+            }
+        } else {
+            // Fallback to simple cloud shapes
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+            for (let i = 0; i < 5; i++) {
+                const x = (i * 200) - offsetX;
+                const y = 50 + Math.sin(i) * 30;
+                
+                // Simple cloud shape
+                ctx.beginPath();
+                ctx.arc(x, y, 20, 0, Math.PI * 2);
+                ctx.arc(x + 20, y, 25, 0, Math.PI * 2);
+                ctx.arc(x + 40, y, 20, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        // Draw hills and bushes in the background
+        if (hill1Sprite && hill2Sprite && bush1Sprite && bush2Sprite && bush3Sprite) {
+            const hillParallax = 0.6;
+            const hillOffsetX = camera.x * hillParallax;
             
-            // Simple cloud shape
-            ctx.beginPath();
-            ctx.arc(x, y, 20, 0, Math.PI * 2);
-            ctx.arc(x + 20, y, 25, 0, Math.PI * 2);
-            ctx.arc(x + 40, y, 20, 0, Math.PI * 2);
-            ctx.fill();
+            // Draw hills
+            for (let i = 0; i < 4; i++) {
+                const x = (i * 200) - hillOffsetX;
+                const y = GAME_CONFIG.CANVAS_HEIGHT - 80;
+                
+                const hillSprite = (i % 2 === 0) ? hill1Sprite : hill2Sprite;
+                ctx.drawImage(
+                    hillSprite.image,
+                    hillSprite.x, hillSprite.y, hillSprite.width, hillSprite.height,
+                    x, y, hillSprite.width, hillSprite.height
+                );
+            }
+            
+            // Draw bushes
+            for (let i = 0; i < 6; i++) {
+                const x = (i * 150) - hillOffsetX + 50;
+                const y = GAME_CONFIG.CANVAS_HEIGHT - 64;
+                
+                let bushSprite;
+                switch (i % 3) {
+                    case 0: bushSprite = bush1Sprite; break;
+                    case 1: bushSprite = bush2Sprite; break;
+                    case 2: bushSprite = bush3Sprite; break;
+                }
+                
+                ctx.drawImage(
+                    bushSprite.image,
+                    bushSprite.x, bushSprite.y, bushSprite.width, bushSprite.height,
+                    x, y, bushSprite.width, bushSprite.height
+                );
+            }
         }
     }
     
@@ -239,9 +319,17 @@ class Level {
         
         switch (tileType) {
             case TILES.SOLID:
-                const groundSprite = window.sprites.getSprite('ground');
+                // Try Mario ground block first
+                let groundSprite = window.sprites.getSprite('ground_block');
+                if (!groundSprite) {
+                    groundSprite = window.sprites.getSprite('ground');
+                }
                 if (groundSprite) {
-                    ctx.drawImage(groundSprite.image, x, y, size, size);
+                    ctx.drawImage(
+                        groundSprite.image,
+                        groundSprite.x, groundSprite.y, groundSprite.width, groundSprite.height,
+                        x, y, size, size
+                    );
                 } else {
                     ctx.fillStyle = COLORS.GROUND_BROWN;
                     ctx.fillRect(x, y, size, size);
@@ -249,9 +337,17 @@ class Level {
                 break;
                 
             case TILES.PLATFORM:
-                const platformSprite = window.sprites.getSprite('platform');
+                // Try Mario brick block first
+                let platformSprite = window.sprites.getSprite('brick');
+                if (!platformSprite) {
+                    platformSprite = window.sprites.getSprite('platform');
+                }
                 if (platformSprite) {
-                    ctx.drawImage(platformSprite.image, x, y, size, size);
+                    ctx.drawImage(
+                        platformSprite.image,
+                        platformSprite.x, platformSprite.y, platformSprite.width, platformSprite.height,
+                        x, y, size, size
+                    );
                 } else {
                     ctx.fillStyle = COLORS.GRAY;
                     ctx.fillRect(x, y, size, 4);
@@ -259,14 +355,30 @@ class Level {
                 break;
                 
             case TILES.BREAKABLE:
-                const breakableSprite = window.sprites.getSprite('breakable');
+                // Try Mario mystery block first
+                let breakableSprite = window.sprites.getSprite('mystery_block');
+                if (!breakableSprite) {
+                    breakableSprite = window.sprites.getSprite('breakable');
+                }
                 if (breakableSprite) {
-                    ctx.drawImage(breakableSprite.image, x, y, size, size);
+                    ctx.drawImage(
+                        breakableSprite.image,
+                        breakableSprite.x, breakableSprite.y, breakableSprite.width, breakableSprite.height,
+                        x, y, size, size
+                    );
                 } else {
+                    // Fallback with question mark
                     ctx.fillStyle = '#DEB887';
                     ctx.fillRect(x, y, size, size);
                     ctx.strokeStyle = COLORS.BLACK;
                     ctx.strokeRect(x, y, size, size);
+                    
+                    // Draw question mark
+                    ctx.fillStyle = COLORS.BLACK;
+                    ctx.font = '12px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('?', x + size/2, y + size/2 + 4);
+                    ctx.textAlign = 'left';
                 }
                 break;
                 
@@ -289,19 +401,39 @@ class Level {
         const screenX = this.exitPoint.x - camera.x;
         const screenY = this.exitPoint.y - camera.y;
         
-        // Draw flag or exit marker
-        ctx.fillStyle = COLORS.SUCCESS;
-        ctx.fillRect(screenX, screenY - 32, 4, 32);
+        // Try to use Mario flag sprites first
+        const flagSprite = window.sprites.getSprite('flag');
+        const flagPoleSprite = window.sprites.getSprite('flag_pole');
         
-        ctx.fillStyle = COLORS.PRIMARY;
-        ctx.fillRect(screenX + 4, screenY - 32, 20, 16);
-        
-        // Draw "EXIT" text
-        ctx.fillStyle = COLORS.WHITE;
-        ctx.font = '8px monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText('EXIT', screenX + 14, screenY - 24);
-        ctx.textAlign = 'left';
+        if (flagSprite && flagPoleSprite) {
+            // Draw flag pole
+            ctx.drawImage(
+                flagPoleSprite.image,
+                flagPoleSprite.x, flagPoleSprite.y, flagPoleSprite.width, flagPoleSprite.height,
+                screenX, screenY - 32, 16, 32
+            );
+            
+            // Draw flag
+            ctx.drawImage(
+                flagSprite.image,
+                flagSprite.x, flagSprite.y, flagSprite.width, flagSprite.height,
+                screenX + 16, screenY - 32, 16, 16
+            );
+        } else {
+            // Fallback to original exit rendering
+            ctx.fillStyle = COLORS.SUCCESS;
+            ctx.fillRect(screenX, screenY - 32, 4, 32);
+            
+            ctx.fillStyle = COLORS.PRIMARY;
+            ctx.fillRect(screenX + 4, screenY - 32, 20, 16);
+            
+            // Draw "EXIT" text
+            ctx.fillStyle = COLORS.WHITE;
+            ctx.font = '8px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('EXIT', screenX + 14, screenY - 24);
+            ctx.textAlign = 'left';
+        }
     }
     
     getThemeColor() {
@@ -349,7 +481,43 @@ class Level {
             particleSystem.blockBreak(x * GAME_CONFIG.TILE_SIZE, y * GAME_CONFIG.TILE_SIZE);
         }
         
+        // Check if this was a question mark block and spawn a collectible
+        this.spawnCollectibleFromBlock(x, y);
+        
         window.audio.playSound('break');
+    }
+    
+    // Spawn collectibles when question mark blocks are broken
+    spawnCollectibleFromBlock(x, y) {
+        // Random chance to spawn different collectibles
+        const rand = Math.random();
+        let collectibleType;
+        
+        if (rand < 0.4) {
+            // 40% chance for coin
+            collectibleType = COLLECTIBLE_TYPES.GOLDEN_DUMBBELL;
+        } else if (rand < 0.7) {
+            // 30% chance for power-up
+            collectibleType = COLLECTIBLE_TYPES.PROTEIN_SHAKE;
+        } else if (rand < 0.9) {
+            // 20% chance for 1-up
+            collectibleType = COLLECTIBLE_TYPES.GYM_CARD;
+        } else {
+            // 10% chance for special item
+            collectibleType = COLLECTIBLE_TYPES.PRE_WORKOUT;
+        }
+        
+        // Spawn the collectible above the broken block
+        const spawnX = x * GAME_CONFIG.TILE_SIZE;
+        const spawnY = (y - 1) * GAME_CONFIG.TILE_SIZE;
+        
+        this.addCollectible(collectibleType, spawnX, spawnY);
+        
+        // Make the collectible float up slightly
+        const collectible = this.collectibles[this.collectibles.length - 1];
+        if (collectible) {
+            collectible.vy = -2; // Float up
+        }
     }
     
     getDebugInfo() {

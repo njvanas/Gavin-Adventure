@@ -12,6 +12,11 @@ class Collectible extends Entity {
         this.bobOffset = 0;
         this.bobTimer = 0;
         
+        // Physics for floating collectibles
+        this.vx = 0;
+        this.vy = 0;
+        this.onGround = false;
+        
         this.setupCollectibleType();
     }
     
@@ -52,6 +57,34 @@ class Collectible extends Entity {
     
     update(deltaTime, level, player, particleSystem) {
         if (!this.active || this.collected) return;
+        
+        // Apply physics if collectible has velocity
+        if (this.vy !== 0 || this.vx !== 0) {
+            // Apply gravity
+            this.vy += 0.2; // Light gravity
+            
+            // Update position
+            this.x += this.vx;
+            this.y += this.vy;
+            
+            // Check ground collision
+            if (this.vy > 0) {
+                const groundY = Math.floor((this.y + this.height) / GAME_CONFIG.TILE_SIZE);
+                const tileType = level.getTile(Math.floor(this.x / GAME_CONFIG.TILE_SIZE), groundY);
+                
+                if (tileType === TILES.SOLID || tileType === TILES.PLATFORM) {
+                    this.y = groundY * GAME_CONFIG.TILE_SIZE - this.height;
+                    this.vy = 0;
+                    this.onGround = true;
+                }
+            }
+            
+            // Stop horizontal movement after a short time
+            if (this.vx !== 0) {
+                this.vx *= 0.9;
+                if (Math.abs(this.vx) < 0.1) this.vx = 0;
+            }
+        }
         
         // Animate bobbing motion
         this.bobTimer += deltaTime;
@@ -119,30 +152,62 @@ class Collectible extends Entity {
         const screenX = this.x - camera.x;
         const screenY = this.y - camera.y + this.bobOffset;
         
-        // Get sprite based on collectible type
+        // Get sprite based on collectible type - try Mario sprites first
         let spriteName = '';
         switch (this.collectibleType) {
             case COLLECTIBLE_TYPES.GOLDEN_DUMBBELL:
-                spriteName = 'golden_dumbbell';
+                // Use coin sprite for golden dumbbell
+                spriteName = 'coin';
                 break;
             case COLLECTIBLE_TYPES.GYM_CARD:
-                spriteName = 'gym_card';
+                // Use magic mushroom for gym card
+                spriteName = 'magic_mushroom';
                 break;
             case COLLECTIBLE_TYPES.PROTEIN_SHAKE:
                 spriteName = 'protein_shake';
                 break;
             case COLLECTIBLE_TYPES.PRE_WORKOUT:
-                spriteName = 'pre_workout';
+                // Use 1up mushroom for pre-workout
+                spriteName = '1up_mushroom';
                 break;
             case COLLECTIBLE_TYPES.MACRO:
-                spriteName = 'golden_dumbbell'; // Reuse dumbbell sprite with different color
+                // Use underground coin for macro
+                spriteName = 'coin_underground';
                 break;
             case COLLECTIBLE_TYPES.TROPHY:
-                spriteName = 'golden_dumbbell'; // Placeholder
+                // Use starman for trophy
+                spriteName = 'starman';
                 break;
         }
         
-        const sprite = window.sprites.getSprite(spriteName);
+        // Try to get Mario sprite first
+        let sprite = window.sprites.getSprite(spriteName);
+        
+        // Fallback to original collectible sprites if Mario sprites aren't available
+        if (!sprite) {
+            switch (this.collectibleType) {
+                case COLLECTIBLE_TYPES.GOLDEN_DUMBBELL:
+                    spriteName = 'golden_dumbbell';
+                    break;
+                case COLLECTIBLE_TYPES.GYM_CARD:
+                    spriteName = 'gym_card';
+                    break;
+                case COLLECTIBLE_TYPES.PROTEIN_SHAKE:
+                    spriteName = 'protein_shake';
+                    break;
+                case COLLECTIBLE_TYPES.PRE_WORKOUT:
+                    spriteName = 'pre_workout';
+                    break;
+                case COLLECTIBLE_TYPES.MACRO:
+                    spriteName = 'golden_dumbbell'; // Reuse dumbbell sprite with different color
+                    break;
+                case COLLECTIBLE_TYPES.TROPHY:
+                    spriteName = 'golden_dumbbell'; // Placeholder
+                    break;
+            }
+            sprite = window.sprites.getSprite(spriteName);
+        }
+        
         if (sprite) {
             // Add subtle glow effect for special items
             if (this.collectibleType === COLLECTIBLE_TYPES.GYM_CARD || 
@@ -150,10 +215,18 @@ class Collectible extends Entity {
                 ctx.save();
                 ctx.shadowColor = COLORS.COIN_GOLD;
                 ctx.shadowBlur = 5;
-                ctx.drawImage(sprite.image, screenX, screenY, this.width, this.height);
+                ctx.drawImage(
+                    sprite.image,
+                    sprite.x, sprite.y, sprite.width, sprite.height,
+                    screenX, screenY, this.width, this.height
+                );
                 ctx.restore();
             } else {
-                ctx.drawImage(sprite.image, screenX, screenY, this.width, this.height);
+                ctx.drawImage(
+                    sprite.image,
+                    sprite.x, sprite.y, sprite.width, sprite.height,
+                    screenX, screenY, this.width, this.height
+                );
             }
         } else {
             // Fallback colored rectangle
