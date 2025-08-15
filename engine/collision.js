@@ -15,7 +15,8 @@ class Collision {
         // Check all tiles entity overlaps
         for (let y = topTile; y <= bottomTile; y++) {
             for (let x = leftTile; x <= rightTile; x++) {
-                if (level.getTile(x, y) === TILES.SOLID) {
+                const tileType = level.getTile(x, y);
+                if (tileType === TILES.SOLID || tileType === TILES.PLATFORM) {
                     return true;
                 }
             }
@@ -75,13 +76,16 @@ class Collision {
                 entity.y = newY;
                 entity.vy = 0;
             }
-            // Check ground
-            else if (entity.vy >= 0 && level.getTile(x, newBottomTile) === TILES.SOLID) {
-                const newY = newBottomTile * tileSize - entity.hitboxOffsetY - entity.hitboxHeight;
-                entity.y = newY;
-                entity.vy = 0;
-                entity.onGround = true;
-                hitGround = true;
+            // Check ground - handle both solid and platform tiles
+            else if (entity.vy >= 0) {
+                const tileType = level.getTile(x, newBottomTile);
+                if (tileType === TILES.SOLID || tileType === TILES.PLATFORM) {
+                    const newY = newBottomTile * tileSize - entity.hitboxOffsetY - entity.hitboxHeight;
+                    entity.y = newY;
+                    entity.vy = 0;
+                    entity.onGround = true;
+                    hitGround = true;
+                }
             }
         }
         
@@ -92,7 +96,8 @@ class Collision {
             let foundGround = false;
             
             for (let x = newLeftTile; x <= newRightTile; x++) {
-                if (level.getTile(x, belowY) === TILES.SOLID) {
+                const tileType = level.getTile(x, belowY);
+                if (tileType === TILES.SOLID || tileType === TILES.PLATFORM) {
                     foundGround = true;
                     break;
                 }
@@ -101,6 +106,11 @@ class Collision {
             if (!foundGround) {
                 entity.onGround = false;
             }
+        }
+        
+        // Check for block breaking (player hitting blocks from below)
+        if (entity.vy < 0 && entity.canBreakBlocks !== undefined) {
+            this.checkBlockBreaking(entity, level, newLeftTile, newRightTile, newTopTile);
         }
         
         // Keep entity within level bounds using hitbox bounds
@@ -205,6 +215,39 @@ class Collision {
         }
         
         return Math.max(0, Math.min(1, entryTime));
+    }
+
+    // Check if player can break blocks by hitting them from below
+    static checkBlockBreaking(entity, level, leftTile, rightTile, topTile) {
+        if (!entity.canBreakBlocks) return;
+        
+        const tileSize = GAME_CONFIG.TILE_SIZE;
+        
+        for (let x = leftTile; x <= rightTile; x++) {
+            const tileType = level.getTile(x, topTile);
+            
+            // Check if it's a breakable block and player has enough power
+            if (tileType === TILES.BREAKABLE && entity.powerState >= POWER_STATES.PUMP) {
+                // Break the block
+                level.breakTile(x, topTile, window.particles);
+                
+                // Bounce the player down slightly
+                entity.vy = 1;
+                
+                // Play break sound
+                if (window.audio) {
+                    window.audio.playSound('break');
+                }
+            } else if (tileType === TILES.BREAKABLE && entity.powerState < POWER_STATES.PUMP) {
+                // Player is too small to break the block, but still bounce
+                entity.vy = 1;
+                
+                // Play hit sound
+                if (window.audio) {
+                    window.audio.playSound('hit');
+                }
+            }
+        }
     }
 }
 
