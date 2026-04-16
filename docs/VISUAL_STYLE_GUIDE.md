@@ -1,4 +1,7 @@
-# Gavin Adventure - Visual Style Guide
+# Gavin Adventure — visual style guide (reference)
+
+> **Note:** Directional guidelines; in-game sprites follow **`Assets/`** and renderer code.
+
 **Modern Pixel Art Standards for Bodybuilding Platformer**
 
 ## Art Direction Philosophy

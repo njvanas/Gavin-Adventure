@@ -1,22 +1,20 @@
+# Publishes the static site via GitHub Actions → Pages (artifact).
+# Repository Settings → Pages → Source MUST be "GitHub Actions" (not the gh-pages branch).
 name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
-  workflow_dispatch: # Allow manual deployment
+    branches: [main, master]
+  workflow_dispatch:
 
-# Add permissions for the workflow
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Ensure only one deployment runs at a time
 concurrency:
-  group: "pages"
-  cancel-in-progress: false
+  group: pages
+  cancel-in-progress: true
 
 jobs:
   deploy:
@@ -24,66 +22,37 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
-        
-    - name: Install dependencies
-      run: |
-        echo "📦 Installing dependencies..."
-        # Try npm ci first, fallback to npm install if needed
-        if npm ci; then
-          echo "✅ Dependencies installed with npm ci"
-        else
-          echo "⚠️ npm ci failed, trying npm install..."
-          npm install
-          echo "✅ Dependencies installed with npm install"
-        fi
-        
-    - name: Validate HTML
-      run: |
-        # Basic HTML validation
-        if [ -f "index.html" ]; then
-          echo "✅ index.html found and valid"
-        else
-          echo "❌ index.html not found"
-          exit 1
-        fi
-        
-    - name: Check file structure
-      run: |
-        echo "📁 Checking essential files..."
-        required_files=("index.html" "main.js" "style.css")
-        for file in "${required_files[@]}"; do
-          if [ -f "$file" ]; then
-            echo "✅ $file found"
-          else
-            echo "❌ $file missing"
-            exit 1
-          fi
-        done
-        
-    - name: Setup Pages
-      uses: actions/configure-pages@v4
-      
-    - name: Upload artifact
-      uses: actions/upload-pages-artifact@v3
-      with:
-        path: .
-        
-    - name: Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v4
-         
-    - name: Verify deployment
-      run: |
-        echo "🚀 Deployment completed successfully!"
-        echo "📱 Your site should be available at: ${{ steps.deployment.outputs.page_url }}"
-        echo "⏱️  It may take a few minutes for changes to appear"
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate static bundle
+        run: |
+          set -e
+          for f in index.html main.js style.css; do
+            test -f "$f" || { echo "Missing $f"; exit 1; }
+          done
+          test -d engine || { echo "Missing engine/"; exit 1; }
+          test -d game || { echo "Missing game/"; exit 1; }
+          for f in game/smbConstants.js game/smbIntegrator.js game/campaign.js; do
+            test -f "$f" || { echo "Missing $f"; exit 1; }
+          done
+          echo "OK: static game files present"
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Summary
+        run: |
+          echo "Deployed: ${{ steps.deployment.outputs.page_url }}"
+          echo "If the site looks stale, confirm Settings → Pages → Build and deployment → Source = GitHub Actions."

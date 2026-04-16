@@ -1,4 +1,7 @@
-# Gavin Adventure - Development Timeline
+# Gavin Adventure — development timeline (planning doc)
+
+> **Note:** Example schedule and backlog — not a commitment log. For the shipped game, see the root **README** and **`game/`** code.
+
 **24-Week Modernization Schedule**
 
 ## Executive Summary

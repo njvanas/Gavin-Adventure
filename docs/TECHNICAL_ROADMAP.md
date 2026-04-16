@@ -1,4 +1,7 @@
-# Gavin Adventure - Technical Implementation Roadmap
+# Gavin Adventure — technical roadmap (planning doc)
+
+> **Note:** Long-form implementation ideas; the repo may diverge. Treat **README** + **`engine/`** / **`game/`** as the source of truth for behavior.
+
 **Comprehensive Development Plan for Modern Browser Game**
 
 ## Overview

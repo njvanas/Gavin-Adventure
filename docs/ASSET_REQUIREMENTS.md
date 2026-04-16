@@ -1,4 +1,7 @@
-# Gavin Adventure - Asset Requirements
+# Gavin Adventure — asset requirements (planning doc)
+
+> **Note:** Production checklist for a possible expanded art pass — **`Assets/`** in the repo is what the game loads today.
+
 **Comprehensive Asset List for Modern Platformer**
 
 ## Overview

@@ -6,8 +6,9 @@
   },
   "deployment": {
     "source": "github-actions",
+    "workflow": ".github/workflows/deploy.yml",
     "target": "github-pages",
-    "branch": "gh-pages"
+    "pages_source_note": "Repository Settings → Pages → Source must be GitHub Actions for this workflow to update the live site."
   },
   "required_files": {
     "root": [
@@ -32,11 +33,14 @@
         "required": true,
         "files": [
           "constants.js",
+          "smbConstants.js",
+          "smbIntegrator.js",
           "sprites.js",
           "player.js",
           "enemies.js",
           "collectibles.js",
           "level.js",
+          "campaign.js",
           "hud.js",
           "scenes.js",
           "save.js"

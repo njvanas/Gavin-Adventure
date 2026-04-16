@@ -109,9 +109,10 @@ gavin-adventure/
 ├── style.css               # Layout & responsive UI
 ├── main.js                 # Bootstrap
 ├── engine/                 # Loop, input, physics, collision, render, audio, particles
-├── game/                   # Gavin, enemies, levels, HUD, scenes, save
+├── game/                   # Gavin, enemies, campaign, levels, HUD, scenes, save
 ├── tools/
 │   └── editor.html         # Tile / entity editor → JSON
+├── docs/                   # Design notes and roadmaps
 ├── DEPLOYMENT.md
 └── TESTPLAN.md
 ```

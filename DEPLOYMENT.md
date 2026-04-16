@@ -13,91 +13,24 @@ This guide explains how to set up automatic deployment for Gavin Adventure, whet
 ### 1. Enable GitHub Pages
 
 1. Go to your repository's **Settings** tab
-2. Scroll down to **Pages** section
-3. Under **Source**, select **GitHub Actions**
-4. Click **Save**
+2. Open **Pages**
+3. Under **Build and deployment → Source**, choose **GitHub Actions** (required for `.github/workflows/deploy.yml`).
+4. Do **not** point Pages at the `gh-pages` branch at the same time — that is a different deployment mode and will ignore Actions builds.
 
-### 2. Configure GitHub Pages Branch
+## ⚙️ Workflow
 
-- **Source**: Deploy from a branch
-- **Branch**: `gh-pages` (will be created automatically)
-- **Folder**: `/ (root)`
+The only deploy workflow is **`.github/workflows/deploy.yml`**. It runs on every push to **`main`** / **`master`** and on **manual** runs (**Actions → Deploy to GitHub Pages → Run workflow**). It uploads the repository root as the GitHub Pages artifact (static files — no build step).
 
-## ⚙️ Automatic Deployment Workflows
+## 🎯 For main repo and forks
 
-This repository includes five deployment workflows:
+1. Set **Pages → Source** to **GitHub Actions** and rely on **`deploy.yml`** on each push to `main` / `master`.
+2. On a **fork**, enable Actions if prompted; the same workflow applies.
+3. **Manual:** Actions → **Deploy to GitHub Pages** → **Run workflow**.
 
-### Legacy Workflow: `deploy-legacy.yml` (Most Reliable - Recommended)
-- **Purpose**: Most reliable deployment using proven technology
-- **Triggers**: Push to main/master branch, pull requests
-- **Features**: 
-  - Uses battle-tested `peaceiris/actions-gh-pages@v3`
-  - No npm dependencies required
-  - Works reliably for both forks and main repos
-  - Creates `gh-pages` branch automatically
-  - Comprehensive file validation
-  - **Fixed permissions** for fork compatibility
+## 🚀 Quick setup
 
-### Fork-Specific Workflow: `deploy-fork-simple.yml` (Best for Forks)
-- **Purpose**: Optimized deployment specifically for forked repositories
-- **Triggers**: Push to main/master branch, pull requests
-- **Features**: 
-  - Uses official GitHub Pages actions (no permission issues)
-  - No npm dependencies required
-  - Designed specifically for fork scenarios
-  - Handles repository permissions correctly
-  - Comprehensive file validation
-
-### Simple Workflow: `deploy-simple.yml`
-- **Purpose**: Modern deployment using GitHub's official actions
-- **Triggers**: Push to main/master branch, pull requests
-- **Features**: 
-  - Uses official GitHub Pages actions
-  - No npm dependencies required
-  - Modern artifact-based deployment
-  - Comprehensive file validation
-
-### Primary Workflow: `deploy.yml`
-- **Purpose**: Standard deployment with npm dependency handling
-- **Triggers**: Push to main/master branch, pull requests
-- **Features**: 
-  - Basic validation
-  - npm dependency management
-  - Fallback npm installation
-  - Direct deployment
-
-### Fork-Compatible Workflow: `deploy-fork.yml`
-- **Purpose**: Enhanced deployment for forks and complex scenarios
-- **Triggers**: Push to main/master branch, pull requests
-- **Features**: 
-  - Enhanced validation
-  - Deployment package creation
-  - Better fork compatibility
-  - Comprehensive file checking
-  - npm dependency management
-
-## 🎯 For Main Repository Users
-
-1. **Recommended**: Use the simple workflow (`deploy-simple.yml`) for fastest deployment
-2. **Alternative**: The primary workflow (`deploy.yml`) handles npm dependencies
-3. **Manual Deployment**: Use the "workflow_dispatch" trigger in GitHub Actions
-4. **Branch Protection**: Ensure `main` branch is protected if needed
-
-## 🔄 For Fork Users
-
-1. **Enable Actions**: Go to Actions tab and enable workflows
-2. **Recommended**: Use `deploy-fork-simple.yml` for best fork compatibility
-3. **Alternative**: Use `deploy-legacy.yml` (updated with fork permissions)
-4. **Avoid**: The other workflows may have permission issues in forks
-5. **Repository Settings**: Update repository name in package.json if needed
-
-## 🚀 Quick Setup (Recommended)
-
-1. **Enable GitHub Pages**: Settings → Pages → Source → GitHub Actions
-2. **Use Legacy Workflow**: The `deploy-legacy.yml` workflow is most reliable and proven
-3. **Push Changes**: Any commit to `main` branch triggers automatic deployment
-4. **No npm Issues**: This workflow doesn't require npm dependencies
-5. **Fork Compatible**: Works reliably for both forks and main repositories
+1. **Settings → Pages → Source → GitHub Actions**
+2. Push to **`main`** (or **`master`**); confirm a green **Deploy to GitHub Pages** run and the deployment `page_url` in the job log.
 
 ## 📁 Required Files for Deployment
 
@@ -118,32 +51,31 @@ Gavin-Adventure/
 │   └── particles.js
 └── game/              # Game logic files
     ├── constants.js
+    ├── smbConstants.js
+    ├── smbIntegrator.js
     ├── sprites.js
     ├── player.js
     ├── enemies.js
     ├── collectibles.js
     ├── level.js
+    ├── campaign.js
     ├── hud.js
     ├── scenes.js
     └── save.js
 ```
 
-## 🚦 Workflow Triggers
+## 🚦 Workflow triggers
 
-### Automatic Triggers
-- **Push to main/master**: Deploys automatically when code is pushed
-- **Pull Request**: Validates changes (doesn't deploy to production)
+- **Automatic:** push to **`main`** / **`master`** runs **`deploy.yml`**.
+- **Manual:** **workflow_dispatch** on **Deploy to GitHub Pages**.
+- **Pull requests** do not run deploy (avoids accidental publishes).
 
-### Manual Triggers
-- **Workflow Dispatch**: Manually trigger deployment from Actions tab
+## 🔍 Deployment process (`deploy.yml`)
 
-## 🔍 Deployment Process
-
-1. **Code Checkout**: Repository is cloned with full history
-2. **Dependencies**: Node.js dependencies are installed
-3. **Validation**: Project structure and files are validated
-4. **Deployment**: Files are deployed to GitHub Pages
-5. **Verification**: Deployment status is confirmed
+1. Checkout the commit.
+2. Validate required static files (see workflow).
+3. Upload the repository root as the Pages artifact (no `npm` step).
+4. `deploy-pages` publishes to GitHub Pages.
 
 ## 📱 Accessing Your Deployed Site
 
@@ -169,21 +101,15 @@ https://[username].github.io/[repository-name]
    - Check GitHub Pages settings
 
 3. **Site Not Updating**
-   - Wait 5-10 minutes for changes to propagate
-   - Clear browser cache
-   - Check GitHub Pages deployment status
+   - Confirm **Settings → Pages → Source** matches how you deploy (**GitHub Actions** vs **`gh-pages` branch**). Updating the branch does nothing if Pages is wired to the other mode.
+   - Wait a few minutes for CDN propagation; hard-refresh or try a private window.
+   - In **Actions**, open the latest **Deploy to GitHub Pages** run and confirm it succeeded and shows a `page_url`.
 
-4. **npm ci Errors (Package Lock Sync Issues)**
-   - **Problem**: `npm ci` fails with "package.json and package-lock.json are out of sync"
-   - **Solution**: Use the `deploy-simple.yml` workflow (recommended)
-   - **Alternative**: Run `npm install` locally and commit the updated package-lock.json
-   - **Why**: Your project is static files and doesn't actually need npm dependencies for deployment
+4. **`npm` / lockfile issues**
+   - The default **`deploy.yml`** does not run `npm`. If you add a build step later, keep `package.json` and `package-lock.json` in sync (`npm install` locally, commit the lockfile).
 
-5. **Fork Permission Errors (403 Forbidden)**
-   - **Problem**: `peaceiris/actions-gh-pages@v3` fails with "Permission denied" in forks
-   - **Solution**: Use the `deploy-fork-simple.yml` workflow (designed for forks)
-   - **Alternative**: Use the updated `deploy-legacy.yml` with fixed permissions
-   - **Why**: Forks have different permission structures than main repositories
+5. **Fork: Actions disabled or permission errors**
+   - On the fork, open **Settings → Actions → General** and allow workflows to run. The deploy job uses the default **`GITHUB_TOKEN`** and the **github-pages** environment.
 
 ### Debug Steps
 
@@ -214,4 +140,4 @@ If you encounter deployment issues:
 
 ---
 
-**Note**: This deployment setup is designed to work automatically for both forks and the main repository. The workflows handle the complexity of deployment, so you can focus on developing your game!
+**Note:** One workflow (**`deploy.yml`**) deploys the static site for both forks and the main repository.

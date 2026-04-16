@@ -1,4 +1,7 @@
-# Gavin Adventure - Modernization Plan
+# Gavin Adventure — modernization plan (aspirational)
+
+> **Note:** Long-form design ideas and possible future work. It does not describe everything in the current shipped game — see the root **README** and the **`game/`** sources for what is implemented today.
+
 **Transforming a Classic Bodybuilding Platformer for Modern Gaming**
 
 ## Executive Summary
