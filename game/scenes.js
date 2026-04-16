@@ -230,6 +230,12 @@ class GameScene extends Scene {
                     this.player.y = this.level.playerSpawn.y;
                     this.player.vx = 0;
                     this.player.vy = 0;
+                    this.player.smbVelX = 0;
+                    this.player.smbVelY = 0;
+                    this.player.smbState = 0;
+                    if (window.SMB_CONST) {
+                        this.player.fallAcc = window.SMB_CONST.DEFAULT_GRAVITY;
+                    }
                 } else {
                     this.gameOver = true;
                 }

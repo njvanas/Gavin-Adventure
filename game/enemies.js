@@ -278,7 +278,10 @@ class Enemy extends Entity {
         if (playerBottom <= enemyTop + 8 && player.vy >= 0) {
             // Player stomps enemy
             this.takeDamage(1, particleSystem);
-            player.vy = -3; // Bounce player up
+            const PS = window.SMB_CONST.POS_SCALE;
+            player.smbVelY = -240;
+            player.vy = player.smbVelY * PS;
+            player.onGround = false;
             player.score += 100;
         } else {
             // Enemy damages player

@@ -45,59 +45,51 @@ class Collision {
         return false;
     }
     
-    static resolveEntityTiles(entity, level) {
+    /** Wall sliding only (after horizontal delta applied). */
+    static resolveEntityTilesHorizontal(entity, level) {
         if (!level || !level.tiles) return;
-        
+
         const tileSize = GAME_CONFIG.TILE_SIZE;
-        const originalX = entity.x;
-        const originalY = entity.y;
-        
-        // Check horizontal collision using hitbox bounds
         const bounds = entity.getBounds();
         const leftTile = Math.floor(bounds.left / tileSize);
         const rightTile = Math.floor(bounds.right / tileSize);
         const topTile = Math.floor(bounds.top / tileSize);
         const bottomTile = Math.floor(bounds.bottom / tileSize);
-        
-        let hitWall = false;
-        let hitGround = false;
-        
-        // Horizontal collision
+
         for (let y = topTile; y <= bottomTile; y++) {
-            // Check left side
             if (entity.vx < 0 && Collision.isWallTile(level.getTile(leftTile, y))) {
-                // Calculate exact position to prevent overlap
-                const newX = (leftTile + 1) * tileSize - entity.hitboxOffsetX;
-                entity.x = newX;
+                entity.x = (leftTile + 1) * tileSize - entity.hitboxOffsetX;
                 entity.vx = 0;
-                hitWall = true;
-            }
-            // Check right side
-            else if (entity.vx > 0 && Collision.isWallTile(level.getTile(rightTile, y))) {
-                // Calculate exact position to prevent overlap
-                const newX = rightTile * tileSize - entity.hitboxOffsetX - entity.hitboxWidth;
-                entity.x = newX;
+            } else if (entity.vx > 0 && Collision.isWallTile(level.getTile(rightTile, y))) {
+                entity.x = rightTile * tileSize - entity.hitboxOffsetX - entity.hitboxWidth;
                 entity.vx = 0;
-                hitWall = true;
             }
         }
-        
-        // Vertical collision - use updated bounds after horizontal resolution
+    }
+
+    /** Floors, ceilings, block-break, level clamp (after vertical delta applied). */
+    static resolveEntityTilesVertical(entity, level) {
+        if (!level || !level.tiles) return;
+
+        const tileSize = GAME_CONFIG.TILE_SIZE;
+        if (entity.vy < 0) {
+            entity.onGround = false;
+        }
+
         const newBounds = entity.getBounds();
         const newLeftTile = Math.floor(newBounds.left / tileSize);
         const newRightTile = Math.floor(newBounds.right / tileSize);
         const newTopTile = Math.floor(newBounds.top / tileSize);
         const newBottomTile = Math.floor(newBounds.bottom / tileSize);
-        
+
+        let hitGround = false;
+
         for (let x = newLeftTile; x <= newRightTile; x++) {
-            // Check ceiling
             if (entity.vy < 0 && Collision.isSolidCeilingOrFloorTile(level.getTile(x, newTopTile))) {
                 const newY = (newTopTile + 1) * tileSize - entity.hitboxOffsetY;
                 entity.y = newY;
                 entity.vy = 0;
-            }
-            // Check ground - handle both solid and platform tiles
-            else if (entity.vy >= 0) {
+            } else if (entity.vy >= 0) {
                 const tileType = level.getTile(x, newBottomTile);
                 if (
                     tileType === TILES.SOLID ||
@@ -113,14 +105,16 @@ class Collision {
                 }
             }
         }
-        
-        // Check if entity fell off ground
+
+        const postBounds = entity.getBounds();
+        const pxLeft = Math.floor(postBounds.left / tileSize);
+        const pxRight = Math.floor(postBounds.right / tileSize);
+        const pxTop = Math.floor(postBounds.top / tileSize);
+
         if (!hitGround && entity.onGround) {
-            // Quick check below entity using hitbox bounds
-            const belowY = Math.floor((newBounds.bottom + 1) / tileSize);
+            const belowY = Math.floor((postBounds.bottom + 1) / tileSize);
             let foundGround = false;
-            
-            for (let x = newLeftTile; x <= newRightTile; x++) {
+            for (let x = pxLeft; x <= pxRight; x++) {
                 const tileType = level.getTile(x, belowY);
                 if (
                     tileType === TILES.SOLID ||
@@ -132,18 +126,15 @@ class Collision {
                     break;
                 }
             }
-            
             if (!foundGround) {
                 entity.onGround = false;
             }
         }
-        
-        // Check for block breaking (player hitting blocks from below)
+
         if (entity.vy < 0 && entity.canBreakBlocks !== undefined) {
-            this.checkBlockBreaking(entity, level, newLeftTile, newRightTile, newTopTile);
+            this.checkBlockBreaking(entity, level, pxLeft, pxRight, pxTop);
         }
-        
-        // Keep entity within level bounds using hitbox bounds
+
         const finalBounds = entity.getBounds();
         if (finalBounds.left < 0) {
             entity.x = -entity.hitboxOffsetX;
@@ -157,6 +148,13 @@ class Collision {
         if (finalBounds.bottom > level.height * tileSize) {
             entity.y = level.height * tileSize - entity.hitboxOffsetY - entity.hitboxHeight;
         }
+    }
+
+    /** Legacy: full move on both axes, then resolve (enemies). */
+    static resolveEntityTiles(entity, level) {
+        if (!level || !level.tiles) return;
+        this.resolveEntityTilesHorizontal(entity, level);
+        this.resolveEntityTilesVertical(entity, level);
     }
     
     static checkEntityCollision(entity1, entity2) {

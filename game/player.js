@@ -17,11 +17,17 @@ class Player extends Entity {
         this.crouching = false;
         this.onGround = false;
         
-        // Jump mechanics
         this.jumpHeld = false;
         this.jumpTimer = 0;
         this.coyoteTime = 0;
+        /** Seconds remaining for jump buffer input */
         this.jumpBuffer = 0;
+
+        this.smbVelX = 0;
+        this.smbVelY = 0;
+        this.fallAcc = (window.SMB_CONST && window.SMB_CONST.DEFAULT_GRAVITY) || 562.5;
+        this.smbState = 0;
+        this.smbFacing = 0;
         
         // Animation
         this.animationState = 'idle';
@@ -85,58 +91,29 @@ class Player extends Entity {
         }
         
         this.handleInput(input, deltaTime, particleSystem);
-        this.updatePhysics(deltaTime, level);
+        this.updatePhysics(deltaTime, level, input);
         this.updateAnimation(deltaTime);
         this.updateProjectiles(deltaTime, level);
-        
-        // Update coyote time and jump buffer
+
+        const dt = deltaTime / 1000;
         if (this.onGround) {
-            this.coyoteTime = GAME_CONFIG.PHYSICS.COYOTE_TIME;
+            this.coyoteTime = GAME_CONFIG.PHYSICS.COYOTE_TIME_SEC;
         } else {
-            this.coyoteTime = Math.max(0, this.coyoteTime - deltaTime / 16.67);
+            this.coyoteTime = Math.max(0, this.coyoteTime - dt);
         }
-        
+
         if (this.jumpBuffer > 0) {
-            this.jumpBuffer = Math.max(0, this.jumpBuffer - deltaTime / 16.67);
+            this.jumpBuffer = Math.max(0, this.jumpBuffer - dt);
         }
     }
     
     handleInput(input, deltaTime, particleSystem) {
-        const timeScale = deltaTime / 16.67;
-        this.running = input.isDown('run');
         this.crouching = input.isDown('down');
-
-        this.applySMBStyleHorizontal(input, timeScale);
-
-        if (this.crouching && this.onGround) {
-            this.vx *= 0.72;
-        }
-        
-        // Jumping - improved handling
         if (input.isPressed('jump')) {
-            this.jumpBuffer = GAME_CONFIG.PHYSICS.JUMP_BUFFER;
-            // Reset jump held state to prevent stuck jumps
-            this.jumpHeld = false;
+            this.jumpBuffer = GAME_CONFIG.PHYSICS.JUMP_BUFFER_SEC;
         }
-        
         this.jumpHeld = input.isDown('jump');
-        
-        // Execute jump with better conditions
-        if (this.jumpBuffer > 0 && (this.onGround || this.coyoteTime > 0)) {
-            this.jump();
-            this.jumpBuffer = 0;
-            this.coyoteTime = 0;
-            particleSystem.playerLand(this.x, this.y + this.height);
-            window.audio.playSound('jump');
-        }
-        
-        // Variable jump height - improved logic
-        if (this.jumpHeld && this.jumpTimer > 0 && this.vy < 0) {
-            this.jumpTimer = Math.max(0, this.jumpTimer - timeScale);
-        } else {
-            this.jumpTimer = 0;
-        }
-        
+
         // Throwing (Beast Mode only)
         if (this.canThrow && input.isPressed('throw') && this.throwCooldown <= 0) {
             this.throwProjectile();
@@ -148,70 +125,6 @@ class Player extends Entity {
         if (throwBtn) {
             throwBtn.style.opacity = this.canThrow ? '1' : '0.3';
         }
-    }
-
-    /**
-     * Acceleration + skid + release decel (see github.com/algorithm0r/SuperMarioBros mario.js).
-     */
-    applySMBStyleHorizontal(input, timeScale) {
-        const P = GAME_CONFIG.PHYSICS;
-        const wantL = input.isDown('left') && !(this.crouching && this.onGround);
-        const wantR = input.isDown('right') && !(this.crouching && this.onGround);
-        const run = this.running;
-        const maxSpeed = run ? P.MAX_RUN : P.MAX_WALK;
-        const acc = run ? P.ACC_RUN : P.ACC_WALK;
-
-        if (this.onGround) {
-            if (!wantL && !wantR) {
-                const dec = P.DEC_REL * timeScale;
-                if (Math.abs(this.vx) <= dec) {
-                    this.vx = 0;
-                } else {
-                    this.vx -= Math.sign(this.vx) * dec;
-                }
-                this.animationState = 'idle';
-            } else if (wantR) {
-                if (this.vx < -P.SKID_VEL_THRESHOLD) {
-                    this.vx += P.DEC_SKID * timeScale;
-                    this.animationState = 'skid';
-                } else {
-                    this.vx = Math.min(maxSpeed, this.vx + acc * timeScale);
-                    this.animationState = run ? 'run' : 'walk';
-                }
-                this.direction = 1;
-            } else if (wantL) {
-                if (this.vx > P.SKID_VEL_THRESHOLD) {
-                    this.vx -= P.DEC_SKID * timeScale;
-                    this.animationState = 'skid';
-                } else {
-                    this.vx = Math.max(-maxSpeed, this.vx - acc * timeScale);
-                    this.animationState = run ? 'run' : 'walk';
-                }
-                this.direction = -1;
-            }
-        } else {
-            if (wantR && !wantL) {
-                this.vx = Math.min(maxSpeed, this.vx + P.AIR_CONTROL_ACCEL * timeScale);
-                this.direction = 1;
-            } else if (wantL && !wantR) {
-                this.vx = Math.max(-maxSpeed, this.vx - P.AIR_CONTROL_ACCEL * timeScale);
-                this.direction = -1;
-            }
-            if (Math.abs(this.vx) > P.MIN_WALK) {
-                this.animationState = run ? 'run' : 'walk';
-            }
-        }
-    }
-    
-    jump() {
-        const jumpPower = this.running ? 
-            GAME_CONFIG.PHYSICS.JUMP_IMPULSE_RUN : 
-            GAME_CONFIG.PHYSICS.JUMP_IMPULSE_SMALL;
-        
-        this.vy = -jumpPower;
-        this.jumpTimer = GAME_CONFIG.PHYSICS.VARIABLE_JUMP_FRAMES;
-        this.onGround = false;
-        this.animationState = 'jump';
     }
     
     throwProjectile() {
@@ -227,22 +140,26 @@ class Player extends Entity {
         window.audio.playSound('throw');
     }
     
-    updatePhysics(deltaTime, level) {
-        if (!this.onGround) {
-            Physics.applyFriction(this, GAME_CONFIG.PHYSICS.AIR_FRICTION);
-        }
+    updatePhysics(deltaTime, level, input) {
+        if (!input || !level) return;
 
-        Physics.applyGravity(this, deltaTime);
-        const P = GAME_CONFIG.PHYSICS;
-        if (!this.onGround && this.jumpHeld && this.vy < 0 && this.jumpTimer > 0) {
-            this.vy -= P.JUMP_RISE_HOLD_BOOST * (deltaTime / 16.67);
-        }
+        window.SMBIntegrator.stepGavin(this, input, deltaTime);
 
-        Physics.updatePosition(this, deltaTime);
-        
-        // Collision with level
-        if (level) {
-            Collision.resolveEntityTiles(this, level);
+        const dt = deltaTime / 1000;
+        this.x += this.vx * dt;
+        Collision.resolveEntityTilesHorizontal(this, level);
+        this.y += this.vy * dt;
+        Collision.resolveEntityTilesVertical(this, level);
+
+        const PS = window.SMB_CONST.POS_SCALE;
+        this.smbVelX = this.vx / PS;
+        this.smbVelY = this.vy / PS;
+        if (this.onGround) {
+            this.smbVelY = 0;
+            this.fallAcc = (window.SMB_CONST && window.SMB_CONST.DEFAULT_GRAVITY) || 562.5;
+            if (this.smbState === 4) {
+                this.smbState = 0;
+            }
         }
     }
     
@@ -480,7 +397,8 @@ class Player extends Entity {
         return {
             'Power State': this.powerState,
             'Position': `${Math.floor(this.x)}, ${Math.floor(this.y)}`,
-            'Velocity': `${this.vx.toFixed(1)}, ${this.vy.toFixed(1)}`,
+            'Vel(px/s)': `${this.vx.toFixed(0)}, ${this.vy.toFixed(0)}`,
+            'SMB': `${this.smbVelX.toFixed(0)}, ${this.smbVelY.toFixed(0)} st=${this.smbState}`,
             'On Ground': this.onGround,
             'Lives': this.lives,
             'Score': this.score
@@ -512,7 +430,9 @@ class Player extends Entity {
     forceUnstuck() {
         if (this.isStuck()) {
             this.resetJumpState();
-            this.vy = 0.1; // Small downward velocity to get unstuck
+            const PS = window.SMB_CONST.POS_SCALE;
+            this.smbVelY = 2;
+            this.vy = this.smbVelY * PS;
         }
     }
 }

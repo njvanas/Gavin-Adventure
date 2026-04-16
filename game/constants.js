@@ -18,32 +18,10 @@ const GAME_CONFIG = {
         FRICTION: 0.85,
         AIR_FRICTION: 0.92,
 
-        // Legacy instant-speed caps (used as fallbacks / tuning reference)
-        WALK_SPEED: 1.2,
-        RUN_SPEED: 2.0,
-
-        /**
-         * SMB-style horizontal tuning (accel / skid / release). Ratios align ~NES-like sources above;
-         * values are for this engine’s per-frame integration (~60fps), not C2 pixels/sec.
-         */
-        MIN_WALK: 0.14,
-        MAX_WALK: 1.25,
-        MAX_RUN: 2.08,
-        ACC_WALK: 0.32,
-        ACC_RUN: 0.46,
-        DEC_REL: 0.4,
-        DEC_SKID: 0.78,
-        SKID_VEL_THRESHOLD: 0.18,
-        AIR_CONTROL_ACCEL: 0.24,
-
-        JUMP_IMPULSE_SMALL: 6.0,
-        JUMP_IMPULSE_RUN: 7.0,
-        VARIABLE_JUMP_FRAMES: 12,
-        /** Extra upward each frame while rising and holding jump (SMB hold-A apex) */
-        JUMP_RISE_HOLD_BOOST: 0.055,
-
-        COYOTE_TIME: 4,
-        JUMP_BUFFER: 5
+        /** Coyote time in seconds (NES-style forgiveness) */
+        COYOTE_TIME_SEC: 0.1,
+        /** Jump buffer in seconds */
+        JUMP_BUFFER_SEC: 0.12
     }
 };
 
