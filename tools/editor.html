@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gavin Adventure - Level Editor</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            background: #2c3e50;
+            color: white;
+        }
+        
+        .editor-container {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .editor-panel {
+            background: #34495e;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        
+        .toolbar {
+            flex: 0 0 250px;
+        }
+        
+        .canvas-container {
+            flex: 1;
+            background: #1a1a1a;
+            border-radius: 8px;
+            padding: 10px;
+        }
+        
+        #levelCanvas {
+            border: 2px solid #555;
+            background: #87CEEB;
+            cursor: crosshair;
+            image-rendering: pixelated;
+        }
+        
+        .tile-palette {
+            display: grid;
+            grid-template-columns: repeat(4, 40px);
+            gap: 5px;
+            margin: 10px 0;
+        }
+        
+        .tile-button {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #666;
+            background: #444;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        
+        .tile-button.active {
+            border-color: #3498db;
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.5);
+        }
+        
+        .controls {
+            margin: 10px 0;
+        }
+        
+        .control-group {
+            margin: 15px 0;
+        }
+        
+        label {
+            display: block;
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        
+        input, select, button {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            background: #444;
+            border: 1px solid #666;
+            color: white;
+            border-radius: 4px;
+        }
+        
+        button {
+            cursor: pointer;
+            background: #3498db;
+        }
+        
+        button:hover {
+            background: #2980b9;
+        }
+        
+        .export-area {
+            margin-top: 20px;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 200px;
+            background: #222;
+            color: #0f0;
+            font-family: 'Courier New', monospace;
+            border: 1px solid #666;
+            border-radius: 4px;
+            padding: 10px;
+            font-size: 12px;
+        }
+        
+        .entity-list {
+            max-height: 200px;
+            overflow-y: auto;
+            background: #222;
+            border: 1px solid #666;
+            border-radius: 4px;
+            padding: 10px;
+        }
+        
+        .entity-item {
+            padding: 5px;
+            margin: 2px 0;
+            background: #333;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        
+        .entity-item:hover {
+            background: #444;
+        }
+        
+        .entity-item.selected {
+            background: #3498db;
+        }
+    </style>
+</head>
+<body>
+    <h1>Gavin Adventure - Level Editor</h1>
+    
+    <div class="editor-container">
+        <div class="editor-panel toolbar">
+            <h3>Tiles</h3>
+            <div class="tile-palette" id="tilePalette">
+                <!-- Tile buttons will be generated here -->
+            </div>
+            
+            <div class="control-group">
+                <h3>Level Properties</h3>
+                <label>Width: <input type="number" id="levelWidth" value="64" min="32" max="200"></label>
+                <label>Height: <input type="number" id="levelHeight" value="36" min="20" max="50"></label>
+                <label>Theme: 
+                    <select id="levelTheme">
+                        <option value="0">Neighborhood Gym</option>
+                        <option value="1">City Rooftops</option>
+                        <option value="2">Locker Depths</option>
+                        <option value="3">Aquatic Mixers</option>
+                        <option value="4">Steel Factory</option>
+                        <option value="5">Neon Night Gym</option>
+                        <option value="6">Alpine Altitude</option>
+                        <option value="7">Championship</option>
+                    </select>
+                </label>
+            </div>
+            
+            <div class="control-group">
+                <h3>Entities</h3>
+                <select id="entityType">
+                    <option value="player">Player Spawn</option>
+                    <option value="enemy_sloucher">Sloucher</option>
+                    <option value="enemy_form_police">Form Police</option>
+                    <option value="enemy_snapper">Snapper</option>
+                    <option value="enemy_kettle_bell">Kettle Bell</option>
+                    <option value="enemy_protein_drone">Protein Drone</option>
+                    <option value="enemy_boss">Boss Shredder</option>
+                    <option value="collectible_dumbbell">Golden Dumbbell</option>
+                    <option value="collectible_gym_card">Gym Card</option>
+                    <option value="collectible_protein_shake">Protein Shake</option>
+                    <option value="collectible_pre_workout">Pre-Workout</option>
+                    <option value="collectible_macro">Macro</option>
+                    <option value="collectible_trophy">Trophy</option>
+                    <option value="checkpoint">Checkpoint</option>
+                    <option value="exit">Exit</option>
+                </select>
+                <button onclick="editor.setMode('entity')">Place Entity</button>
+                <button onclick="editor.setMode('tile')">Place Tiles</button>
+                
+                <div class="entity-list" id="entityList">
+                    <!-- Entities will be listed here -->
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <h3>Actions</h3>
+                <button onclick="editor.clearLevel()">Clear Level</button>
+                <button onclick="editor.fillGround()">Fill Ground</button>
+                <button onclick="editor.exportLevel()">Export JSON</button>
+                <button onclick="editor.importLevel()">Import JSON</button>
+                <button onclick="editor.testLevel()">Test Level</button>
+            </div>
+        </div>
+        
+        <div class="editor-panel canvas-container">
+            <div class="controls">
+                <span>Mode: <span id="currentMode">Tile</span></span> | 
+                <span>Zoom: <button onclick="editor.zoomIn()">+</button> <button onclick="editor.zoomOut()">-</button></span> | 
+                <span>Grid: <button onclick="editor.toggleGrid()">Toggle</button></span>
+            </div>
+            <canvas id="levelCanvas" width="1024" height="576"></canvas>
+        </div>
+    </div>
+    
+    <div class="editor-panel export-area">
+        <h3>Export / Import</h3>
+        <textarea id="exportText" placeholder="Level JSON will appear here..."></textarea>
+    </div>
+
+    <script>
+        class LevelEditor {
+            constructor() {
+                this.canvas = document.getElementById('levelCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.ctx.imageSmoothingEnabled = false;
+                
+                this.tileSize = 16;
+                this.zoom = 2;
+                this.gridVisible = true;
+                this.mode = 'tile'; // 'tile' or 'entity'
+                
+                this.selectedTile = 1; // SOLID tile
+                this.selectedEntity = 'player';
+                
+                this.level = {
+                    width: 64,
+                    height: 36,
+                    theme: 0,
+                    tiles: new Array(64 * 36).fill(0), // AIR
+                    entities: [],
+                    playerSpawn: { x: 32, y: 300 },
+                    exitPoint: { x: 1000, y: 300 }
+                };
+                
+                this.camera = { x: 0, y: 0 };
+                
+                this.setupEventListeners();
+                this.setupTilePalette();
+                this.updateEntityList();
+                this.render();
+            }
+            
+            setupEventListeners() {
+                this.canvas.addEventListener('click', (e) => this.handleClick(e));
+                this.canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
+                this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+                
+                // Keyboard shortcuts
+                document.addEventListener('keydown', (e) => {
+                    switch(e.key) {
+                        case '1': this.selectedTile = 0; break; // AIR
+                        case '2': this.selectedTile = 1; break; // SOLID
+                        case '3': this.selectedTile = 2; break; // PLATFORM
+                        case '4': this.selectedTile = 3; break; // BREAKABLE
+                        case '5': this.selectedTile = 6; break; // SPIKES
+                        case 'g': this.toggleGrid(); break;
+                        case 't': this.setMode('tile'); break;
+                        case 'e': this.setMode('entity'); break;
+                    }
+                    this.updateTilePalette();
+                });
+                
+                // Level property changes
+                document.getElementById('levelWidth').addEventListener('change', (e) => {
+                    this.resizeLevel(parseInt(e.target.value), this.level.height);
+                });
+                document.getElementById('levelHeight').addEventListener('change', (e) => {
+                    this.resizeLevel(this.level.width, parseInt(e.target.value));
+                });
+                document.getElementById('levelTheme').addEventListener('change', (e) => {
+                    this.level.theme = parseInt(e.target.value);
+                    this.render();
+                });
+            }
+            
+            setupTilePalette() {
+                const palette = document.getElementById('tilePalette');
+                const tileTypes = [
+                    { type: 0, name: 'Air', color: '#87CEEB' },
+                    { type: 1, name: 'Solid', color: '#8B4513' },
+                    { type: 2, name: 'Platform', color: '#808080' },
+                    { type: 3, name: 'Breakable', color: '#DEB887' },
+                    { type: 6, name: 'Spikes', color: '#FF0000' }
+                ];
+                
+                tileTypes.forEach(tile => {
+                    const button = document.createElement('div');
+                    button.className = 'tile-button';
+                    button.style.backgroundColor = tile.color;
+                    button.title = tile.name;
+                    button.onclick = () => {
+                        this.selectedTile = tile.type;
+                        this.updateTilePalette();
+                    };
+                    palette.appendChild(button);
+                });
+                
+                this.updateTilePalette();
+            }
+            
+            updateTilePalette() {
+                const buttons = document.querySelectorAll('.tile-button');
+                buttons.forEach((button, index) => {
+                    const tileTypes = [0, 1, 2, 3, 6];
+                    button.classList.toggle('active', tileTypes[index] === this.selectedTile);
+                });
+            }
+            
+            handleClick(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                const x = (e.clientX - rect.left) / this.zoom + this.camera.x;
+                const y = (e.clientY - rect.top) / this.zoom + this.camera.y;
+                
+                const tileX = Math.floor(x / this.tileSize);
+                const tileY = Math.floor(y / this.tileSize);
+                
+                if (this.mode === 'tile') {
+                    this.placeTile(tileX, tileY);
+                } else if (this.mode === 'entity') {
+                    this.placeEntity(tileX * this.tileSize, tileY * this.tileSize);
+                }
+                
+                this.render();
+            }
+            
+            handleMouseMove(e) {
+                if (e.buttons === 1) { // Left mouse button held
+                    this.handleClick(e);
+                }
+            }
+            
+            placeTile(x, y) {
+                if (x >= 0 && x < this.level.width && y >= 0 && y < this.level.height) {
+                    this.level.tiles[y * this.level.width + x] = this.selectedTile;
+                }
+            }
+            
+            placeEntity(x, y) {
+                const entity = {
+                    type: this.selectedEntity,
+                    x: x,
+                    y: y,
+                    id: Date.now() + Math.random()
+                };
+                
+                // Special handling for player spawn and exit
+                if (this.selectedEntity === 'player') {
+                    this.level.playerSpawn = { x, y };
+                    return;
+                } else if (this.selectedEntity === 'exit') {
+                    this.level.exitPoint = { x, y };
+                    return;
+                }
+                
+                this.level.entities.push(entity);
+                this.updateEntityList();
+            }
+            
+            updateEntityList() {
+                const list = document.getElementById('entityList');
+                list.innerHTML = '';
+                
+                // Add player spawn
+                const playerItem = document.createElement('div');
+                playerItem.className = 'entity-item';
+                playerItem.textContent = `Player Spawn (${this.level.playerSpawn.x}, ${this.level.playerSpawn.y})`;
+                list.appendChild(playerItem);
+                
+                // Add exit
+                const exitItem = document.createElement('div');
+                exitItem.className = 'entity-item';
+                exitItem.textContent = `Exit (${this.level.exitPoint.x}, ${this.level.exitPoint.y})`;
+                list.appendChild(exitItem);
+                
+                // Add entities
+                this.level.entities.forEach((entity, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'entity-item';
+                    item.textContent = `${entity.type} (${entity.x}, ${entity.y})`;
+                    item.onclick = () => this.selectEntity(index);
+                    list.appendChild(item);
+                });
+            }
+            
+            selectEntity(index) {
+                // Remove entity on click for now
+                this.level.entities.splice(index, 1);
+                this.updateEntityList();
+                this.render();
+            }
+            
+            resizeLevel(newWidth, newHeight) {
+                const newTiles = new Array(newWidth * newHeight).fill(0);
+                
+                // Copy existing tiles
+                for (let y = 0; y < Math.min(this.level.height, newHeight); y++) {
+                    for (let x = 0; x < Math.min(this.level.width, newWidth); x++) {
+                        const oldIndex = y * this.level.width + x;
+                        const newIndex = y * newWidth + x;
+                        newTiles[newIndex] = this.level.tiles[oldIndex];
+                    }
+                }
+                
+                this.level.width = newWidth;
+                this.level.height = newHeight;
+                this.level.tiles = newTiles;
+                this.render();
+            }
+            
+            setMode(mode) {
+                this.mode = mode;
+                this.selectedEntity = document.getElementById('entityType').value;
+                document.getElementById('currentMode').textContent = 
+                    mode === 'tile' ? 'Tile' : 'Entity';
+            }
+            
+            zoomIn() {
+                this.zoom = Math.min(this.zoom * 1.5, 8);
+                this.render();
+            }
+            
+            zoomOut() {
+                this.zoom = Math.max(this.zoom / 1.5, 0.5);
+                this.render();
+            }
+            
+            toggleGrid() {
+                this.gridVisible = !this.gridVisible;
+                this.render();
+            }
+            
+            clearLevel() {
+                if (confirm('Clear entire level?')) {
+                    this.level.tiles.fill(0);
+                    this.level.entities = [];
+                    this.render();
+                    this.updateEntityList();
+                }
+            }
+            
+            fillGround() {
+                // Fill bottom 4 rows with solid tiles
+                for (let x = 0; x < this.level.width; x++) {
+                    for (let y = this.level.height - 4; y < this.level.height; y++) {
+                        this.placeTile(x, y, 1);
+                    }
+                }
+                this.render();
+            }
+            
+            exportLevel() {
+                const levelData = {
+                    width: this.level.width,
+                    height: this.level.height,
+                    theme: this.level.theme,
+                    tiles: this.level.tiles,
+                    playerSpawn: this.level.playerSpawn,
+                    exitPoint: this.level.exitPoint,
+                    entities: this.level.entities.map(e => ({
+                        type: e.type,
+                        x: e.x,
+                        y: e.y
+                    }))
+                };
+                
+                const json = JSON.stringify(levelData, null, 2);
+                document.getElementById('exportText').value = json;
+            }
+            
+            importLevel() {
+                const json = document.getElementById('exportText').value;
+                try {
+                    const levelData = JSON.parse(json);
+                    this.level = {
+                        ...levelData,
+                        entities: levelData.entities.map(e => ({
+                            ...e,
+                            id: Date.now() + Math.random()
+                        }))
+                    };
+                    
+                    document.getElementById('levelWidth').value = this.level.width;
+                    document.getElementById('levelHeight').value = this.level.height;
+                    document.getElementById('levelTheme').value = this.level.theme;
+                    
+                    this.updateEntityList();
+                    this.render();
+                } catch (error) {
+                    alert('Invalid JSON format!');
+                }
+            }
+            
+            testLevel() {
+                this.exportLevel();
+                alert('Level exported! Copy the JSON and test in the main game.');
+            }
+            
+            render() {
+                const ctx = this.ctx;
+                const canvasWidth = this.canvas.width / this.zoom;
+                const canvasHeight = this.canvas.height / this.zoom;
+                
+                ctx.save();
+                ctx.scale(this.zoom, this.zoom);
+                
+                // Clear canvas
+                ctx.fillStyle = this.getThemeColor();
+                ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+                
+                // Draw tiles
+                this.drawTiles(ctx);
+                
+                // Draw entities
+                this.drawEntities(ctx);
+                
+                // Draw grid
+                if (this.gridVisible) {
+                    this.drawGrid(ctx);
+                }
+                
+                ctx.restore();
+            }
+            
+            drawTiles(ctx) {
+                const startX = Math.floor(this.camera.x / this.tileSize);
+                const endX = Math.ceil((this.camera.x + this.canvas.width / this.zoom) / this.tileSize);
+                const startY = Math.floor(this.camera.y / this.tileSize);
+                const endY = Math.ceil((this.camera.y + this.canvas.height / this.zoom) / this.tileSize);
+                
+                for (let y = Math.max(0, startY); y < Math.min(this.level.height, endY); y++) {
+                    for (let x = Math.max(0, startX); x < Math.min(this.level.width, endX); x++) {
+                        const tile = this.level.tiles[y * this.level.width + x];
+                        if (tile === 0) continue; // Skip air tiles
+                        
+                        const screenX = x * this.tileSize - this.camera.x;
+                        const screenY = y * this.tileSize - this.camera.y;
+                        
+                        ctx.fillStyle = this.getTileColor(tile);
+                        ctx.fillRect(screenX, screenY, this.tileSize, this.tileSize);
+                        
+                        // Tile border
+                        ctx.strokeStyle = '#000';
+                        ctx.lineWidth = 0.5;
+                        ctx.strokeRect(screenX, screenY, this.tileSize, this.tileSize);
+                    }
+                }
+            }
+            
+            drawEntities(ctx) {
+                // Draw player spawn
+                ctx.fillStyle = '#00FF00';
+                ctx.fillRect(
+                    this.level.playerSpawn.x - this.camera.x,
+                    this.level.playerSpawn.y - this.camera.y,
+                    this.tileSize,
+                    this.tileSize
+                );
+                ctx.fillStyle = '#000';
+                ctx.font = '8px monospace';
+                ctx.fillText('P', 
+                    this.level.playerSpawn.x - this.camera.x + 4,
+                    this.level.playerSpawn.y - this.camera.y + 12
+                );
+                
+                // Draw exit
+                ctx.fillStyle = '#FFD700';
+                ctx.fillRect(
+                    this.level.exitPoint.x - this.camera.x,
+                    this.level.exitPoint.y - this.camera.y,
+                    this.tileSize,
+                    this.tileSize
+                );
+                ctx.fillStyle = '#000';
+                ctx.fillText('E',
+                    this.level.exitPoint.x - this.camera.x + 4,
+                    this.level.exitPoint.y - this.camera.y + 12
+                );
+                
+                // Draw entities
+                this.level.entities.forEach(entity => {
+                    ctx.fillStyle = this.getEntityColor(entity.type);
+                    ctx.fillRect(
+                        entity.x - this.camera.x,
+                        entity.y - this.camera.y,
+                        this.tileSize,
+                        this.tileSize
+                    );
+                    
+                    // Entity type indicator
+                    ctx.fillStyle = '#000';
+                    ctx.fillText(
+                        entity.type.charAt(0).toUpperCase(),
+                        entity.x - this.camera.x + 4,
+                        entity.y - this.camera.y + 12
+                    );
+                });
+            }
+            
+            drawGrid(ctx) {
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.lineWidth = 0.5;
+                
+                const canvasWidth = this.canvas.width / this.zoom;
+                const canvasHeight = this.canvas.height / this.zoom;
+                
+                // Vertical lines
+                for (let x = 0; x <= this.level.width; x++) {
+                    const screenX = x * this.tileSize - this.camera.x;
+                    if (screenX >= 0 && screenX <= canvasWidth) {
+                        ctx.beginPath();
+                        ctx.moveTo(screenX, 0);
+                        ctx.lineTo(screenX, canvasHeight);
+                        ctx.stroke();
+                    }
+                }
+                
+                // Horizontal lines
+                for (let y = 0; y <= this.level.height; y++) {
+                    const screenY = y * this.tileSize - this.camera.y;
+                    if (screenY >= 0 && screenY <= canvasHeight) {
+                        ctx.beginPath();
+                        ctx.moveTo(0, screenY);
+                        ctx.lineTo(canvasWidth, screenY);
+                        ctx.stroke();
+                    }
+                }
+            }
+            
+            getTileColor(tile) {
+                switch (tile) {
+                    case 1: return '#8B4513'; // SOLID
+                    case 2: return '#808080'; // PLATFORM
+                    case 3: return '#DEB887'; // BREAKABLE
+                    case 6: return '#FF0000'; // SPIKES
+                    default: return '#FFFFFF';
+                }
+            }
+            
+            getEntityColor(type) {
+                if (type.includes('enemy')) return '#FF4444';
+                if (type.includes('collectible')) return '#FFD700';
+                if (type === 'checkpoint') return '#00FF00';
+                return '#FFFFFF';
+            }
+            
+            getThemeColor() {
+                const colors = [
+                    '#90EE90', // Neighborhood
+                    '#696969', // City
+                    '#2F4F4F', // Locker
+                    '#1E90FF', // Aquatic
+                    '#708090', // Factory
+                    '#FF1493', // Neon
+                    '#F0F8FF', // Alpine
+                    '#DAA520'  // Championship
+                ];
+                return colors[this.level.theme] || '#87CEEB';
+            }
+        }
+        
+        // Initialize editor
+        const editor = new LevelEditor();
+        window.editor = editor;
+    </script>
+</body>
+</html>
