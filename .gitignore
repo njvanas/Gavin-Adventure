@@ -23,3 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+# Local reference clones (not part of this project)
+_ref_SuperMarioBros
+_ref_c2-smb1

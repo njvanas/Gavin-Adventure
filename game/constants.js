@@ -1,4 +1,11 @@
 // Game Constants and Configuration
+//
+// Physics feel targets (walk/run/skid/gravity) are informed by:
+// - github.com/algorithm0r/SuperMarioBros (JS NES-style clone)
+// - github.com/Jcw87/c2-smb1 (Construct 2; Event sheets/Level.xml defines PLAYER_WALK_SPEED 93.75,
+//   PLAYER_RUN_SPEED 153.75, PLAYER_WALK_ACCEL 135, PLAYER_RUN_ACCEL 200, PLAYER_SKID_ACCEL 365,
+//   PLAYER_DECEL 183, PLAYER_GRAVITY 562.5 — Construct Platform units, not used verbatim here)
+//
 const GAME_CONFIG = {
     CANVAS_WIDTH: 1024,
     CANVAS_HEIGHT: 576,
@@ -9,18 +16,34 @@ const GAME_CONFIG = {
         GRAVITY: 0.42,
         MAX_FALL_SPEED: 8,
         FRICTION: 0.85,
-        AIR_FRICTION: 0.95,
-        
-        // Player movement
+        AIR_FRICTION: 0.92,
+
+        // Legacy instant-speed caps (used as fallbacks / tuning reference)
         WALK_SPEED: 1.2,
         RUN_SPEED: 2.0,
+
+        /**
+         * SMB-style horizontal tuning (accel / skid / release). Ratios align ~NES-like sources above;
+         * values are for this engine’s per-frame integration (~60fps), not C2 pixels/sec.
+         */
+        MIN_WALK: 0.14,
+        MAX_WALK: 1.25,
+        MAX_RUN: 2.08,
+        ACC_WALK: 0.32,
+        ACC_RUN: 0.46,
+        DEC_REL: 0.4,
+        DEC_SKID: 0.78,
+        SKID_VEL_THRESHOLD: 0.18,
+        AIR_CONTROL_ACCEL: 0.24,
+
         JUMP_IMPULSE_SMALL: 6.0,
         JUMP_IMPULSE_RUN: 7.0,
         VARIABLE_JUMP_FRAMES: 12,
-        
-        // Advanced movement
+        /** Extra upward each frame while rising and holding jump (SMB hold-A apex) */
+        JUMP_RISE_HOLD_BOOST: 0.055,
+
         COYOTE_TIME: 4,
-        JUMP_BUFFER: 5,
+        JUMP_BUFFER: 5
     }
 };
 

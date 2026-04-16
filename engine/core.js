@@ -88,7 +88,6 @@ class GameEngine {
         this.canvas.width = this.internalWidth;
         this.canvas.height = this.internalHeight;
         
-        console.log(`Scale updated: ${this.scale.toFixed(2)}x, Container: ${containerWidth}x${containerHeight}, Game: ${this.internalWidth}x${this.internalHeight}`);
     }
     
     // Get performance statistics

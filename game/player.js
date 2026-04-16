@@ -103,38 +103,13 @@ class Player extends Entity {
     
     handleInput(input, deltaTime, particleSystem) {
         const timeScale = deltaTime / 16.67;
-        
-        // Debug: Log input state occasionally
-        if (Math.random() < 0.1) { // 10% chance to log
-            console.log('Input state:', {
-                left: input.isDown('left'),
-                right: input.isDown('right'),
-                jump: input.isDown('jump'),
-                run: input.isDown('run')
-            });
-        }
-        
-        // Horizontal movement
         this.running = input.isDown('run');
-        const speed = this.running ? GAME_CONFIG.PHYSICS.RUN_SPEED : GAME_CONFIG.PHYSICS.WALK_SPEED;
-        
-        if (input.isDown('left')) {
-            this.vx = -speed;
-            this.direction = -1;
-            this.animationState = this.running ? 'run' : 'walk';
-        } else if (input.isDown('right')) {
-            this.vx = speed;
-            this.direction = 1;
-            this.animationState = this.running ? 'run' : 'walk';
-        } else {
-            this.vx = 0;
-            this.animationState = 'idle';
-        }
-        
-        // Crouching
         this.crouching = input.isDown('down');
+
+        this.applySMBStyleHorizontal(input, timeScale);
+
         if (this.crouching && this.onGround) {
-            this.vx *= 0.5; // Slow down when crouching
+            this.vx *= 0.72;
         }
         
         // Jumping - improved handling
@@ -174,6 +149,59 @@ class Player extends Entity {
             throwBtn.style.opacity = this.canThrow ? '1' : '0.3';
         }
     }
+
+    /**
+     * Acceleration + skid + release decel (see github.com/algorithm0r/SuperMarioBros mario.js).
+     */
+    applySMBStyleHorizontal(input, timeScale) {
+        const P = GAME_CONFIG.PHYSICS;
+        const wantL = input.isDown('left') && !(this.crouching && this.onGround);
+        const wantR = input.isDown('right') && !(this.crouching && this.onGround);
+        const run = this.running;
+        const maxSpeed = run ? P.MAX_RUN : P.MAX_WALK;
+        const acc = run ? P.ACC_RUN : P.ACC_WALK;
+
+        if (this.onGround) {
+            if (!wantL && !wantR) {
+                const dec = P.DEC_REL * timeScale;
+                if (Math.abs(this.vx) <= dec) {
+                    this.vx = 0;
+                } else {
+                    this.vx -= Math.sign(this.vx) * dec;
+                }
+                this.animationState = 'idle';
+            } else if (wantR) {
+                if (this.vx < -P.SKID_VEL_THRESHOLD) {
+                    this.vx += P.DEC_SKID * timeScale;
+                    this.animationState = 'skid';
+                } else {
+                    this.vx = Math.min(maxSpeed, this.vx + acc * timeScale);
+                    this.animationState = run ? 'run' : 'walk';
+                }
+                this.direction = 1;
+            } else if (wantL) {
+                if (this.vx > P.SKID_VEL_THRESHOLD) {
+                    this.vx -= P.DEC_SKID * timeScale;
+                    this.animationState = 'skid';
+                } else {
+                    this.vx = Math.max(-maxSpeed, this.vx - acc * timeScale);
+                    this.animationState = run ? 'run' : 'walk';
+                }
+                this.direction = -1;
+            }
+        } else {
+            if (wantR && !wantL) {
+                this.vx = Math.min(maxSpeed, this.vx + P.AIR_CONTROL_ACCEL * timeScale);
+                this.direction = 1;
+            } else if (wantL && !wantR) {
+                this.vx = Math.max(-maxSpeed, this.vx - P.AIR_CONTROL_ACCEL * timeScale);
+                this.direction = -1;
+            }
+            if (Math.abs(this.vx) > P.MIN_WALK) {
+                this.animationState = run ? 'run' : 'walk';
+            }
+        }
+    }
     
     jump() {
         const jumpPower = this.running ? 
@@ -200,15 +228,16 @@ class Player extends Entity {
     }
     
     updatePhysics(deltaTime, level) {
-        // Apply friction
-        if (this.onGround) {
-            Physics.applyFriction(this, GAME_CONFIG.PHYSICS.FRICTION);
-        } else {
+        if (!this.onGround) {
             Physics.applyFriction(this, GAME_CONFIG.PHYSICS.AIR_FRICTION);
         }
-        
-        // Apply gravity and update position
+
         Physics.applyGravity(this, deltaTime);
+        const P = GAME_CONFIG.PHYSICS;
+        if (!this.onGround && this.jumpHeld && this.vy < 0 && this.jumpTimer > 0) {
+            this.vy -= P.JUMP_RISE_HOLD_BOOST * (deltaTime / 16.67);
+        }
+
         Physics.updatePosition(this, deltaTime);
         
         // Collision with level
@@ -227,16 +256,11 @@ class Player extends Entity {
             this.animationTimer = 0;
         }
         
-        // Set animation state based on movement
         if (!this.onGround) {
             this.animationState = 'jump';
-            this.animationFrame = this.vy < 0 ? 0 : 1; // Rising or falling
-        } else if (Math.abs(this.vx) > 0.1) {
-            this.animationState = this.running ? 'run' : 'walk';
-        } else {
-            this.animationState = 'idle';
-            this.animationFrame = 0;
+            this.animationFrame = this.vy < 0 ? 0 : 1;
         }
+        /* Ground: idle / walk / run / skid come from applySMBStyleHorizontal */
     }
     
     updateProjectiles(deltaTime, level) {
@@ -337,6 +361,9 @@ class Player extends Entity {
                         const runFrame = (this.animationFrame % 3) + 1;
                         spriteName = `mario_small_run${runFrame}`;
                         break;
+                    case 'skid':
+                        spriteName = 'mario_small_run2';
+                        break;
                     case 'jump':
                         spriteName = 'mario_small_jump';
                         break;
@@ -355,6 +382,9 @@ class Player extends Entity {
                         // Cycle through run animations
                         const runFrame = (this.animationFrame % 3) + 1;
                         spriteName = `mario_big_run${runFrame}`;
+                        break;
+                    case 'skid':
+                        spriteName = 'mario_big_run2';
                         break;
                     case 'jump':
                         spriteName = 'mario_big_jump';

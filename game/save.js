@@ -36,6 +36,11 @@ class SaveManager {
                 secretsFound: 0,
                 deaths: 0,
                 jumps: 0
+            },
+            campaign: {
+                resumeWorld: 1,
+                resumeLevel: 1,
+                finished: false
             }
         };
     }
@@ -127,6 +132,51 @@ class SaveManager {
     
     getSaveData() {
         return this.load();
+    }
+
+    resetCampaignProgress() {
+        const saveData = this.load();
+        saveData.campaign = {
+            resumeWorld: 1,
+            resumeLevel: 1,
+            finished: false
+        };
+        saveData.totalScore = 0;
+        this.save(saveData);
+    }
+
+    /**
+     * Call when a stage is cleared. Advances resume pointer to the next stage.
+     */
+    completeStage(world, stage, score) {
+        const saveData = this.load();
+        saveData.campaign = saveData.campaign || { ...this.defaultSave.campaign };
+
+        if (typeof score === 'number') {
+            saveData.totalScore = Math.max(saveData.totalScore || 0, score);
+        }
+
+        if (world > saveData.highestWorld || (world === saveData.highestWorld && stage > saveData.highestLevel)) {
+            saveData.highestWorld = world;
+            saveData.highestLevel = stage;
+        }
+
+        if (world === 8 && stage === 4) {
+            saveData.campaign.finished = true;
+            saveData.campaign.resumeWorld = 1;
+            saveData.campaign.resumeLevel = 1;
+        } else {
+            let nw = world;
+            let ns = stage + 1;
+            if (ns > 4) {
+                nw++;
+                ns = 1;
+            }
+            saveData.campaign.resumeWorld = nw;
+            saveData.campaign.resumeLevel = ns;
+        }
+
+        this.save(saveData);
     }
     
     deleteSave() {

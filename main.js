@@ -7,6 +7,8 @@ class Game {
         this.loaded = false;
         this.loadingProgress = 0;
         this.version = '2.0.0'; // Modernized version
+        /** @type {'continue' | 'new' | null} */
+        this.campaignMode = 'continue';
         
         // Global systems
         this.input = null;
@@ -62,6 +64,7 @@ class Game {
         // Add scenes
         this.engine.addScene('loading', new LoadingScene());
         this.engine.addScene('menu', new MenuScene());
+        this.engine.addScene('credits', new CreditsScene());
         this.engine.addScene('game', new GameScene());
         this.updateLoadingProgress(90, 'Loading game scenes...');
         

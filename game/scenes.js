@@ -3,7 +3,7 @@ class MenuScene extends Scene {
     constructor() {
         super();
         this.selectedOption = 0;
-        this.options = ['START GAME', 'OPTIONS', 'CREDITS'];
+        this.options = ['CONTINUE', 'NEW GAME', 'CREDITS'];
         this.title = 'GAVIN ADVENTURE';
         this.subtitle = 'Make GAINS. Beat The Shredder.';
         this.backgroundOffset = 0;
@@ -28,14 +28,16 @@ class MenuScene extends Scene {
     
     selectOption() {
         switch (this.selectedOption) {
-            case 0: // START GAME
+            case 0:
+                if (window.game) window.game.campaignMode = 'continue';
                 this.engine.setScene('game');
                 break;
-            case 1: // OPTIONS
-                // TODO: Implement options scene
+            case 1:
+                if (window.game) window.game.campaignMode = 'new';
+                this.engine.setScene('game');
                 break;
-            case 2: // CREDITS
-                // TODO: Implement credits scene
+            case 2:
+                this.engine.setScene('credits');
                 break;
         }
     }
@@ -82,7 +84,7 @@ class MenuScene extends Scene {
         // Instructions
         ctx.fillStyle = COLORS.GRAY_LIGHT;
         ctx.font = '14px monospace';
-        ctx.fillText('Use ARROW KEYS to navigate, SPACE or Z to select', GAME_CONFIG.CANVAS_WIDTH / 2, 500);
+        ctx.fillText('ARROWS — move   SPACE / Z — select', GAME_CONFIG.CANVAS_WIDTH / 2, 500);
         
         ctx.textAlign = 'left'; // Reset
     }
@@ -118,6 +120,9 @@ class GameScene extends Scene {
         this.paused = false;
         this.levelComplete = false;
         this.gameOver = false;
+        this.campaignWorld = 1;
+        this.campaignStage = 1;
+        this._advanceScheduled = false;
         
         // Camera settings
         this.cameraDeadZone = { x: 100, y: 50 };
@@ -146,19 +151,36 @@ class GameScene extends Scene {
     }
     
     enter() {
-        // Initialize level and player
-        this.level = LevelGenerator.createTestLevel();
-        this.player = new Player(this.level.playerSpawn.x, this.level.playerSpawn.y);
-        
-        // Set up camera
-        this.updateCamera();
-        
-        // Start level music
-        window.audio.playMusic('level');
+        if (window.game && window.game.campaignMode === 'new') {
+            window.saveManager.resetCampaignProgress();
+        }
+        if (window.game) {
+            window.game.campaignMode = null;
+        }
+        const save = window.saveManager.getSaveData();
+        const w = save.campaign && save.campaign.resumeWorld ? save.campaign.resumeWorld : 1;
+        const s = save.campaign && save.campaign.resumeLevel ? save.campaign.resumeLevel : 1;
+        this.loadCampaignLevel(w, s);
         
         this.paused = false;
         this.levelComplete = false;
         this.gameOver = false;
+        this._advanceScheduled = false;
+    }
+
+    loadCampaignLevel(world, stage) {
+        this.campaignWorld = world;
+        this.campaignStage = stage;
+        this.levelComplete = false;
+        this.gameOver = false;
+        this._advanceScheduled = false;
+        this.level = window.Campaign.createLevel(world, stage);
+        this.player = new Player(this.level.playerSpawn.x, this.level.playerSpawn.y);
+        this.hud.setWorldLevel(world, stage);
+        this.hud.setLevelTitle(window.Campaign.getLevelTitle(world, stage));
+        this.hud.time = 400;
+        this.updateCamera();
+        window.audio.playMusic('level');
     }
     
     exit() {
@@ -173,6 +195,10 @@ class GameScene extends Scene {
         
         if (this.paused) {
             this.pauseMenu.handleInput(window.input);
+            return;
+        }
+
+        if (this.levelComplete || this._advanceScheduled) {
             return;
         }
         
@@ -193,6 +219,21 @@ class GameScene extends Scene {
         
         if (this.player) {
             this.player.update(deltaTime, this.level, window.input, window.particles);
+        }
+
+        if (this.player && this.player.active && this.level) {
+            const killY = this.level.height * GAME_CONFIG.TILE_SIZE + 64;
+            if (this.player.y > killY) {
+                const died = this.player.takeDamage(window.particles);
+                if (this.player.active) {
+                    this.player.x = this.level.playerSpawn.x;
+                    this.player.y = this.level.playerSpawn.y;
+                    this.player.vx = 0;
+                    this.player.vy = 0;
+                } else {
+                    this.gameOver = true;
+                }
+            }
         }
         
         // Update camera
@@ -251,16 +292,29 @@ class GameScene extends Scene {
     }
     
     restartLevel() {
-        this.enter(); // Reinitialize everything
+        this.gameOver = false;
+        this.loadCampaignLevel(this.campaignWorld, this.campaignStage);
     }
     
     completeLevel() {
+        if (this._advanceScheduled) return;
+        this._advanceScheduled = true;
         window.audio.playSound('victory');
-        // TODO: Implement level completion sequence
-        // For now, just go back to menu after a delay
+        const w = this.campaignWorld;
+        const s = this.campaignStage;
+        window.saveManager.completeStage(w, s, this.player ? this.player.score : 0);
+        const finale = w === 8 && s === 4;
         setTimeout(() => {
-            this.engine.setScene('menu');
-        }, 3000);
+            this._advanceScheduled = false;
+            if (finale) {
+                this.engine.setScene('menu');
+                return;
+            }
+            const save = window.saveManager.getSaveData();
+            const cw = save.campaign.resumeWorld;
+            const cs = save.campaign.resumeLevel;
+            this.loadCampaignLevel(cw, cs);
+        }, 2400);
     }
     
     render(ctx) {
@@ -347,6 +401,60 @@ class GameScene extends Scene {
     }
 }
 
+class CreditsScene extends Scene {
+    constructor() {
+        super();
+    }
+
+    enter() {}
+
+    update(deltaTime) {
+        if (
+            window.input.isPressed('jump') ||
+            window.input.isPressed('start') ||
+            window.input.isPressed('pause')
+        ) {
+            this.engine.setScene('menu');
+        }
+    }
+
+    render(ctx) {
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(0, 0, GAME_CONFIG.CANVAS_WIDTH, GAME_CONFIG.CANVAS_HEIGHT);
+
+        ctx.fillStyle = COLORS.COIN_GOLD;
+        ctx.font = 'bold 28px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('CREDITS', GAME_CONFIG.CANVAS_WIDTH / 2, 100);
+
+        ctx.fillStyle = COLORS.WHITE;
+        ctx.font = '14px monospace';
+        const lines = [
+            'Gavin Adventure',
+            'Bodybuilding hero. Epic bosses.',
+            '',
+            'Built with HTML5 Canvas & JavaScript',
+            'Chiptune audio · Pixel polish',
+            '',
+            'Make GAINS. Beat The Shredder.'
+        ];
+        let y = 160;
+        for (const line of lines) {
+            ctx.fillText(line, GAME_CONFIG.CANVAS_WIDTH / 2, y);
+            y += 28;
+        }
+
+        ctx.fillStyle = COLORS.GRAY_LIGHT;
+        ctx.font = '12px monospace';
+        ctx.fillText(
+            'SPACE / ENTER / ESC — menu',
+            GAME_CONFIG.CANVAS_WIDTH / 2,
+            GAME_CONFIG.CANVAS_HEIGHT - 40
+        );
+        ctx.textAlign = 'left';
+    }
+}
+
 class LoadingScene extends Scene {
     constructor() {
         super();
@@ -413,4 +521,5 @@ class LoadingScene extends Scene {
 // Export to global scope
 window.MenuScene = MenuScene;
 window.GameScene = GameScene;
+window.CreditsScene = CreditsScene;
 window.LoadingScene = LoadingScene;

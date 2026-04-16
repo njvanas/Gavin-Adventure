@@ -19,6 +19,8 @@ class Level {
         // Spawn points
         this.playerSpawn = levelData.playerSpawn || { x: 32, y: 300 };
         this.exitPoint = levelData.exitPoint || { x: this.width * 16 - 64, y: 300 };
+        this.isBossLevel = !!levelData.isBossLevel;
+        this.hadBoss = !!(levelData.enemies && levelData.enemies.some((e) => e.type === ENEMY_TYPES.BOSS_SHREDDER));
         
         this.initializeLevel(levelData);
     }
@@ -42,8 +44,9 @@ class Level {
             });
         }
         
-        // Add some default collectibles for testing
-        this.addDefaultCollectibles();
+        if (levelData.useDefaultCollectibles !== false) {
+            this.addDefaultCollectibles();
+        }
     }
     
     generateDefaultTiles() {
@@ -165,8 +168,14 @@ class Level {
             }
         }
         
-        // Check if player reached exit
-        if (player && this.isPlayerAtExit(player)) {
+        if (this.hadBoss) {
+            const bossAlive = this.enemies.some(
+                (e) => e.active && e.enemyType === ENEMY_TYPES.BOSS_SHREDDER
+            );
+            if (!bossAlive) {
+                this.completed = true;
+            }
+        } else if (player && this.isPlayerAtExit(player)) {
             this.completed = true;
         }
     }

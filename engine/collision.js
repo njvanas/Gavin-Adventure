@@ -1,5 +1,25 @@
 // Collision Detection System
 class Collision {
+    /** Blocks horizontal movement (brick walls, etc.) */
+    static isWallTile(tileType) {
+        return (
+            tileType === TILES.SOLID ||
+            tileType === TILES.BREAKABLE ||
+            tileType === TILES.STRONG_PLATE ||
+            tileType === TILES.INVISIBLE_BLOCK
+        );
+    }
+
+    /** Stand on top or hit head */
+    static isSolidCeilingOrFloorTile(tileType) {
+        return (
+            tileType === TILES.SOLID ||
+            tileType === TILES.BREAKABLE ||
+            tileType === TILES.STRONG_PLATE ||
+            tileType === TILES.INVISIBLE_BLOCK
+        );
+    }
+
     static checkTileCollision(entity, level) {
         if (!level || !level.tiles) return false;
         
@@ -16,7 +36,7 @@ class Collision {
         for (let y = topTile; y <= bottomTile; y++) {
             for (let x = leftTile; x <= rightTile; x++) {
                 const tileType = level.getTile(x, y);
-                if (tileType === TILES.SOLID || tileType === TILES.PLATFORM) {
+                if (tileType === TILES.PLATFORM || Collision.isWallTile(tileType)) {
                     return true;
                 }
             }
@@ -45,7 +65,7 @@ class Collision {
         // Horizontal collision
         for (let y = topTile; y <= bottomTile; y++) {
             // Check left side
-            if (entity.vx < 0 && level.getTile(leftTile, y) === TILES.SOLID) {
+            if (entity.vx < 0 && Collision.isWallTile(level.getTile(leftTile, y))) {
                 // Calculate exact position to prevent overlap
                 const newX = (leftTile + 1) * tileSize - entity.hitboxOffsetX;
                 entity.x = newX;
@@ -53,7 +73,7 @@ class Collision {
                 hitWall = true;
             }
             // Check right side
-            else if (entity.vx > 0 && level.getTile(rightTile, y) === TILES.SOLID) {
+            else if (entity.vx > 0 && Collision.isWallTile(level.getTile(rightTile, y))) {
                 // Calculate exact position to prevent overlap
                 const newX = rightTile * tileSize - entity.hitboxOffsetX - entity.hitboxWidth;
                 entity.x = newX;
@@ -71,7 +91,7 @@ class Collision {
         
         for (let x = newLeftTile; x <= newRightTile; x++) {
             // Check ceiling
-            if (entity.vy < 0 && level.getTile(x, newTopTile) === TILES.SOLID) {
+            if (entity.vy < 0 && Collision.isSolidCeilingOrFloorTile(level.getTile(x, newTopTile))) {
                 const newY = (newTopTile + 1) * tileSize - entity.hitboxOffsetY;
                 entity.y = newY;
                 entity.vy = 0;
@@ -79,7 +99,12 @@ class Collision {
             // Check ground - handle both solid and platform tiles
             else if (entity.vy >= 0) {
                 const tileType = level.getTile(x, newBottomTile);
-                if (tileType === TILES.SOLID || tileType === TILES.PLATFORM) {
+                if (
+                    tileType === TILES.SOLID ||
+                    tileType === TILES.PLATFORM ||
+                    tileType === TILES.BREAKABLE ||
+                    tileType === TILES.STRONG_PLATE
+                ) {
                     const newY = newBottomTile * tileSize - entity.hitboxOffsetY - entity.hitboxHeight;
                     entity.y = newY;
                     entity.vy = 0;
@@ -97,7 +122,12 @@ class Collision {
             
             for (let x = newLeftTile; x <= newRightTile; x++) {
                 const tileType = level.getTile(x, belowY);
-                if (tileType === TILES.SOLID || tileType === TILES.PLATFORM) {
+                if (
+                    tileType === TILES.SOLID ||
+                    tileType === TILES.PLATFORM ||
+                    tileType === TILES.BREAKABLE ||
+                    tileType === TILES.STRONG_PLATE
+                ) {
                     foundGround = true;
                     break;
                 }

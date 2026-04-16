@@ -7,6 +7,7 @@ class HUD {
         this.gainsPoints = 0;
         this.world = 1;
         this.level = 1;
+        this.levelTitle = '';
         this.time = 400; // Timer in seconds
         this.powerState = POWER_STATES.SMALL;
         
@@ -227,6 +228,11 @@ class HUD {
         ctx.fillStyle = COLORS.WHITE;
         ctx.font = '14px monospace';
         ctx.fillText(`WORLD ${this.world}-${this.level}`, x, y);
+        if (this.levelTitle) {
+            ctx.font = '11px monospace';
+            ctx.fillStyle = COLORS.GRAY_LIGHT;
+            ctx.fillText(this.levelTitle, x, y + 16);
+        }
     }
     
     drawTimer(ctx) {
@@ -268,6 +274,10 @@ class HUD {
     setWorldLevel(world, level) {
         this.world = world;
         this.level = level;
+    }
+
+    setLevelTitle(title) {
+        this.levelTitle = title || '';
     }
     
     setTimer(seconds) {
