@@ -1,41 +1,12 @@
 {
-  "name": "gavin-adventure",
-  "version": "1.0.0",
-  "description": "A retro bodybuilding-themed platformer game - Make GAINS. Beat The Shredder.",
-  "main": "index.html",
+  "name": "c2-smb1-html5",
+  "private": true,
+  "description": "Static mirror of Jcw87/c2-smb1 gh-pages (Construct 2 SMB1 HTML5 export)",
   "scripts": {
     "start": "npx http-server . -p 8000 -c-1",
-    "build": "echo 'No build process required - ready for deployment'",
-    "dev": "npx http-server . -p 8000 -c-1 -o",
-    "test": "echo 'Open TESTPLAN.md for testing procedures'"
+    "dev": "npx http-server . -p 8000 -c-1 -o"
   },
-  "keywords": [
-    "game",
-    "platformer",
-    "retro",
-    "html5",
-    "canvas",
-    "javascript",
-    "bodybuilding",
-    "pixel-art"
-  ],
-  "author": "Gavin Adventure Development Team",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/njvanas/Gavin-Adventure.git"
-  },
-  "homepage": "https://njvanas.github.io/Gavin-Adventure",
   "devDependencies": {
     "http-server": "^14.1.1"
-  },
-  "engines": {
-    "node": ">=14.0.0"
-  },
-  "browserslist": [
-    "last 2 Chrome versions",
-    "last 2 Firefox versions",
-    "last 2 Safari versions",
-    "last 2 Edge versions"
-  ]
+  }
 }

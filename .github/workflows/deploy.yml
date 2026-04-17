@@ -1,5 +1,5 @@
-# Publishes the static site via GitHub Actions → Pages (artifact).
-# Repository Settings → Pages → Source MUST be "GitHub Actions" (not the gh-pages branch).
+# Publishes the static Construct 2 export via GitHub Actions → Pages (artifact).
+# Repository Settings → Pages → Source MUST be "GitHub Actions".
 name: Deploy to GitHub Pages
 
 on:
@@ -27,18 +27,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate static bundle
+      - name: Validate c2-smb1 export bundle
         run: |
           set -e
-          for f in index.html main.js style.css; do
+          for f in index.html c2runtime.js data.js jquery-2.1.1.min.js appmanifest.json sw.js; do
             test -f "$f" || { echo "Missing $f"; exit 1; }
           done
-          test -d engine || { echo "Missing engine/"; exit 1; }
-          test -d game || { echo "Missing game/"; exit 1; }
-          for f in game/smbConstants.js game/smbIntegrator.js game/campaign.js; do
-            test -f "$f" || { echo "Missing $f"; exit 1; }
-          done
-          echo "OK: static game files present"
+          test -d images || { echo "Missing images/"; exit 1; }
+          test -d media || { echo "Missing media/"; exit 1; }
+          echo "OK: Construct 2 HTML5 export present"
 
       - name: Configure Pages
         uses: actions/configure-pages@v4
@@ -55,4 +52,3 @@ jobs:
       - name: Summary
         run: |
           echo "Deployed: ${{ steps.deployment.outputs.page_url }}"
-          echo "If the site looks stale, confirm Settings → Pages → Build and deployment → Source = GitHub Actions."
