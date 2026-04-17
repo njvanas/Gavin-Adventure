@@ -29,11 +29,11 @@
         DEFAULT_GRAVITY: 562.5,
 
         /**
-         * Maps screen pixels per SMB unit (reference uses SCALE=3 on position integration).
-         * WORLD_SCALE shrinks the whole feel for wider levels / modern resolutions.
+         * Maps SMB internal velocity units → world pixels/sec (c2-smb1 / algorithm0r use ~×3 display scale).
+         * WORLD_SCALE was 0.36 and made movement ~3× too slow vs NES SMB feel.
          */
         DISPLAY_SCALE: 3,
-        WORLD_SCALE: 0.36,
+        WORLD_SCALE: 1,
 
         get POS_SCALE() {
             return this.DISPLAY_SCALE * this.WORLD_SCALE;

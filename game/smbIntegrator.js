@@ -130,7 +130,9 @@
         if (vx < 0) player.smbFacing = 1;
         if (vx > 0) player.smbFacing = 0;
 
-        player.direction = vx >= 0 ? 1 : -1;
+        if (vx > 0.08) player.direction = 1;
+        else if (vx < -0.08) player.direction = -1;
+
         player.running = runB;
 
         if (st === 3) player.animationState = 'skid';

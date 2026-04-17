@@ -257,31 +257,23 @@ class GameScene extends Scene {
     
     updateCamera() {
         if (!this.player) return;
-        
-        const targetX = this.player.x - GAME_CONFIG.CANVAS_WIDTH / 2;
-        const targetY = this.player.y - GAME_CONFIG.CANVAS_HEIGHT / 2;
-        
-        // Apply dead zone
-        const deltaX = targetX - this.camera.x;
-        const deltaY = targetY - this.camera.y;
-        
-        if (Math.abs(deltaX) > this.cameraDeadZone.x) {
-            this.camera.x += (deltaX - Math.sign(deltaX) * this.cameraDeadZone.x) * this.cameraSpeed;
-        }
-        
-        if (Math.abs(deltaY) > this.cameraDeadZone.y) {
-            this.camera.y += (deltaY - Math.sign(deltaY) * this.cameraDeadZone.y) * this.cameraSpeed;
-        }
-        
-        // Clamp camera to level bounds
-        if (this.level) {
-            this.camera.x = Math.max(0, Math.min(this.camera.x, 
-                this.level.width * GAME_CONFIG.TILE_SIZE - GAME_CONFIG.CANVAS_WIDTH));
-            this.camera.y = Math.max(0, Math.min(this.camera.y, 
-                this.level.height * GAME_CONFIG.TILE_SIZE - GAME_CONFIG.CANVAS_HEIGHT));
-        }
-        
-        // Update renderer camera
+
+        const hud = GAME_CONFIG.HUD_HEIGHT || 56;
+        const playH = GAME_CONFIG.CANVAS_HEIGHT - hud;
+        const levelWpx = this.level ? this.level.width * GAME_CONFIG.TILE_SIZE : GAME_CONFIG.CANVAS_WIDTH;
+        const levelHpx = this.level ? this.level.height * GAME_CONFIG.TILE_SIZE : GAME_CONFIG.CANVAS_HEIGHT;
+
+        // NES SMB: horizontal camera locks to player with small lookahead (no floaty lerp)
+        const look = this.player.direction > 0 ? 48 : -48;
+        let targetX = this.player.x - GAME_CONFIG.CANVAS_WIDTH * 0.42 + look;
+        targetX = Math.max(0, Math.min(targetX, levelWpx - GAME_CONFIG.CANVAS_WIDTH));
+
+        this.camera.x += (targetX - this.camera.x) * 0.92;
+
+        let targetY = this.player.y - playH * 0.55;
+        targetY = Math.max(0, Math.min(targetY, levelHpx - playH));
+        this.camera.y += (targetY - this.camera.y) * 0.88;
+
         window.renderer.setCamera(this.camera.x, this.camera.y);
     }
     
@@ -324,20 +316,29 @@ class GameScene extends Scene {
     }
     
     render(ctx) {
-        // Render level
+        const hud = GAME_CONFIG.HUD_HEIGHT || 56;
+        const W = GAME_CONFIG.CANVAS_WIDTH;
+        const H = GAME_CONFIG.CANVAS_HEIGHT;
+
+        ctx.fillStyle = '#020617';
+        ctx.fillRect(0, 0, W, hud);
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(0, hud, W, H - hud);
+        ctx.clip();
+        ctx.translate(0, hud);
+
         if (this.level) {
             this.level.render(ctx, this.camera);
         }
-        
-        // Render player
         if (this.player) {
             this.player.render(ctx, this.camera);
         }
-        
-        // Render particles
         window.particles.render(window.renderer);
-        
-        // Render HUD
+
+        ctx.restore();
+
         this.hud.render(ctx);
         
         // Render pause menu

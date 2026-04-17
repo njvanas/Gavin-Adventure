@@ -1,4 +1,4 @@
-// HUD (Heads-Up Display) System
+// HUD — SMB-style status bar (no overlapping columns)
 class HUD {
     constructor() {
         this.visible = true;
@@ -8,269 +8,194 @@ class HUD {
         this.world = 1;
         this.level = 1;
         this.levelTitle = '';
-        this.time = 400; // Timer in seconds
+        this.time = 400;
         this.powerState = POWER_STATES.SMALL;
-        
-        // Animation properties
+
         this.scoreAnimation = 0;
         this.lifeAnimation = 0;
         this.gainsAnimation = 0;
     }
-    
+
     update(deltaTime, player) {
         if (!player) return;
-        
-        // Update from player
+
         this.lives = player.lives;
         this.score = player.score;
         this.gainsPoints = player.gainsPoints;
         this.powerState = player.powerState;
-        
-        // Update animations
+
         this.updateAnimations(deltaTime);
-        
-        // Update timer (if applicable)
+
         if (this.time > 0) {
             this.time -= deltaTime / 1000;
             this.time = Math.max(0, this.time);
         }
     }
-    
+
     updateAnimations(deltaTime) {
-        // Animate score changes
-        if (this.scoreAnimation > 0) {
-            this.scoreAnimation -= deltaTime;
-        }
-        
-        if (this.lifeAnimation > 0) {
-            this.lifeAnimation -= deltaTime;
-        }
-        
-        if (this.gainsAnimation > 0) {
-            this.gainsAnimation -= deltaTime;
-        }
+        if (this.scoreAnimation > 0) this.scoreAnimation -= deltaTime;
+        if (this.lifeAnimation > 0) this.lifeAnimation -= deltaTime;
+        if (this.gainsAnimation > 0) this.gainsAnimation -= deltaTime;
     }
-    
+
     render(ctx) {
         if (!this.visible) return;
-        
-        // Save context state
+
+        const W = GAME_CONFIG.CANVAS_WIDTH;
+        const H = GAME_CONFIG.HUD_HEIGHT || 56;
+
         ctx.save();
-        
-        // Draw HUD background
-        this.drawBackground(ctx);
-        
-        // Draw HUD elements
-        this.drawLives(ctx);
-        this.drawScore(ctx);
-        this.drawGAINSMeter(ctx);
-        this.drawPowerState(ctx);
-        this.drawWorldLevel(ctx);
-        this.drawTimer(ctx);
-        
-        // Restore context state
+        this.drawBackground(ctx, W, H);
+
+        ctx.textBaseline = 'alphabetic';
+
+        this.drawScoreBlock(ctx, W, H);
+        this.drawLives(ctx, W, H);
+        this.drawGAINSMeter(ctx, W, H);
+        this.drawPowerState(ctx, W, H);
+        this.drawWorldAndTime(ctx, W, H);
+        this.drawLevelSubtitle(ctx, W, H);
+
         ctx.restore();
     }
-    
-    drawBackground(ctx) {
-        // Semi-transparent background bar
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        ctx.fillRect(0, 0, GAME_CONFIG.CANVAS_WIDTH, 48);
-        
-        // Bottom border
-        ctx.fillStyle = COLORS.PRIMARY;
-        ctx.fillRect(0, 46, GAME_CONFIG.CANVAS_WIDTH, 2);
+
+    drawBackground(ctx, W, H) {
+        const grd = ctx.createLinearGradient(0, 0, 0, H);
+        grd.addColorStop(0, '#0f172a');
+        grd.addColorStop(1, '#020617');
+        ctx.fillStyle = grd;
+        ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = 'rgba(148, 163, 184, 0.35)';
+        ctx.fillRect(0, H - 1, W, 1);
     }
-    
-    drawLives(ctx) {
-        // Lives label
+
+    drawScoreBlock(ctx, W, H) {
         ctx.fillStyle = COLORS.WHITE;
-        ctx.font = '14px monospace';
-        ctx.fillText('LIVES', 20, 20);
-        
-        // Heart icons
+        ctx.font = 'bold 13px "Segoe UI", ui-sans-serif, system-ui, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText('SCORE', 14, 18);
+        ctx.font = '15px "Consolas", "Courier New", monospace';
+        ctx.fillText(this.score.toString().padStart(8, '0'), 14, 36);
+    }
+
+    drawLives(ctx, W, H) {
+        ctx.fillStyle = '#fca5a5';
+        ctx.font = '11px "Segoe UI", sans-serif';
+        ctx.fillText('LIVES', 130, 18);
         const heartSprite = window.sprites.getSprite('heart');
         for (let i = 0; i < this.lives; i++) {
-            const x = 20 + (i * 16);
-            const y = 25;
-            
+            const x = 130 + i * 18;
+            const y = 22;
             if (heartSprite) {
-                ctx.drawImage(heartSprite.image, x, y, 12, 12);
+                ctx.drawImage(heartSprite.image, x, y, 14, 14);
             } else {
-                // Fallback heart
                 ctx.fillStyle = COLORS.ERROR;
                 ctx.fillRect(x, y, 12, 12);
             }
         }
-        
-        // Life animation effect
         if (this.lifeAnimation > 0) {
             ctx.save();
             ctx.globalAlpha = this.lifeAnimation / 500;
             ctx.fillStyle = COLORS.SUCCESS;
-            ctx.font = '16px monospace';
-            ctx.fillText('+1 LIFE', 150, 35);
-            ctx.restore();
-        }
-    }
-    
-    drawScore(ctx) {
-        // Score
-        ctx.fillStyle = COLORS.WHITE;
-        ctx.font = '14px monospace';
-        ctx.textAlign = 'right';
-        
-        const scoreText = `SCORE ${this.score.toString().padStart(8, '0')}`;
-        ctx.fillText(scoreText, GAME_CONFIG.CANVAS_WIDTH - 20, 20);
-        
-        // Score animation effect
-        if (this.scoreAnimation > 0) {
-            ctx.save();
-            ctx.globalAlpha = this.scoreAnimation / 300;
-            ctx.fillStyle = COLORS.COIN_GOLD;
             ctx.font = '12px monospace';
-            ctx.fillText('+100', GAME_CONFIG.CANVAS_WIDTH - 20, 35);
+            ctx.fillText('+1', 200, 34);
             ctx.restore();
         }
-        
-        ctx.textAlign = 'left'; // Reset
     }
-    
-    drawGAINSMeter(ctx) {
-        const x = 250;
-        const y = 8;
-        const width = 120;
-        const height = 12;
-        
-        // Label
-        ctx.fillStyle = COLORS.WHITE;
-        ctx.font = '12px monospace';
-        ctx.fillText('GAINS', x, y);
-        
-        // Background
-        ctx.fillStyle = COLORS.BLACK;
-        ctx.fillRect(x, y + 2, width, height);
-        
-        // Fill based on gains points
-        const fillWidth = (this.gainsPoints / 100) * (width - 2);
+
+    drawGAINSMeter(ctx, W, H) {
+        const x = 268;
+        const y = 22;
+        const width = 100;
+        const barH = 10;
+
+        ctx.fillStyle = '#e2e8f0';
+        ctx.font = '10px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText('GAINS', x, 18);
+
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(x, y, width, barH);
+        const fillW = Math.min(1, this.gainsPoints / 100) * (width - 2);
         ctx.fillStyle = COLORS.ACCENT;
-        ctx.fillRect(x + 1, y + 3, fillWidth, height - 2);
-        
-        // Border
-        ctx.strokeStyle = COLORS.WHITE;
-        ctx.strokeRect(x, y + 2, width, height);
-        
-        // Threshold markers
-        for (let i = 1; i < 4; i++) {
-            const markerX = x + (i * width / 4);
-            ctx.strokeStyle = COLORS.WHITE;
-            ctx.beginPath();
-            ctx.moveTo(markerX, y + 2);
-            ctx.lineTo(markerX, y + height + 2);
-            ctx.stroke();
-        }
-        
-        // Animation effect
-        if (this.gainsAnimation > 0) {
-            ctx.save();
-            ctx.globalAlpha = this.gainsAnimation / 400;
-            ctx.fillStyle = COLORS.SUCCESS;
-            ctx.font = '12px monospace';
-            ctx.fillText('GAINS!', x + width + 10, y + 10);
-            ctx.restore();
-        }
+        ctx.fillRect(x + 1, y + 1, fillW, barH - 2);
+        ctx.strokeStyle = '#94a3b8';
+        ctx.strokeRect(x, y, width, barH);
     }
-    
-    drawPowerState(ctx) {
-        const x = 450;
-        const y = 8;
-        
-        // Power state indicator
-        ctx.fillStyle = COLORS.WHITE;
-        ctx.font = '12px monospace';
-        ctx.fillText('POWER', x, y);
-        
-        // Power icon based on state
-        const iconX = x;
-        const iconY = y + 4;
-        
+
+    drawPowerState(ctx, W, H) {
+        const x = 392;
+        ctx.fillStyle = '#e2e8f0';
+        ctx.font = '10px sans-serif';
+        ctx.fillText('POWER', x, 18);
+        const iconY = 22;
+        ctx.font = 'bold 11px monospace';
         switch (this.powerState) {
             case POWER_STATES.SMALL:
-                ctx.fillStyle = COLORS.ACCENT;
-                ctx.fillRect(iconX, iconY, 16, 16);
-                ctx.fillStyle = COLORS.WHITE;
-                ctx.font = '10px monospace';
-                ctx.fillText('S', iconX + 6, iconY + 12);
+                ctx.fillStyle = '#fb923c';
+                ctx.fillRect(x, iconY, 18, 14);
+                ctx.fillStyle = '#0f172a';
+                ctx.fillText('S', x + 5, iconY + 11);
                 break;
-                
             case POWER_STATES.PUMP:
                 ctx.fillStyle = COLORS.PRIMARY;
-                ctx.fillRect(iconX, iconY, 20, 20);
-                ctx.fillStyle = COLORS.WHITE;
-                ctx.font = '10px monospace';
-                ctx.fillText('P', iconX + 8, iconY + 14);
+                ctx.fillRect(x, iconY, 18, 14);
+                ctx.fillStyle = '#fff';
+                ctx.fillText('P', x + 5, iconY + 11);
                 break;
-                
             case POWER_STATES.BEAST:
                 ctx.fillStyle = COLORS.ERROR;
-                ctx.fillRect(iconX, iconY, 24, 20);
-                ctx.fillStyle = COLORS.WHITE;
-                ctx.font = '10px monospace';
-                ctx.fillText('B', iconX + 10, iconY + 14);
+                ctx.fillRect(x, iconY, 22, 14);
+                ctx.fillStyle = '#fff';
+                ctx.fillText('B', x + 7, iconY + 11);
                 break;
         }
     }
-    
-    drawWorldLevel(ctx) {
-        const x = 550;
-        const y = 20;
-        
-        ctx.fillStyle = COLORS.WHITE;
-        ctx.font = '14px monospace';
-        ctx.fillText(`WORLD ${this.world}-${this.level}`, x, y);
-        if (this.levelTitle) {
-            ctx.font = '11px monospace';
-            ctx.fillStyle = COLORS.GRAY_LIGHT;
-            ctx.fillText(this.levelTitle, x, y + 16);
-        }
-    }
-    
-    drawTimer(ctx) {
-        if (this.time <= 0) return;
-        
-        const x = 550;
-        const y = 35;
-        
-        const minutes = Math.floor(this.time / 60);
-        const seconds = Math.floor(this.time % 60);
-        const timeText = `TIME ${minutes}:${seconds.toString().padStart(2, '0')}`;
-        
-        // Color based on remaining time
-        if (this.time < 60) {
-            ctx.fillStyle = COLORS.ERROR; // Red when low
-        } else if (this.time < 120) {
-            ctx.fillStyle = COLORS.WARNING; // Yellow when medium
+
+    drawWorldAndTime(ctx, W, H) {
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#f8fafc';
+        ctx.font = 'bold 14px "Consolas", monospace';
+        ctx.fillText(`WORLD  ${this.world}-${this.level}`, W / 2, 24);
+
+        const timeDisp = Math.max(0, Math.ceil(this.time));
+        const minutes = Math.floor(timeDisp / 60);
+        const seconds = timeDisp % 60;
+        ctx.textAlign = 'right';
+        if (timeDisp <= 0) {
+            ctx.fillStyle = COLORS.ERROR;
+        } else if (timeDisp < 100) {
+            ctx.fillStyle = COLORS.WARNING;
         } else {
-            ctx.fillStyle = COLORS.WHITE; // White when plenty
+            ctx.fillStyle = '#f8fafc';
         }
-        
-        ctx.font = '12px monospace';
-        ctx.fillText(timeText, x, y);
+        ctx.font = '14px "Consolas", monospace';
+        ctx.fillText(`TIME ${minutes}:${seconds.toString().padStart(2, '0')}`, W - 14, 24);
+        ctx.textAlign = 'left';
     }
-    
-    // Animation triggers
+
+    drawLevelSubtitle(ctx, W, H) {
+        if (!this.levelTitle) return;
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '11px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        const t = this.levelTitle.length > 42 ? this.levelTitle.slice(0, 40) + '…' : this.levelTitle;
+        ctx.fillText(t, W / 2, 46);
+        ctx.textAlign = 'left';
+    }
+
     animateScoreGain(points) {
-        this.scoreAnimation = 300; // 0.3 seconds
+        this.scoreAnimation = 300;
     }
-    
+
     animateLifeGain() {
-        this.lifeAnimation = 500; // 0.5 seconds
+        this.lifeAnimation = 500;
     }
-    
+
     animateGAINS() {
-        this.gainsAnimation = 400; // 0.4 seconds
+        this.gainsAnimation = 400;
     }
-    
+
     setWorldLevel(world, level) {
         this.world = world;
         this.level = level;
@@ -279,19 +204,19 @@ class HUD {
     setLevelTitle(title) {
         this.levelTitle = title || '';
     }
-    
+
     setTimer(seconds) {
         this.time = seconds;
     }
-    
+
     show() {
         this.visible = true;
     }
-    
+
     hide() {
         this.visible = false;
     }
-    
+
     reset() {
         this.scoreAnimation = 0;
         this.lifeAnimation = 0;
@@ -299,27 +224,26 @@ class HUD {
     }
 }
 
-// Pause Menu
 class PauseMenu {
     constructor() {
         this.visible = false;
         this.selectedOption = 0;
         this.options = ['RESUME', 'RESTART', 'OPTIONS', 'QUIT'];
-        this.onSelect = null; // Callback function
+        this.onSelect = null;
     }
-    
+
     show() {
         this.visible = true;
         this.selectedOption = 0;
     }
-    
+
     hide() {
         this.visible = false;
     }
-    
+
     handleInput(input) {
         if (!this.visible) return;
-        
+
         if (input.isPressed('down')) {
             this.selectedOption = (this.selectedOption + 1) % this.options.length;
         } else if (input.isPressed('up')) {
@@ -330,38 +254,34 @@ class PauseMenu {
             }
         }
     }
-    
+
     render(ctx) {
         if (!this.visible) return;
-        
-        // Semi-transparent overlay
+
         ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
         ctx.fillRect(0, 0, GAME_CONFIG.CANVAS_WIDTH, GAME_CONFIG.CANVAS_HEIGHT);
-        
-        // Menu background
+
         const menuWidth = 300;
         const menuHeight = 200;
         const menuX = (GAME_CONFIG.CANVAS_WIDTH - menuWidth) / 2;
         const menuY = (GAME_CONFIG.CANVAS_HEIGHT - menuHeight) / 2;
-        
+
         ctx.fillStyle = COLORS.GRAY_DARK;
         ctx.fillRect(menuX, menuY, menuWidth, menuHeight);
-        
+
         ctx.strokeStyle = COLORS.WHITE;
         ctx.lineWidth = 2;
         ctx.strokeRect(menuX, menuY, menuWidth, menuHeight);
-        
-        // Title
+
         ctx.fillStyle = COLORS.WHITE;
         ctx.font = '24px monospace';
         ctx.textAlign = 'center';
         ctx.fillText('PAUSED', GAME_CONFIG.CANVAS_WIDTH / 2, menuY + 40);
-        
-        // Options
+
         ctx.font = '16px monospace';
         this.options.forEach((option, index) => {
-            const y = menuY + 80 + (index * 30);
-            
+            const y = menuY + 80 + index * 30;
+
             if (index === this.selectedOption) {
                 ctx.fillStyle = COLORS.ACCENT;
                 ctx.fillRect(menuX + 50, y - 20, 200, 25);
@@ -369,14 +289,13 @@ class PauseMenu {
             } else {
                 ctx.fillStyle = COLORS.WHITE;
             }
-            
+
             ctx.fillText(option, GAME_CONFIG.CANVAS_WIDTH / 2, y);
         });
-        
-        ctx.textAlign = 'left'; // Reset
+
+        ctx.textAlign = 'left';
     }
 }
 
-// Export to global scope
 window.HUD = HUD;
 window.PauseMenu = PauseMenu;

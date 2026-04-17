@@ -203,11 +203,29 @@ class Level {
     }
     
     renderBackground(ctx, camera) {
-        // Clear with theme color
-        ctx.fillStyle = this.backgroundColor;
-        ctx.fillRect(0, 0, GAME_CONFIG.CANVAS_WIDTH, GAME_CONFIG.CANVAS_HEIGHT);
-        
-        // Add simple parallax background elements
+        const W = GAME_CONFIG.CANVAS_WIDTH;
+        const H = GAME_CONFIG.CANVAS_HEIGHT;
+        // SMB1-inspired sky (c2-smb1 overworld feel — gradient + ground band)
+        const g = ctx.createLinearGradient(0, 0, 0, H);
+        g.addColorStop(0, '#5b9cff');
+        g.addColorStop(0.45, '#8ec5ff');
+        g.addColorStop(0.72, '#b8dcff');
+        g.addColorStop(0.88, '#c8e6b0');
+        g.addColorStop(1, '#7ec850');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, W, H);
+
+        // Distant rounded hills (slow parallax)
+        ctx.fillStyle = 'rgba(46, 125, 50, 0.28)';
+        const hillBase = H - 36;
+        const scroll = (camera.x * 0.12) % 140;
+        for (let i = -1; i < 12; i++) {
+            const cx = i * 140 - scroll;
+            ctx.beginPath();
+            ctx.ellipse(cx, hillBase + 18, 72, 26, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
         this.renderParallaxBackground(ctx, camera);
     }
     

@@ -2,14 +2,15 @@
 //
 // Physics feel targets (walk/run/skid/gravity) are informed by:
 // - github.com/algorithm0r/SuperMarioBros (JS NES-style clone)
-// - github.com/Jcw87/c2-smb1 (Construct 2; Event sheets/Level.xml defines PLAYER_WALK_SPEED 93.75,
-//   PLAYER_RUN_SPEED 153.75, PLAYER_WALK_ACCEL 135, PLAYER_RUN_ACCEL 200, PLAYER_SKID_ACCEL 365,
-//   PLAYER_DECEL 183, PLAYER_GRAVITY 562.5 — Construct Platform units, not used verbatim here)
+// - github.com/Jcw87/c2-smb1 (Construct 2 SMB1 — primary tuning reference for integrator constants)
 //
 const GAME_CONFIG = {
     CANVAS_WIDTH: 1024,
     CANVAS_HEIGHT: 576,
     TILE_SIZE: 16,
+    /** Draw player/enemies/collectibles larger than hitbox (NES on TV look). */
+    SPRITE_DRAW_SCALE: 2,
+    HUD_HEIGHT: 56,
     TARGET_FPS: 60,
     
     PHYSICS: {

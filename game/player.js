@@ -332,26 +332,31 @@ class Player extends Entity {
         }
         
         if (sprite) {
+            const sc = GAME_CONFIG.SPRITE_DRAW_SCALE || 1;
+            const dw = this.width * sc;
+            const dh = this.height * sc;
+            const ox = (dw - this.width) / 2;
+            const oy = dh - this.height;
+
             ctx.save();
-            
-            // Flip sprite if facing left
+
             if (this.direction < 0) {
                 ctx.scale(-1, 1);
                 ctx.drawImage(
                     sprite.image,
                     sprite.x, sprite.y, sprite.width, sprite.height,
-                    -screenX - this.width, screenY,
-                    this.width, this.height
+                    -(screenX - ox) - dw, screenY - oy,
+                    dw, dh
                 );
             } else {
                 ctx.drawImage(
                     sprite.image,
                     sprite.x, sprite.y, sprite.width, sprite.height,
-                    screenX, screenY,
-                    this.width, this.height
+                    screenX - ox, screenY - oy,
+                    dw, dh
                 );
             }
-            
+
             ctx.restore();
         } else {
             // Fallback colored rectangle
@@ -428,12 +433,7 @@ class Player extends Entity {
     
     // Force unstuck player
     forceUnstuck() {
-        if (this.isStuck()) {
-            this.resetJumpState();
-            const PS = window.SMB_CONST.POS_SCALE;
-            this.smbVelY = 2;
-            this.vy = this.smbVelY * PS;
-        }
+        // Previously nudged vy when "stuck"; caused false positives. Collision + SMB integrator handle it.
     }
 }
 
