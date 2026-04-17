@@ -1,9 +1,10 @@
 const GAME_CONFIG = {
-    CANVAS_WIDTH: 1024,
-    CANVAS_HEIGHT: 576,
-    TILE_SIZE: 16,
+    /** Minimum target: 720p (1280×720). CSS scales display to fit the viewport. */
+    CANVAS_WIDTH: 1280,
+    CANVAS_HEIGHT: 720,
+    TILE_SIZE: 24,
     SPRITE_DRAW_SCALE: 2,
-    HUD_HEIGHT: 56,
+    HUD_HEIGHT: 64,
     TARGET_FPS: 60,
     PHYSICS: {
         GRAVITY: 0.42,

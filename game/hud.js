@@ -34,14 +34,14 @@
             ctx.shadowBlur = 2;
             ctx.shadowOffsetY = 1;
             ctx.fillStyle = COLORS.WHITE;
-            ctx.font = 'bold 19px system-ui,Segoe UI,sans-serif';
-            ctx.fillText(`GAINS ${state.gains}`, 18, y);
+            ctx.font = 'bold 22px system-ui,Segoe UI,sans-serif';
+            ctx.fillText(`GAINS ${state.gains}`, 20, y);
             ctx.shadowBlur = 0;
             ctx.shadowOffsetY = 0;
 
-            const meterW = 168;
-            const meterH = 12;
-            const mx = 128;
+            const meterW = 188;
+            const meterH = 14;
+            const mx = 140;
             const my = y - meterH / 2;
             const track = ctx.createLinearGradient(mx, my, mx + meterW, my + meterH);
             track.addColorStop(0, 'rgba(255,255,255,0.12)');
@@ -63,22 +63,22 @@
             ctx.fill();
 
             ctx.fillStyle = COLORS.WHITE;
-            ctx.font = 'bold 19px system-ui,Segoe UI,sans-serif';
+            ctx.font = 'bold 22px system-ui,Segoe UI,sans-serif';
             ctx.textAlign = 'right';
-            ctx.fillText(`W${state.world + 1}-${state.stage + 1}`, w - 72, y);
+            ctx.fillText(`W${state.world + 1}-${state.stage + 1}`, w - 78, y);
 
-            ctx.font = '20px system-ui,sans-serif';
+            ctx.font = '22px system-ui,sans-serif';
             ctx.fillStyle = '#fecaca';
-            ctx.fillText('♥', w - 52, y);
+            ctx.fillText('♥', w - 56, y);
             ctx.fillStyle = COLORS.WHITE;
-            ctx.font = 'bold 19px system-ui,sans-serif';
-            ctx.fillText(`${state.lives}`, w - 18, y);
+            ctx.font = 'bold 22px system-ui,sans-serif';
+            ctx.fillText(`${state.lives}`, w - 20, y);
             ctx.textAlign = 'left';
 
             if (state.title) {
-                ctx.font = '13px system-ui,Segoe UI,sans-serif';
+                ctx.font = '14px system-ui,Segoe UI,sans-serif';
                 ctx.fillStyle = 'rgba(255,255,255,0.72)';
-                ctx.fillText(state.title, 320, y);
+                ctx.fillText(state.title, 360, y);
             }
             ctx.restore();
         }

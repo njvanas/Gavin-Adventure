@@ -20,15 +20,20 @@ body {
     align-items: center;
     justify-content: center;
     min-height: 100vh;
+    min-height: 100dvh;
     padding: 12px;
+    width: 100%;
 }
 
+/**
+ * Internal bitmap: 1280×720 (720p class). Display size fits the viewport while
+ * preserving 16:9 — uses the smaller of width-limited and height-limited scale.
+ */
 #game {
     display: block;
-    width: min(100vw - 24px, 1024px);
+    width: min(1280px, calc(100vw - 24px), calc((100vh - 24px) * 1280 / 720), calc((100dvh - 24px) * 1280 / 720));
     height: auto;
-    aspect-ratio: 1024 / 576;
-    max-height: calc(100vh - 24px);
+    aspect-ratio: 1280 / 720;
     border-radius: 8px;
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
     background: #000;

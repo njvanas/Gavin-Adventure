@@ -2,6 +2,8 @@
 
 **Gavin Adventure** is a browser-based, gym-themed platformer: run and jump through procedurally varied stages, collect **GAINS**, grab protein power-ups, and face the **Boss Shredder** at the end of each world.
 
+The game renders at **1280×720** (720p class) and scales to fit your browser while keeping a 16:9 aspect ratio.
+
 ## Run locally
 
 Static files only — serve over HTTP (not `file://`) so audio unlock behaves consistently:

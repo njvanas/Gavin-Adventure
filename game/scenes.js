@@ -217,21 +217,21 @@
 
             const px = this.player.x - cam.x;
             const py = this.player.y - cam.y;
-            if (this.player.invuln > 0 && Math.floor(performance.now() / 100) % 2 === 0) {
-                /* blink */
-            } else {
-                Sprites.drawPlayer(
-                    ctx,
-                    px,
-                    py,
-                    this.player.width,
-                    this.player.height,
-                    this.player.powerState,
-                    this.player.animationState,
-                    this.player.direction < 0 ? 1 : 0,
-                    timeMs
-                );
+            if (this.player.invuln > 0) {
+                ctx.globalAlpha = Math.floor(performance.now() / 120) % 2 === 0 ? 0.42 : 1;
             }
+            Sprites.drawPlayer(
+                ctx,
+                px,
+                py,
+                this.player.width,
+                this.player.height,
+                this.player.powerState,
+                this.player.animationState,
+                this.player.direction < 0 ? 1 : 0,
+                timeMs
+            );
+            ctx.globalAlpha = 1;
 
             if (!this.level.isBoss) {
                 const gx = this.level.goalX - cam.x;
@@ -249,11 +249,12 @@
                 title: this.level.title
             });
 
+            const overlayTitle = Math.max(28, Math.round(this.canvas.width * 0.028));
             if (this.levelCompleteTimer > 0) {
                 ctx.fillStyle = 'rgba(0,0,0,0.55)';
                 ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
                 ctx.fillStyle = '#fff';
-                ctx.font = 'bold 28px system-ui,sans-serif';
+                ctx.font = `bold ${overlayTitle}px system-ui,sans-serif`;
                 ctx.textAlign = 'center';
                 ctx.fillText('Level clear — loading next stage…', this.canvas.width / 2, this.canvas.height * 0.45);
                 ctx.textAlign = 'left';
@@ -262,7 +263,7 @@
                 ctx.fillStyle = 'rgba(0,0,0,0.65)';
                 ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
                 ctx.fillStyle = '#fca5a5';
-                ctx.font = 'bold 32px system-ui,sans-serif';
+                ctx.font = `bold ${overlayTitle + 4}px system-ui,sans-serif`;
                 ctx.textAlign = 'center';
                 ctx.fillText('Game Over', this.canvas.width / 2, this.canvas.height * 0.45);
                 ctx.textAlign = 'left';
