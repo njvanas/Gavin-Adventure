@@ -18,3 +18,5 @@ The script copies normalized filenames into `Assets/c2/`. The game loads them in
 ## Filenames
 
 See `tools/import-c2-smb1.ps1` for the full map (grounds, bricks, Small/Big Mario, Goomba, Koopa, items, pipes, HUD-adjacent props, etc.).
+
+`favicon-32.png` is copied from c2 `Files/icon-32.png` and linked in `index.html`.

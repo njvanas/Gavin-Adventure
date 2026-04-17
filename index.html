@@ -2,38 +2,45 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gavin Adventure - Make GAINS. Beat The Shredder.</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Gavin Adventure — browser platformer with NES-style physics. Make GAINS. Beat The Shredder.">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="color-scheme" content="dark">
+    <title>Gavin Adventure</title>
+    <link rel="icon" href="Assets/c2/favicon-32.png" type="image/png" sizes="32x32">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="gameContainer">
-        <canvas id="gameCanvas"></canvas>
-        <div id="mobileControls" class="mobile-controls">
+    <main id="gameContainer" role="application" aria-label="Gavin Adventure game">
+        <canvas id="gameCanvas" width="1024" height="576" aria-label="Game canvas"></canvas>
+        <div id="mobileControls" class="mobile-controls" aria-hidden="true">
             <div class="dpad">
-                <button id="leftBtn" class="control-btn dpad-left">←</button>
-                <button id="rightBtn" class="control-btn dpad-right">→</button>
-                <button id="downBtn" class="control-btn dpad-down">↓</button>
+                <button type="button" id="leftBtn" class="control-btn dpad-left" aria-label="Move left">←</button>
+                <button type="button" id="rightBtn" class="control-btn dpad-right" aria-label="Move right">→</button>
+                <button type="button" id="downBtn" class="control-btn dpad-down" aria-label="Crouch">↓</button>
             </div>
             <div class="action-buttons">
-                <button id="jumpBtn" class="control-btn jump-btn">JUMP</button>
-                <button id="runBtn" class="control-btn run-btn">RUN</button>
-                <button id="throwBtn" class="control-btn throw-btn">THROW</button>
+                <button type="button" id="jumpBtn" class="control-btn jump-btn" aria-label="Jump">JUMP</button>
+                <button type="button" id="runBtn" class="control-btn run-btn" aria-label="Run">RUN</button>
+                <button type="button" id="throwBtn" class="control-btn throw-btn" aria-label="Throw">THROW</button>
             </div>
         </div>
-        <div id="loadingScreen" class="loading-screen">
+        <div id="loadingScreen" class="loading-screen" aria-busy="true" aria-live="polite">
             <div class="loading-content">
                 <h1>GAVIN ADVENTURE</h1>
-                <p>Make GAINS. Beat The Shredder.</p>
-                <div class="loading-bar">
+                <p class="loading-tagline">Make GAINS. Beat The Shredder.</p>
+                <div class="loading-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="loadingBar">
                     <div id="loadingProgress" class="loading-progress"></div>
                 </div>
-                <p id="loadingText">Loading assets...</p>
+                <p id="loadingText">Loading assets…</p>
             </div>
         </div>
-    </div>
-    
-    <!-- Game Scripts -->
+    </main>
+
+    <noscript>
+        <p class="noscript-msg">This game needs JavaScript enabled.</p>
+    </noscript>
+
     <script src="engine/core.js"></script>
     <script src="engine/input.js"></script>
     <script src="engine/physics.js"></script>
@@ -41,7 +48,7 @@
     <script src="engine/renderer.js"></script>
     <script src="engine/audio.js"></script>
     <script src="engine/particles.js"></script>
-    
+
     <script src="game/constants.js"></script>
     <script src="game/smbConstants.js"></script>
     <script src="game/smbIntegrator.js"></script>
@@ -54,7 +61,7 @@
     <script src="game/hud.js"></script>
     <script src="game/scenes.js"></script>
     <script src="game/save.js"></script>
-    
+
     <script src="main.js"></script>
 </body>
 </html>

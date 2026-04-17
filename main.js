@@ -99,7 +99,12 @@ class Game {
         if (progressBar) {
             progressBar.style.width = progress + '%';
         }
-        
+
+        const loadingBar = document.getElementById('loadingBar');
+        if (loadingBar) {
+            loadingBar.setAttribute('aria-valuenow', String(Math.round(progress)));
+        }
+
         if (loadingText) {
             loadingText.textContent = message;
         }
@@ -189,6 +194,7 @@ class Game {
     hideLoadingScreen() {
         const loadingScreen = document.getElementById('loadingScreen');
         if (loadingScreen) {
+            loadingScreen.setAttribute('aria-busy', 'false');
             loadingScreen.style.opacity = '0';
             setTimeout(() => {
                 loadingScreen.style.display = 'none';

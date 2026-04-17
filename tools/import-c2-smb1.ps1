@@ -73,5 +73,6 @@ Copy-C2 "c2_1up_mushroom.png" "Animations\1UP\Default\000.png"
 Copy-C2 "c2_starman.png" "Animations\Starman\Default\000.png"
 Copy-C2 "c2_fire_flower.png" "Animations\FireFlower\Default\000.png"
 Copy-C2 "c2_castle_flag.png" "Animations\CastleFlag\Default\000.png"
+Copy-C2 "favicon-32.png" "Files\icon-32.png"
 
 Write-Host "Done. Output: $Dst"

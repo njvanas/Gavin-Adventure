@@ -1,29 +1,42 @@
+/* Shell matches in-game SMB-style sky / HUD (see game/level.js, game/hud.js) */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-body {
-    background: linear-gradient(135deg, #1a1a2e, #16213e);
-    font-family: 'Courier New', monospace;
+html, body {
+    width: 100%;
+    height: 100%;
     overflow: hidden;
+}
+
+body {
+    font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+    background: #0b1220;
+    background: linear-gradient(180deg, #0f172a 0%, #1e3a5f 35%, #2563ab 70%, #1e40af 100%);
+    color: #f8fafc;
     user-select: none;
     touch-action: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 #gameContainer {
     position: relative;
     width: 100vw;
     height: 100vh;
+    height: 100dvh;
     display: flex;
     justify-content: center;
     align-items: center;
-    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    overflow: hidden;
 }
 
 #gameCanvas {
-    border: 2px solid #333;
+    border: 2px solid rgba(15, 23, 42, 0.9);
+    box-shadow:
+        0 0 0 1px rgba(148, 163, 184, 0.15),
+        0 12px 40px rgba(0, 0, 0, 0.45);
     background: #000;
     image-rendering: pixelated;
     image-rendering: -moz-crisp-edges;
@@ -33,12 +46,12 @@ body {
     max-height: none;
 }
 
-/* Mobile Controls */
+/* Mobile controls */
 .mobile-controls {
     position: absolute;
-    bottom: 20px;
-    left: 20px;
-    right: 20px;
+    bottom: max(20px, env(safe-area-inset-bottom));
+    left: max(20px, env(safe-area-inset-left));
+    right: max(20px, env(safe-area-inset-right));
     display: none;
     justify-content: space-between;
     align-items: flex-end;
@@ -46,7 +59,8 @@ body {
     pointer-events: none;
 }
 
-.dpad, .action-buttons {
+.dpad,
+.action-buttons {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -61,38 +75,34 @@ body {
 }
 
 .control-btn {
-    background: rgba(255, 255, 255, 0.8);
-    border: 2px solid #333;
+    background: rgba(248, 250, 252, 0.92);
+    border: 2px solid #0f172a;
     border-radius: 8px;
-    color: #333;
-    font-family: 'Courier New', monospace;
-    font-weight: bold;
+    color: #0f172a;
+    font-family: inherit;
+    font-weight: 700;
     font-size: 14px;
     cursor: pointer;
     touch-action: manipulation;
     user-select: none;
-    transition: all 0.1s ease;
+    transition: transform 0.08s ease, background 0.08s ease;
 }
 
 .control-btn:active {
-    background: rgba(255, 255, 255, 1);
-    transform: scale(0.95);
+    background: #fff;
+    transform: scale(0.96);
 }
 
-.dpad-left, .dpad-right {
+.dpad-left,
+.dpad-right {
     position: absolute;
     top: 40px;
     width: 40px;
     height: 40px;
 }
 
-.dpad-left {
-    left: 0;
-}
-
-.dpad-right {
-    right: 0;
-}
+.dpad-left { left: 0; }
+.dpad-right { right: 0; }
 
 .dpad-down {
     position: absolute;
@@ -107,7 +117,9 @@ body {
     gap: 15px;
 }
 
-.jump-btn, .run-btn, .throw-btn {
+.jump-btn,
+.run-btn,
+.throw-btn {
     width: 60px;
     height: 60px;
     border-radius: 50%;
@@ -117,14 +129,11 @@ body {
     opacity: 0.5;
 }
 
-/* Loading Screen */
+/* Loading overlay — same family as HUD bar */
 .loading-screen {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    inset: 0;
+    background: linear-gradient(180deg, #020617 0%, #0f172a 50%, #1e3a8a 100%);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -133,72 +142,87 @@ body {
 
 .loading-content {
     text-align: center;
-    color: #fff;
-    max-width: 400px;
-    padding: 20px;
+    max-width: 420px;
+    padding: 24px;
 }
 
 .loading-content h1 {
-    font-size: 2.5em;
-    margin-bottom: 10px;
-    color: #f39c12;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    font-size: clamp(1.75rem, 5vw, 2.5rem);
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+    color: #fbbf24;
+    text-shadow: 0 2px 0 #0f172a;
 }
 
-.loading-content p {
-    font-size: 1.2em;
-    margin-bottom: 30px;
-    color: #ecf0f1;
+.loading-tagline {
+    font-size: 1rem;
+    margin-bottom: 28px;
+    color: #cbd5e1;
 }
 
 .loading-bar {
     width: 100%;
-    height: 20px;
-    background: rgba(255,255,255,0.2);
-    border-radius: 10px;
+    height: 10px;
+    background: rgba(15, 23, 42, 0.8);
+    border-radius: 6px;
     overflow: hidden;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
+    border: 1px solid rgba(148, 163, 184, 0.35);
 }
 
 .loading-progress {
     height: 100%;
-    background: linear-gradient(90deg, #f39c12, #e74c3c);
     width: 0%;
-    transition: width 0.3s ease;
+    background: linear-gradient(90deg, #f97316, #fbbf24);
+    transition: width 0.25s ease;
 }
 
-/* Responsive Design */
+#loadingText {
+    font-size: 0.9rem;
+    color: #94a3b8;
+}
+
+.noscript-msg {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0f172a;
+    color: #f8fafc;
+    padding: 24px;
+    text-align: center;
+    z-index: 2000;
+}
+
 @media (max-width: 768px) {
     .mobile-controls {
         display: flex;
     }
-    
+
     #gameCanvas {
-        border: none;
+        border-width: 0;
+        box-shadow: none;
     }
 }
 
 @media (max-height: 600px) {
     .loading-content h1 {
-        font-size: 2em;
+        font-size: 1.5rem;
     }
-    
-    .loading-content p {
-        font-size: 1em;
+
+    .loading-tagline {
+        font-size: 0.9rem;
     }
 }
 
-/* Desktop specific */
-@media (min-width: 769px) {
-    #gameCanvas {
-        width: 1024px;
-        height: 576px;
+@media (prefers-reduced-motion: reduce) {
+    .loading-progress {
+        transition: none;
     }
-}
 
-/* High DPI Support */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-    #gameCanvas {
-        image-rendering: pixelated;
+    .control-btn {
+        transition: none;
     }
 }
