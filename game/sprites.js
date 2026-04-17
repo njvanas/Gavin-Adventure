@@ -20,10 +20,13 @@ class SpriteManager {
         
         // Load Mario-style image assets
         this.loadMarioAssets();
-        
-        // Load sprite sheet assets
+
+        // Sprite sheets (optional fallbacks)
         this.loadSpriteSheets();
-        
+
+        // Jcw87 c2-smb1–derived PNGs in Assets/c2/ (see tools/import-c2-smb1.ps1)
+        this.loadC2Smb1Assets();
+
         this.loaded = true;
         this.loadProgress = 100;
     }
@@ -442,7 +445,72 @@ class SpriteManager {
         
         console.log('🎮 Mario-style assets loaded successfully!');
     }
-    
+
+    /**
+     * Override / replace key sprites with frames exported from Jcw87/c2-smb1 (Construct 2 SMB1).
+     * Files live in Assets/c2/ — copy them with tools/import-c2-smb1.ps1 from a local _ref_c2-smb1 clone.
+     */
+    loadC2Smb1Assets() {
+        const c2 = (name) => `Assets/c2/${name}`;
+        // Player (small / big)
+        this.loadImageSprite('mario_small_idle', c2('c2_mario_small_idle.png'), 16, 16);
+        this.loadImageSprite('mario_small_run1', c2('c2_mario_small_run1.png'), 16, 16);
+        this.loadImageSprite('mario_small_run2', c2('c2_mario_small_run2.png'), 16, 16);
+        this.loadImageSprite('mario_small_run3', c2('c2_mario_small_run3.png'), 16, 16);
+        this.loadImageSprite('mario_small_jump', c2('c2_mario_small_jump.png'), 16, 16);
+        this.loadImageSprite('mario_small_slide', c2('c2_mario_small_skid.png'), 16, 16);
+        this.loadImageSprite('mario_small_death', c2('c2_mario_small_die.png'), 16, 16);
+
+        this.loadImageSprite('mario_big_idle', c2('c2_mario_big_idle.png'), 16, 32);
+        this.loadImageSprite('mario_big_run1', c2('c2_mario_big_run1.png'), 16, 32);
+        this.loadImageSprite('mario_big_run2', c2('c2_mario_big_run2.png'), 16, 32);
+        this.loadImageSprite('mario_big_run3', c2('c2_mario_big_run3.png'), 16, 32);
+        this.loadImageSprite('mario_big_jump', c2('c2_mario_big_jump.png'), 16, 32);
+        this.loadImageSprite('mario_big_slide', c2('c2_mario_big_skid.png'), 16, 32);
+
+        // Enemies
+        this.loadImageSprite('goomba_walk1', c2('c2_goomba_walk1.png'), 16, 16);
+        this.loadImageSprite('goomba_walk2', c2('c2_goomba_walk2.png'), 16, 16);
+        this.loadImageSprite('goomba_flat', c2('c2_goomba_flat.png'), 16, 16);
+        this.loadImageSprite('koopa_walk1', c2('c2_koopa_walk1.png'), 16, 16);
+        this.loadImageSprite('koopa_walk2', c2('c2_koopa_walk2.png'), 16, 16);
+        this.loadImageSprite('koopa_shell', c2('c2_koopa_shell.png'), 16, 16);
+
+        // Items
+        this.loadImageSprite('coin', c2('c2_coin.png'), 16, 16);
+        this.loadImageSprite('coin_underground', c2('c2_coin.png'), 16, 16);
+        this.loadImageSprite('magic_mushroom', c2('c2_fire_flower.png'), 16, 16);
+        this.loadImageSprite('1up_mushroom', c2('c2_1up_mushroom.png'), 16, 16);
+        this.loadImageSprite('starman', c2('c2_starman.png'), 16, 16);
+
+        // Tiles & world
+        this.loadImageSprite('ground_block', c2('c2_ground.png'), 16, 16);
+        this.loadImageSprite('brick', c2('c2_brick.png'), 16, 16);
+        this.loadImageSprite('hard_block', c2('c2_hard_block.png'), 16, 16);
+        this.loadImageSprite('mystery_block', c2('c2_mystery_block.png'), 16, 16);
+        this.loadImageSprite('empty_block', c2('c2_empty_block.png'), 16, 16);
+        this.loadImageSprite('underground_brick', c2('c2_underground_brick.png'), 16, 16);
+        this.loadImageSprite('underground_block', c2('c2_underground_block.png'), 16, 16);
+
+        this.loadImageSprite('cloud1', c2('c2_cloud.png'), 32, 24);
+        this.loadImageSprite('cloud2', c2('c2_cloud.png'), 32, 24);
+        this.loadImageSprite('cloud3', c2('c2_cloud.png'), 32, 24);
+        this.loadImageSprite('hill1', c2('c2_bush.png'), 16, 16);
+        this.loadImageSprite('hill2', c2('c2_bush.png'), 16, 16);
+        this.loadImageSprite('bush1', c2('c2_bush.png'), 16, 16);
+        this.loadImageSprite('bush2', c2('c2_bush.png'), 16, 16);
+        this.loadImageSprite('bush3', c2('c2_bush.png'), 16, 16);
+
+        this.loadImageSprite('flag', c2('c2_castle_flag.png'), 16, 16);
+        this.loadImageSprite('flag_pole', c2('c2_flag_pole.png'), 16, 16);
+
+        this.loadImageSprite('pipe_top', c2('c2_pipe_vertical.png'), 32, 32);
+        this.loadImageSprite('pipe_bottom', c2('c2_pipe_vertical.png'), 32, 32);
+        this.loadImageSprite('pipe_connection', c2('c2_pipe_intersection.png'), 16, 16);
+
+        console.log('🍄 c2-smb1 asset overrides queued (Assets/c2/)');
+    }
+
     // Load sprite sheet assets
     loadSpriteSheets() {
         // Load background sprite sheet
