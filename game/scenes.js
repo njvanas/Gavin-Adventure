@@ -10,6 +10,7 @@
     const Campaign = window.Campaign;
     const Sprites = window.Sprites;
     const GameSave = window.GameSave;
+    const VisualEffects = window.VisualEffects;
 
     class MenuScene {
         constructor(engine, input, onStart) {
@@ -33,36 +34,47 @@
 
         render() {
             const ctx = this.ctx;
-            const w = this.canvas.width;
-            const h = this.canvas.height;
-            Sprites.drawMenuBackdrop(ctx, w, h, performance.now());
+            const w = GAME_CONFIG.CANVAS_WIDTH;
+            const h = GAME_CONFIG.CANVAS_HEIGHT;
+            const t = performance.now();
+            Sprites.drawMenuBackdrop(ctx, w, h, t);
+            if (VisualEffects && VisualEffects.applyMenuCinematic) VisualEffects.applyMenuCinematic(ctx, w, h, t);
 
             ctx.textAlign = 'center';
             const titleY = h * 0.28;
-            const tg = ctx.createLinearGradient(w * 0.2, titleY - 24, w * 0.8, titleY + 8);
-            tg.addColorStop(0, '#fdba74');
-            tg.addColorStop(0.5, '#fff7ed');
-            tg.addColorStop(1, '#f97316');
-            ctx.font = 'bold 44px system-ui,Segoe UI,sans-serif';
-            ctx.shadowColor = 'rgba(0,0,0,0.55)';
-            ctx.shadowBlur = 12;
+            const tg = ctx.createLinearGradient(w * 0.15, titleY - 32, w * 0.85, titleY + 20);
+            tg.addColorStop(0, '#fff7ed');
+            tg.addColorStop(0.35, '#fdba74');
+            tg.addColorStop(0.65, '#fb923c');
+            tg.addColorStop(1, '#ea580c');
+            ctx.font = 'bold 52px system-ui,Segoe UI,sans-serif';
+            ctx.shadowColor = 'rgba(0,0,0,0.75)';
+            ctx.shadowBlur = 20;
+            ctx.shadowOffsetY = 4;
             ctx.fillStyle = tg;
             ctx.fillText('Gavin Adventure', w / 2, titleY);
+            ctx.shadowOffsetY = 0;
+            ctx.shadowBlur = 14;
+            ctx.fillStyle = 'rgba(255,255,255,0.22)';
+            ctx.fillText('Gavin Adventure', w / 2 - 1, titleY - 1);
             ctx.shadowBlur = 0;
 
-            ctx.font = '20px system-ui,Segoe UI,sans-serif';
-            ctx.fillStyle = 'rgba(226,232,240,0.92)';
-            ctx.fillText('Bodybuilder platformer — chase gains, crush the Shredder', w / 2, h * 0.38);
-
-            ctx.fillStyle = '#fb923c';
             ctx.font = '22px system-ui,Segoe UI,sans-serif';
-            ctx.shadowColor = 'rgba(0,0,0,0.35)';
-            ctx.shadowBlur = 4;
+            ctx.fillStyle = 'rgba(226,232,240,0.95)';
+            ctx.shadowColor = 'rgba(0,0,0,0.5)';
+            ctx.shadowBlur = 6;
+            ctx.fillText('Bodybuilder platformer — chase gains, crush the Shredder', w / 2, h * 0.38);
+            ctx.shadowBlur = 0;
+
+            ctx.fillStyle = '#fdba74';
+            ctx.font = '23px system-ui,Segoe UI,sans-serif';
+            ctx.shadowColor = 'rgba(0,0,0,0.45)';
+            ctx.shadowBlur = 5;
             ctx.fillText('ENTER / SPACE — Start   |   SHIFT+ENTER — Continue', w / 2, h * 0.55);
             ctx.shadowBlur = 0;
             if (this.hasSave) {
-                ctx.fillStyle = '#38bdf8';
-                ctx.font = '16px system-ui,Segoe UI,sans-serif';
+                ctx.fillStyle = '#7dd3fc';
+                ctx.font = '17px system-ui,Segoe UI,sans-serif';
                 ctx.fillText('Saved progress found. Hold Shift and press Enter to continue.', w / 2, h * 0.62);
             }
             ctx.textAlign = 'left';
@@ -193,7 +205,8 @@
             const ctx = this.ctx;
             const timeMs = performance.now();
             const playH = GAME_CONFIG.CANVAS_HEIGHT - GAME_CONFIG.HUD_HEIGHT;
-            Sprites.drawBackgroundLayers(ctx, this.renderer.camera.x, this.canvas.width, playH, this.level.theme, timeMs);
+            const viewW = GAME_CONFIG.CANVAS_WIDTH;
+            Sprites.drawBackgroundLayers(ctx, this.renderer.camera.x, viewW, playH, this.level.theme, timeMs);
             this.renderer.drawLevel(this.level, this.level.theme);
 
             const cam = this.renderer.camera;
@@ -241,6 +254,10 @@
 
             this.particles.draw(ctx);
 
+            if (VisualEffects && VisualEffects.applyGameplayCinematic) {
+                VisualEffects.applyGameplayCinematic(ctx, viewW, playH, this.level.theme, timeMs);
+            }
+
             this.hud.draw({
                 gains: this.gains,
                 world: this.world,
@@ -249,23 +266,25 @@
                 title: this.level.title
             });
 
-            const overlayTitle = Math.max(28, Math.round(this.canvas.width * 0.028));
+            const cw = GAME_CONFIG.CANVAS_WIDTH;
+            const ch = GAME_CONFIG.CANVAS_HEIGHT;
+            const overlayTitle = Math.max(28, Math.round(cw * 0.028));
             if (this.levelCompleteTimer > 0) {
                 ctx.fillStyle = 'rgba(0,0,0,0.55)';
-                ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                ctx.fillRect(0, 0, cw, ch);
                 ctx.fillStyle = '#fff';
                 ctx.font = `bold ${overlayTitle}px system-ui,sans-serif`;
                 ctx.textAlign = 'center';
-                ctx.fillText('Level clear — loading next stage…', this.canvas.width / 2, this.canvas.height * 0.45);
+                ctx.fillText('Level clear — loading next stage…', cw / 2, ch * 0.45);
                 ctx.textAlign = 'left';
             }
             if (this.gameOverTimer > 0) {
                 ctx.fillStyle = 'rgba(0,0,0,0.65)';
-                ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                ctx.fillRect(0, 0, cw, ch);
                 ctx.fillStyle = '#fca5a5';
                 ctx.font = `bold ${overlayTitle + 4}px system-ui,sans-serif`;
                 ctx.textAlign = 'center';
-                ctx.fillText('Game Over', this.canvas.width / 2, this.canvas.height * 0.45);
+                ctx.fillText('Game Over', cw / 2, ch * 0.45);
                 ctx.textAlign = 'left';
             }
         }

@@ -10,14 +10,21 @@
     const canvas = document.getElementById('game');
     if (!canvas) return;
 
-    canvas.width = GAME_CONFIG.CANVAS_WIDTH;
-    canvas.height = GAME_CONFIG.CANVAS_HEIGHT;
+    /** Logical size in CSS pixels; backing store scaled for sharp retina output. */
+    const maxDpr = 2;
+    const dpr = Math.min(window.devicePixelRatio || 1, maxDpr);
+    canvas.width = Math.round(GAME_CONFIG.CANVAS_WIDTH * dpr);
+    canvas.height = Math.round(GAME_CONFIG.CANVAS_HEIGHT * dpr);
+    canvas.dataset.logicalWidth = String(GAME_CONFIG.CANVAS_WIDTH);
+    canvas.dataset.logicalHeight = String(GAME_CONFIG.CANVAS_HEIGHT);
 
     const bootCtx = canvas.getContext('2d');
     if (bootCtx) {
+        bootCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
         bootCtx.imageSmoothingEnabled = true;
         if (bootCtx.imageSmoothingQuality !== undefined) bootCtx.imageSmoothingQuality = 'high';
     }
+    window.__gameDpr = dpr;
 
     window.audio = new AudioManager();
 

@@ -17,8 +17,8 @@
         }
 
         setCamera(x, y, levelWidthPx, levelHeightPx) {
-            const vw = this.canvas.width;
-            const vh = this.canvas.height - GAME_CONFIG.HUD_HEIGHT;
+            const vw = GAME_CONFIG.CANVAS_WIDTH;
+            const vh = GAME_CONFIG.CANVAS_HEIGHT - GAME_CONFIG.HUD_HEIGHT;
             let cx = x - vw / 2;
             let cy = y - vh / 2;
             cx = Math.max(0, Math.min(cx, Math.max(0, levelWidthPx - vw)));
@@ -31,19 +31,20 @@
          * Legacy solid sky fill — prefer Sprites.drawBackgroundLayers in scenes for parallax.
          */
         clear(skyTop, skyBot) {
-            const g = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
+            const h = GAME_CONFIG.CANVAS_HEIGHT;
+            const g = this.ctx.createLinearGradient(0, 0, 0, h);
             g.addColorStop(0, skyTop || '#5b9cff');
             g.addColorStop(1, skyBot || '#87ceeb');
             this.ctx.fillStyle = g;
-            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            this.ctx.fillRect(0, 0, GAME_CONFIG.CANVAS_WIDTH, h);
         }
 
         drawLevel(level, theme) {
             const ctx = this.ctx;
             const ts = GAME_CONFIG.TILE_SIZE;
             const cam = this.camera;
-            const vw = this.canvas.width;
-            const vh = this.canvas.height - GAME_CONFIG.HUD_HEIGHT;
+            const vw = GAME_CONFIG.CANVAS_WIDTH;
+            const vh = GAME_CONFIG.CANVAS_HEIGHT - GAME_CONFIG.HUD_HEIGHT;
 
             const startX = Math.floor(cam.x / ts);
             const endX = Math.ceil((cam.x + vw) / ts) + 1;

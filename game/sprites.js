@@ -159,10 +159,20 @@
             ctx.stroke();
         }
         const hl = ctx.createLinearGradient(x, y, x + size * 0.4, y + size * 0.4);
-        hl.addColorStop(0, 'rgba(255,255,255,0.14)');
+        hl.addColorStop(0, 'rgba(255,255,255,0.2)');
         hl.addColorStop(1, 'rgba(255,255,255,0)');
         ctx.fillStyle = hl;
-        ctx.fillRect(x + 1, y + 1, size * 0.45, size * 0.45);
+        ctx.fillRect(x + 1, y + 1, size * 0.5, size * 0.38);
+        const ao = ctx.createLinearGradient(x, y + size * 0.35, x, y + size);
+        ao.addColorStop(0, 'rgba(0,0,0,0)');
+        ao.addColorStop(1, 'rgba(0,0,0,0.28)');
+        ctx.fillStyle = ao;
+        ctx.fillRect(x, y + size * 0.35, size, size * 0.65);
+        const topRim = ctx.createLinearGradient(x, y, x, y + size * 0.12);
+        topRim.addColorStop(0, 'rgba(255,255,255,0.12)');
+        topRim.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = topRim;
+        ctx.fillRect(x + 1, y + 1, size - 2, size * 0.1);
         ctx.restore();
     }
 
@@ -352,7 +362,8 @@
     }
 
     /**
-     * Sky gradient, sun, soft clouds, and scrolling parallax hills (screen space).
+     * Cinematic sky: multi-stop HDR-style gradient, sun corona, aerial perspective,
+     * volumetric-ish clouds, parallax ridges with depth fog.
      */
     function drawBackgroundLayers(ctx, cameraX, viewW, viewH, themeIndex, timeMs) {
         const p = pal(themeIndex);
@@ -360,102 +371,184 @@
 
         const sky = ctx.createLinearGradient(0, 0, 0, viewH);
         sky.addColorStop(0, p.sky1);
-        sky.addColorStop(0.55, p.sky2);
-        sky.addColorStop(1, p.skyHorizon);
+        sky.addColorStop(0.28, p.sky2);
+        sky.addColorStop(0.62, p.skyHorizon);
+        sky.addColorStop(0.88, 'rgba(255,255,255,0.35)');
+        sky.addColorStop(1, 'rgba(230,240,255,0.55)');
         ctx.fillStyle = sky;
         ctx.fillRect(0, 0, viewW, viewH);
 
-        const sunX = viewW * 0.78 + Math.sin(t * 0.15) * 6;
-        const sunY = viewH * 0.18 + Math.cos(t * 0.12) * 4;
-        const sunR = Math.min(viewW, viewH) * 0.09;
-        const glow = ctx.createRadialGradient(sunX, sunY, sunR * 0.2, sunX, sunY, sunR * 2.8);
-        glow.addColorStop(0, p.sun);
-        glow.addColorStop(0.35, 'rgba(253,230,138,0.35)');
-        glow.addColorStop(1, 'rgba(253,230,138,0)');
-        ctx.fillStyle = glow;
+        const zenith = ctx.createRadialGradient(viewW * 0.35, viewH * 0.08, 0, viewW * 0.4, viewH * 0.15, viewW * 0.9);
+        zenith.addColorStop(0, 'rgba(255,255,255,0.12)');
+        zenith.addColorStop(0.4, 'rgba(255,255,255,0.02)');
+        zenith.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = zenith;
+        ctx.fillRect(0, 0, viewW, viewH * 0.55);
+
+        const sunX = viewW * 0.76 + Math.sin(t * 0.12) * 8;
+        const sunY = viewH * 0.16 + Math.cos(t * 0.1) * 5;
+        const sunR = Math.min(viewW, viewH) * 0.095;
+
+        const corona = ctx.createRadialGradient(sunX, sunY, sunR * 0.05, sunX, sunY, sunR * 3.6);
+        corona.addColorStop(0, 'rgba(255,250,220,0.55)');
+        corona.addColorStop(0.2, 'rgba(255,230,150,0.22)');
+        corona.addColorStop(0.45, 'rgba(255,200,100,0.08)');
+        corona.addColorStop(1, 'rgba(255,200,120,0)');
+        ctx.fillStyle = corona;
         ctx.beginPath();
-        ctx.arc(sunX, sunY, sunR * 2.8, 0, Math.PI * 2);
+        ctx.arc(sunX, sunY, sunR * 3.6, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = '#fff9e6';
-        ctx.globalAlpha = 0.95;
+
+        const glow2 = ctx.createRadialGradient(sunX, sunY, sunR * 0.3, sunX, sunY, sunR * 1.8);
+        glow2.addColorStop(0, p.sun);
+        glow2.addColorStop(0.5, 'rgba(255,240,200,0.4)');
+        glow2.addColorStop(1, 'rgba(255,220,120,0)');
+        ctx.fillStyle = glow2;
         ctx.beginPath();
-        ctx.arc(sunX, sunY, sunR * 0.65, 0, Math.PI * 2);
+        ctx.arc(sunX, sunY, sunR * 1.8, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#fffef5';
+        ctx.globalAlpha = 0.98;
+        ctx.beginPath();
+        ctx.arc(sunX, sunY, sunR * 0.62, 0, Math.PI * 2);
         ctx.fill();
         ctx.globalAlpha = 1;
 
-        ctx.fillStyle = p.haze;
-        ctx.fillRect(0, viewH * 0.55, viewW, viewH * 0.45);
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        ctx.globalAlpha = 0.09;
+        const rays = ctx.createRadialGradient(sunX, sunY, sunR * 0.5, sunX, sunY, Math.max(viewW, viewH) * 0.85);
+        rays.addColorStop(0, 'rgba(255,248,230,0.5)');
+        rays.addColorStop(0.12, 'rgba(255,235,190,0.12)');
+        rays.addColorStop(0.35, 'rgba(255,220,160,0.04)');
+        rays.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = rays;
+        ctx.fillRect(0, 0, viewW, viewH * 0.65);
+        ctx.restore();
 
-        function hillLayer(yBase, amp, scroll, color, freq) {
+        const hazeBand = ctx.createLinearGradient(0, viewH * 0.38, 0, viewH * 0.72);
+        hazeBand.addColorStop(0, 'rgba(255,255,255,0)');
+        hazeBand.addColorStop(0.5, p.haze);
+        hazeBand.addColorStop(1, 'rgba(200,210,230,0.18)');
+        ctx.fillStyle = hazeBand;
+        ctx.fillRect(0, viewH * 0.38, viewW, viewH * 0.36);
+
+        function hillLayer(yBase, amp, scroll, color, freq, depthFade) {
+            ctx.save();
+            ctx.globalAlpha = depthFade;
             ctx.fillStyle = color;
             ctx.beginPath();
             ctx.moveTo(0, viewH + 2);
-            for (let x = -80; x <= viewW + 80; x += 6) {
+            for (let x = -120; x <= viewW + 120; x += 5) {
                 const wx = x + scroll;
                 const y =
                     yBase +
                     Math.sin(wx * freq) * amp +
-                    Math.sin(wx * freq * 2.3 + 1.2) * amp * 0.35 +
-                    Math.sin(wx * 0.002 + t) * amp * 0.15;
+                    Math.sin(wx * freq * 2.3 + 1.2) * amp * 0.38 +
+                    Math.sin(wx * 0.002 + t) * amp * 0.12;
                 ctx.lineTo(x, y);
             }
-            ctx.lineTo(viewW + 80, viewH + 2);
-            ctx.lineTo(-80, viewH + 2);
+            ctx.lineTo(viewW + 120, viewH + 2);
+            ctx.lineTo(-120, viewH + 2);
             ctx.closePath();
             ctx.fill();
+            ctx.globalAlpha = 1;
+            ctx.restore();
         }
 
-        const s0 = (cameraX * 0.06) % 800;
-        const s1 = (cameraX * 0.14) % 800;
-        const s2 = (cameraX * 0.26) % 800;
-        hillLayer(viewH * 0.58, viewH * 0.05, s0, p.parallax[0], 0.004);
-        hillLayer(viewH * 0.64, viewH * 0.07, s1, p.parallax[1], 0.0055);
-        hillLayer(viewH * 0.72, viewH * 0.09, s2, p.parallax[2], 0.007);
+        const s0 = (cameraX * 0.045) % 900;
+        const s1 = (cameraX * 0.1) % 900;
+        const s2 = (cameraX * 0.18) % 900;
+        const s3 = (cameraX * 0.28) % 900;
+        hillLayer(viewH * 0.52, viewH * 0.04, s0, p.parallax[0], 0.0032, 0.55);
+        hillLayer(viewH * 0.58, viewH * 0.055, s1, p.parallax[0], 0.004, 0.72);
+        hillLayer(viewH * 0.64, viewH * 0.07, s2, p.parallax[1], 0.0052, 0.88);
+        hillLayer(viewH * 0.71, viewH * 0.09, s3, p.parallax[2], 0.0068, 1);
 
-        ctx.fillStyle = 'rgba(255,255,255,0.55)';
-        for (let i = 0; i < 7; i++) {
-            const cx = ((i * 237 + t * 12) % (viewW + 120)) - 40;
-            const cy = viewH * (0.08 + (i % 3) * 0.06) + Math.sin(t + i) * 5;
-            const rw = 70 + (i % 4) * 18;
-            const rh = 18 + (i % 2) * 6;
+        const fogNear = ctx.createLinearGradient(0, viewH * 0.48, 0, viewH * 0.85);
+        fogNear.addColorStop(0, 'rgba(255,255,255,0)');
+        fogNear.addColorStop(1, 'rgba(220,230,245,0.25)');
+        ctx.fillStyle = fogNear;
+        ctx.fillRect(0, viewH * 0.48, viewW, viewH * 0.4);
+
+        function drawCloud(cx, cy, rw, rh, alpha) {
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            const sh = ctx.createRadialGradient(cx - rw * 0.2, cy + rh * 0.3, 0, cx, cy, rw * 1.2);
+            sh.addColorStop(0, 'rgba(80,100,130,0.35)');
+            sh.addColorStop(1, 'rgba(255,255,255,0)');
+            ctx.fillStyle = sh;
             ctx.beginPath();
-            ctx.ellipse(cx, cy, rw, rh, 0, 0, Math.PI * 2);
+            ctx.ellipse(cx - rw * 0.15, cy + rh * 0.25, rw * 0.9, rh * 0.65, 0, 0, Math.PI * 2);
             ctx.fill();
+            const body = ctx.createRadialGradient(cx - rw * 0.1, cy - rh * 0.1, 0, cx, cy, rw);
+            body.addColorStop(0, 'rgba(255,255,255,0.95)');
+            body.addColorStop(0.7, 'rgba(255,255,255,0.75)');
+            body.addColorStop(1, 'rgba(255,255,255,0.35)');
+            ctx.fillStyle = body;
+            ctx.beginPath();
+            ctx.ellipse(cx, cy, rw * 0.85, rh, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = 'rgba(255,255,255,0.55)';
+            ctx.beginPath();
+            ctx.ellipse(cx - rw * 0.35, cy - rh * 0.15, rw * 0.35, rh * 0.45, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+
+        for (let i = 0; i < 9; i++) {
+            const cx = ((i * 263 + t * 14) % (viewW + 200)) - 80;
+            const cy = viewH * (0.06 + (i % 4) * 0.055) + Math.sin(t * 0.8 + i) * 6;
+            const rw = 85 + (i % 5) * 22;
+            const rh = 20 + (i % 3) * 7;
+            drawCloud(cx, cy, rw, rh, 0.5 + (i % 3) * 0.08);
         }
     }
 
     function drawMenuBackdrop(ctx, w, h, timeMs) {
         const t = (timeMs || 0) * 0.001;
-        const g = ctx.createLinearGradient(0, 0, w, h);
-        g.addColorStop(0, '#0f172a');
-        g.addColorStop(0.45, '#1e3a8a');
+        const g = ctx.createLinearGradient(0, 0, w * 0.6, h);
+        g.addColorStop(0, '#020617');
+        g.addColorStop(0.35, '#0f172a');
+        g.addColorStop(0.65, '#1e3a8a');
         g.addColorStop(1, '#312e81');
         ctx.fillStyle = g;
         ctx.fillRect(0, 0, w, h);
 
-        const glow = ctx.createRadialGradient(w * 0.5, h * 0.35, 20, w * 0.5, h * 0.4, h * 0.55);
-        glow.addColorStop(0, 'rgba(249,115,22,0.35)');
-        glow.addColorStop(0.45, 'rgba(59,130,246,0.12)');
-        glow.addColorStop(1, 'rgba(15,23,42,0)');
-        ctx.fillStyle = glow;
+        const spot = ctx.createRadialGradient(w * 0.55, h * 0.25, 10, w * 0.55, h * 0.35, h * 0.65);
+        spot.addColorStop(0, 'rgba(251,146,60,0.45)');
+        spot.addColorStop(0.25, 'rgba(249,115,22,0.18)');
+        spot.addColorStop(0.55, 'rgba(59,130,246,0.15)');
+        spot.addColorStop(1, 'rgba(15,23,42,0)');
+        ctx.fillStyle = spot;
         ctx.fillRect(0, 0, w, h);
 
-        ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+        const floor = ctx.createLinearGradient(0, h * 0.55, 0, h);
+        floor.addColorStop(0, 'rgba(0,0,0,0)');
+        floor.addColorStop(1, 'rgba(0,0,0,0.55)');
+        ctx.fillStyle = floor;
+        ctx.fillRect(0, h * 0.55, w, h * 0.45);
+
+        ctx.strokeStyle = 'rgba(255,255,255,0.05)';
         ctx.lineWidth = 1;
-        for (let i = 0; i < 18; i++) {
-            const y = (i / 18) * h + Math.sin(t + i * 0.4) * 6;
+        for (let i = 0; i < 22; i++) {
+            const y = (i / 22) * h + Math.sin(t * 0.8 + i * 0.35) * 8;
             ctx.beginPath();
             ctx.moveTo(0, y);
-            ctx.bezierCurveTo(w * 0.33, y - 20, w * 0.66, y + 20, w, y);
+            ctx.bezierCurveTo(w * 0.33, y - 24, w * 0.66, y + 24, w, y);
             ctx.stroke();
         }
 
-        ctx.fillStyle = 'rgba(255,255,255,0.03)';
-        for (let s = 0; s < 40; s++) {
-            const sx = (s * 97 + t * 18) % w;
-            const sy = (s * 53) % h;
-            ctx.fillRect(sx, sy, 2, 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.04)';
+        for (let s = 0; s < 120; s++) {
+            const sx = (s * 127 + t * 22) % w;
+            const sy = (s * 83 + s * s) % h;
+            const sz = 1 + (s % 3);
+            ctx.globalAlpha = 0.3 + (s % 5) * 0.12;
+            ctx.fillRect(sx, sy, sz, sz);
         }
+        ctx.globalAlpha = 1;
     }
 
     function drawPlayer(ctx, px, py, w, h, powerState, anim, facing, timeMs) {
@@ -491,12 +584,13 @@
         const hw = w * 0.48;
         const hh = h * 0.48;
 
-        const shadowGrad = ctx.createRadialGradient(0, hh * 0.95, 0, 0, hh * 0.95, hw * 1.4);
-        shadowGrad.addColorStop(0, 'rgba(0,0,0,0.35)');
+        const shadowGrad = ctx.createRadialGradient(0, hh * 0.92, 0, 0, hh * 0.92, hw * 1.45);
+        shadowGrad.addColorStop(0, 'rgba(0,0,0,0.52)');
+        shadowGrad.addColorStop(0.55, 'rgba(0,0,0,0.18)');
         shadowGrad.addColorStop(1, 'rgba(0,0,0,0)');
         ctx.fillStyle = shadowGrad;
         ctx.beginPath();
-        ctx.ellipse(0, hh * 0.92, hw * 1.1, hh * 0.18, 0, 0, Math.PI * 2);
+        ctx.ellipse(0, hh * 0.94, hw * 1.25, hh * 0.22, 0, 0, Math.PI * 2);
         ctx.fill();
 
         const legW = hw * 0.28;
@@ -604,6 +698,16 @@
             ctx.lineWidth = 2;
             ctx.strokeRect(-torsoW * 0.52, -torsoH * 0.2, torsoW * 1.04, torsoH * 1.05);
         }
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+        ctx.globalAlpha = 0.22;
+        ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+        ctx.lineWidth = Math.max(1.2, hw * 0.06);
+        ctx.beginPath();
+        ctx.arc(-headR * 0.35, -hh * 0.58, headR * 0.85, -Math.PI * 0.7, -Math.PI * 0.1);
+        ctx.stroke();
+        ctx.restore();
 
         ctx.restore();
     }

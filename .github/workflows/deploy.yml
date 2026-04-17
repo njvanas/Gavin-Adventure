@@ -35,7 +35,7 @@ jobs:
           done
           test -d engine || { echo "Missing engine/"; exit 1; }
           test -d game || { echo "Missing game/"; exit 1; }
-          for f in engine/core.js engine/input.js game/constants.js game/scenes.js; do
+          for f in engine/core.js engine/input.js engine/visualEffects.js game/constants.js game/scenes.js; do
             test -f "$f" || { echo "Missing $f"; exit 1; }
           done
           echo "OK: Gavin Adventure bundle present"
