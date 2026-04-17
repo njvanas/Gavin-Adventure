@@ -1,5 +1,3 @@
-This site is the HTML5 export from **c2-smb1** by **Jcw87**  
-https://github.com/Jcw87/c2-smb1  
+**Gavin Adventure** is original game code in this repository (canvas / JavaScript).
 
-Game code and assets originate from that project (Construct 2).  
-Nintendo owns Super Mario Bros. trademarks and copyrights.
+Earlier versions of this repo may have contained third-party demo exports; those are not required to run the current game. If you redistribute art or audio from external sources, retain their respective notices and licenses.

@@ -1,29 +1,36 @@
-# Super Mario Bros (Construct 2) — HTML5 export
+# Gavin Adventure
 
-This repository hosts the **official HTML5 export** from **[Jcw87/c2-smb1](https://github.com/Jcw87/c2-smb1)** (branch **`gh-pages`**): the same files as the upstream demo, so the site matches that project **exactly** (Construct 2 runtime + bundled assets).
-
-- **Upstream source project:** [github.com/Jcw87/c2-smb1](https://github.com/Jcw87/c2-smb1) (MIT)
-- **Update:** Re-copy from `gh-pages` when you want to sync with upstream (see below).
-
-The previous custom “Gavin Adventure” canvas codebase was removed in favor of this export.
+**Gavin Adventure** is a browser-based, gym-themed platformer: run and jump through procedurally varied stages, collect **GAINS**, grab protein power-ups, and face the **Boss Shredder** at the end of each world.
 
 ## Run locally
 
-```bash
-npx http-server . -p 8000 -c-1
-```
-
-Open the printed `http://localhost:8000/` URL (serving over `http://` avoids `file://` limitations noted in `index.html`).
-
-## Syncing from upstream
+Static files only — serve over HTTP (not `file://`) so audio unlock behaves consistently:
 
 ```bash
-git clone --branch gh-pages --single-branch --depth 1 https://github.com/Jcw87/c2-smb1.git _upstream_pages
-# Copy everything except .git from _upstream_pages/ into this repo root, commit, push.
+npm start
 ```
 
-Remove the embedded Google Analytics block from `index.html` if you forked from upstream and do not want their measurement ID on your domain (this fork may omit it).
+Then open the URL printed by `http-server` (for example `http://127.0.0.1:8000/`).
+
+## Controls
+
+- **Move:** Arrow keys or **A** / **D**
+- **Jump:** Space or **Z**
+- **Run:** Shift or **X** / **C**
+- **Menu:** **Enter** or Space to start a new run. Hold **Shift** while pressing Enter to **continue** from the saved world/stage (if a save exists).
+
+Progress (world, stage, gains, power state) is stored in `localStorage`.
+
+## Project layout
+
+- `index.html`, `style.css`, `main.js` — shell and bootstrap
+- `engine/` — loop, input, collision, rendering, particles, audio
+- `game/` — player tuning (SMB-style integrator), campaign, levels, entities, HUD, scenes, save data
+
+## Deploy
+
+GitHub Actions publishes the repository root as a GitHub Pages artifact (see `.github/workflows/deploy.yml`). Pages **Source** should be **GitHub Actions**.
 
 ## License
 
-See the [c2-smb1 repository](https://github.com/Jcw87/c2-smb1) for license terms. Nintendo retains rights to Mario-related IP.
+Add your preferred license for original game code. Third-party references or inspirations should be credited separately if you reintroduce them.

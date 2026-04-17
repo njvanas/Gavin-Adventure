@@ -1,0 +1,35 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #0f172a;
+    color: #e2e8f0;
+    font-family: system-ui, 'Segoe UI', sans-serif;
+    touch-action: none;
+}
+
+#wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 12px;
+}
+
+#game {
+    display: block;
+    width: min(100vw - 24px, 1024px);
+    height: auto;
+    aspect-ratio: 1024 / 576;
+    max-height: calc(100vh - 24px);
+    border-radius: 8px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+    background: #000;
+}

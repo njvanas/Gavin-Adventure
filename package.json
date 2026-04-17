@@ -1,7 +1,7 @@
 {
-  "name": "c2-smb1-html5",
+  "name": "gavin-adventure",
   "private": true,
-  "description": "Static mirror of Jcw87/c2-smb1 gh-pages (Construct 2 SMB1 HTML5 export)",
+  "description": "Gavin Adventure — gym-themed canvas platformer (GitHub Pages static bundle)",
   "scripts": {
     "start": "npx http-server . -p 8000 -c-1",
     "dev": "npx http-server . -p 8000 -c-1 -o"

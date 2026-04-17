@@ -1,4 +1,4 @@
-# Publishes the static Construct 2 export via GitHub Actions → Pages (artifact).
+# Publishes the static Gavin Adventure bundle via GitHub Actions → Pages (artifact).
 # Repository Settings → Pages → Source MUST be "GitHub Actions".
 name: Deploy to GitHub Pages
 
@@ -27,15 +27,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate c2-smb1 export bundle
+      - name: Validate Gavin Adventure static bundle
         run: |
           set -e
-          for f in index.html c2runtime.js data.js jquery-2.1.1.min.js appmanifest.json sw.js; do
+          for f in index.html style.css main.js; do
             test -f "$f" || { echo "Missing $f"; exit 1; }
           done
-          test -d images || { echo "Missing images/"; exit 1; }
-          test -d media || { echo "Missing media/"; exit 1; }
-          echo "OK: Construct 2 HTML5 export present"
+          test -d engine || { echo "Missing engine/"; exit 1; }
+          test -d game || { echo "Missing game/"; exit 1; }
+          for f in engine/core.js engine/input.js game/constants.js game/scenes.js; do
+            test -f "$f" || { echo "Missing $f"; exit 1; }
+          done
+          echo "OK: Gavin Adventure bundle present"
 
       - name: Configure Pages
         uses: actions/configure-pages@v4
