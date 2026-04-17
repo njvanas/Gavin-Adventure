@@ -96,8 +96,11 @@ No Node? Serve the folder with any static server, e.g. `python -m http.server 80
 
 GitHub Actions can publish to **GitHub Pages** from `main`. Fork, enable Actions, push — your site follows the usual `https://<user>.github.io/<repo>/` pattern.
 
-**Details:** [DEPLOYMENT.md](./DEPLOYMENT.md)  
-**Live demo (upstream):** [dolfie.github.io/Gavin-Adventure](https://dolfie.github.io/Gavin-Adventure)
+**Details:** [DEPLOYMENT.md](./DEPLOYMENT.md)
+
+**Live site (this fork’s GitHub Pages):** [njvanas.github.io/Gavin-Adventure](https://njvanas.github.io/Gavin-Adventure)
+
+If you bookmarked an old link or another fork, you may see a different build. Your deploy URL is always `https://<your-github-username>.github.io/Gavin-Adventure/` (enable **Actions** + **Pages → GitHub Actions** on that repo). The upstream repo [Barend183/Gavin-Adventure](https://github.com/Barend183/Gavin-Adventure) may still serve an older `index.html` on its Pages site until those commits are merged and deployed there.
 
 ---
 

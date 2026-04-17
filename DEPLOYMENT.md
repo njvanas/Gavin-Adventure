@@ -84,7 +84,7 @@ After successful deployment, your site will be available at:
 https://[username].github.io/[repository-name]
 ```
 
-**Example**: `https://dolfie.github.io/Gavin-Adventure`
+**Example (this fork):** `https://njvanas.github.io/Gavin-Adventure`
 
 ## ⚠️ Troubleshooting
 
@@ -102,8 +102,9 @@ https://[username].github.io/[repository-name]
 
 3. **Site Not Updating**
    - Confirm **Settings → Pages → Source** matches how you deploy (**GitHub Actions** vs **`gh-pages` branch**). Updating the branch does nothing if Pages is wired to the other mode.
-   - Wait a few minutes for CDN propagation; hard-refresh or try a private window.
-   - In **Actions**, open the latest **Deploy to GitHub Pages** run and confirm it succeeded and shows a `page_url`.
+   - Open **`https://<your-username>.github.io/<repo>/`** for *your* fork — another user’s or upstream’s URL can be an older build (different `index.html` / JS).
+   - Wait a few minutes for CDN propagation; **hard-refresh** (Ctrl+F5) or a **private window** — cached `main.js` / `style.css` often looks like an “old” site.
+   - In **Actions**, open the latest **Deploy to GitHub Pages** run and confirm it succeeded and shows a `page_url`. View **page source** on the live URL and check that `<script src="game/campaign.js">` (etc.) matches the branch you expect.
 
 4. **`npm` / lockfile issues**
    - The default **`deploy.yml`** does not run `npm`. If you add a build step later, keep `package.json` and `package-lock.json` in sync (`npm install` locally, commit the lockfile).
